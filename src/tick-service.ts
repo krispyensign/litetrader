@@ -1,28 +1,19 @@
-import { ExchangePair, PairPriceUpdate } from 'exchange-models/exchange'
-import { Subscribe } from 'exchange-models/kraken'
+import type { PairPriceUpdate } from 'exchange-models/exchange'
 import { LoggerFactoryService } from 'socket-comms-libs'
 import WebSocket from 'ws'
 import * as kraken from 'kraken-helpers'
-import { Configuration, sleep } from './common'
-
-interface TickerExchangeInterface {
-  createTickSubRequest: { (instruments: string[]): Subscribe }
-  isError: { (event: unknown): event is Error }
-  parseEvent: { (eventData: string): string | Error | PairPriceUpdate }
-  createStopRequest: { (): object }
-  getAvailablePairs: {
-    (exchangeApiUrl: string, threshold: number): Promise<Error | ExchangePair[]>
-  }
-}
+import type { TickerConfiguration, TickerExchangeInterface } from './types'
 
 export let tickService = async (
-  conf: Configuration,
+  conf: TickerConfiguration,
   tickerWS: WebSocket,
   tickCallback: (arg: PairPriceUpdate) => void
 ): Promise<WebSocket> => {
   // configure ticker behavior
-  let isRunning = true
   const logger = new LoggerFactoryService().getLogger('TickService')
+  const sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
+  let isRunning = true
+
   let exi: TickerExchangeInterface
   switch (conf.exchangeName) {
     case 'kraken':
