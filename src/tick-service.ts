@@ -13,8 +13,8 @@ export let tickService = async (
   const logger = new LoggerFactoryService().getLogger('TickService')
   const sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
   let isRunning = true
-
   let exi: TickerExchangeInterface
+  
   switch (conf.exchangeName) {
     case 'kraken':
       exi = {
