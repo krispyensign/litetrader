@@ -1,7 +1,7 @@
 import type { PairPriceUpdate } from 'exchange-models/exchange'
 import { LoggerFactoryService } from 'socket-comms-libs'
 import WebSocket from 'ws'
-import * as kraken from 'kraken-helpers'
+import { getExchangeInterface } from './kraken/tick'
 import type { TickerConfiguration, TickerExchangeInterface } from './types'
 
 export let tickService = async (
@@ -10,36 +10,29 @@ export let tickService = async (
   tickCallback: (arg: PairPriceUpdate) => void
 ): Promise<WebSocket> => {
   // configure ticker behavior
-  const logger = new LoggerFactoryService().getLogger('TickService')
-  const sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
+  let logger = new LoggerFactoryService().getLogger('TickService')
+  let sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
   let isRunning = true
-  let exi: TickerExchangeInterface
-  
-  switch (conf.exchangeName) {
-    case 'kraken':
-      exi = {
-        createTickSubRequest: kraken.createTickSubRequest,
-        isError: kraken.isError,
-        parseEvent: kraken.parseEvent,
-        getAvailablePairs: kraken.getAvailablePairs,
-        createStopRequest: kraken.createStopRequest,
-      }
-      break
-    default:
-      throw Error('Invalid exchange selected')
-  }
+  let exi = ((): TickerExchangeInterface => {
+    switch (conf.exchangeName) {
+      case 'kraken':
+        return getExchangeInterface()
+      default:
+        throw Error('Invalid exchange selected')
+    }
+  })()
 
   // attempt to get available pairs
-  const pairsResponse = await exi.getAvailablePairs(conf.apiUrl, conf.threshold)
+  let pairsResponse = await exi.getAvailablePairs(conf.apiUrl, conf.threshold)
   if (pairsResponse instanceof Error) throw pairsResponse
-  const pairs = pairsResponse.map(p => p.tradename)
+  let pairs = pairsResponse.map(p => p.tradename)
 
   // register handlers
   tickerWS.on('message', async (eventData: string) => {
     if (!isRunning) return
     logger.debug(eventData)
     // attempt to parse the event
-    const event = exi.parseEvent(eventData)
+    let event = exi.parseTick(eventData)
 
     // log then eat any errors
     if (exi.isError(event)) {
