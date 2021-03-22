@@ -45,9 +45,9 @@ export let tickService = async (
 
   // register handlers
   tickerWS.on('message', async (eventData: string) => {
-    // attempt to parse the event
     if (!isRunning) return
     logger.debug(eventData)
+    // attempt to parse the event
     const event = exi.parseEvent(eventData)
 
     // log then eat any errors
