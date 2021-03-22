@@ -1,0 +1,44 @@
+{
+  "name": "litetrader",
+  "version": "0.0.4",
+  "description": "simple platform for crypto exchanges",
+  "dependencies": {
+    "@msgpack/msgpack": "^2.3.0",
+    "exchange-models": "https://gitlab.com/krispyensign/exchange-models/-/archive/v0.0.2/exchange-models-v0.0.2.tar",
+    "kraken-helpers": "https://gitlab.com/krispyensign/kraken-helpers/-/archive/v0.0.5/kraken-helpers-v0.0.5.tar",
+    "socket-comms-libs": "https://gitlab.com/krispyensign/socket-comms-libs/-/archive/v0.0.5/socket-comms-libs-v0.0.5.tar",
+    "source-map-support": "^0.5.19",
+    "winston": "^3.3.3",
+    "ws": "^7.4.2",
+    "yargs": "^16.2.0",
+    "zeromq": "^6.0.0-beta.6"
+  },
+  "devDependencies": {
+    "@types/ws": "^7.4.0",
+    "@types/yargs": "^15.0.12",
+    "@typescript-eslint/eslint-plugin": "^4.12.0",
+    "@typescript-eslint/parser": "^4.12.0",
+    "eslint": "^7.17.0",
+    "eslint-config-prettier": "^7.1.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "prettier": "^2.2.1",
+    "typescript": "^4.1.3"
+  },
+  "scripts": {
+    "start": "node --no-lazy --experimental-specifier-resolution=node ./dist/index.js",
+    "build": "npm i && npx tsc",
+    "fix": "npx prettier -w src/ && npx eslint --fix src/",
+    "clean": "rimraf dist/ node_modules/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/krispyensign/litetrader.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/krispyensign/litetrader/issues"
+  },
+  "homepage": "https://github.com/krispyensign/litetrader#readme"
+}
