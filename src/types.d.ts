@@ -8,11 +8,16 @@ export interface TickerConfiguration {
   exchangeName: ExchangeName
 }
 
-export interface TickerExchangeInterface {
+export interface TickerExchangeDriver {
   createTickSubRequest: { (instruments: string[]): Subscribe }
   parseTick: { (eventData: string): string | PairPriceUpdate }
   createStopRequest: { (): object }
   getAvailablePairs: {
     (exchangeApiUrl: string, threshold: number): Promise<ExchangePair[]>
   }
+}
+
+export interface OrdersExchangeDriver {
+  getReqId(parsedEvent: unknown): string
+  isEvent(parsedEvent: unknown): boolean
 }

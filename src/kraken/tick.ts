@@ -1,7 +1,7 @@
 import type { ExchangePair, PairPriceUpdate } from 'exchange-models/exchange'
 import type { Subscribe, Unsubscribe } from 'exchange-models/kraken'
 import { HttpClient } from 'socket-comms-libs'
-import type { TickerExchangeInterface } from '../types'
+import type { TickerExchangeDriver } from '../types'
 import { isError, isKrakenPair, isLastTick, isPublication, isTicker } from './type-helpers'
 import type { AssetPairsResponse, AssetTicksResponse, ResponseWrapper } from './types'
 
@@ -96,7 +96,7 @@ let getAvailablePairs = async (
   )
 }
 
-export let getExchangeInterface = (): TickerExchangeInterface => ({
+export let getExchangeInterface = (): TickerExchangeDriver => ({
   createStopRequest: (): Unsubscribe => ({
     event: 'unsubscribe',
     subscription: {

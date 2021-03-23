@@ -2,7 +2,7 @@ import type { PairPriceUpdate } from 'exchange-models/exchange'
 import { LoggerFactoryService } from 'socket-comms-libs'
 import WebSocket from 'ws'
 import { getExchangeInterface } from './kraken/tick'
-import type { TickerConfiguration, TickerExchangeInterface } from './types'
+import type { TickerConfiguration, TickerExchangeDriver } from './types'
 
 export let tickService = async (
   conf: TickerConfiguration,
@@ -13,7 +13,7 @@ export let tickService = async (
   let logger = new LoggerFactoryService().getLogger('TickService')
   let sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
   let isRunning = true
-  let exi = ((): TickerExchangeInterface => {
+  let exchangeDriver = ((): TickerExchangeDriver => {
     switch (conf.exchangeName) {
       case 'kraken':
         return getExchangeInterface()
@@ -30,7 +30,7 @@ export let tickService = async (
     // attempt to parse the event
     let event: string | PairPriceUpdate
     try {
-      event = exi.parseTick(eventData)
+      event = exchangeDriver.parseTick(eventData)
     } catch (e) {
       tickerWS.close()
       throw e
@@ -43,7 +43,7 @@ export let tickService = async (
     // unsubscribe from ticker
     logger.info('Got shutdown request')
     isRunning = false
-    tickerWS.send(JSON.stringify(exi.createStopRequest()))
+    tickerWS.send(JSON.stringify(exchangeDriver.createStopRequest()))
     await sleep(10)
     tickerWS.close()
     logger.info('Shutdown complete')
@@ -56,8 +56,8 @@ export let tickService = async (
   // subscribe
   tickerWS.send(
     JSON.stringify(
-      exi.createTickSubRequest(
-        (await exi.getAvailablePairs(conf.apiUrl, conf.threshold)).map(p => p.tradename)
+      exchangeDriver.createTickSubRequest(
+        (await exchangeDriver.getAvailablePairs(conf.apiUrl, conf.threshold)).map(p => p.tradename)
       )
     )
   )
