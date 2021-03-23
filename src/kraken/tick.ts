@@ -1,15 +1,15 @@
-import { ExchangePair, PairPriceUpdate } from 'exchange-models/exchange'
-import { Subscribe, Unsubscribe } from 'exchange-models/kraken'
+import type { ExchangePair, PairPriceUpdate } from 'exchange-models/exchange'
+import type { Subscribe, Unsubscribe } from 'exchange-models/kraken'
 import { HttpClient } from 'socket-comms-libs'
-import { TickerExchangeInterface } from '../types'
+import type { TickerExchangeInterface } from '../types'
 import { isError, isKrakenPair, isLastTick, isPublication, isTicker } from './type-helpers'
-import { AssetPairsResponse, AssetTicksResponse, ResponseWrapper } from './types'
+import type { AssetPairsResponse, AssetTicksResponse, ResponseWrapper } from './types'
 
 let krakenTickerPath = '/0/public/Ticker'
 let krakenPairsPath = '/0/public/AssetPairs'
 // let krakenTokenPath = '/0/private/GetWebSocketsToken'
 
-export let parseTick = (tickData?: string): string | PairPriceUpdate => {
+let parseTick = (tickData?: string): string | PairPriceUpdate => {
   // make sure we got something if not failure during ws message
   if (!tickData) throw Error('TickData missing. Cannot parse.')
 
@@ -40,7 +40,7 @@ export let parseTick = (tickData?: string): string | PairPriceUpdate => {
   return tickData
 }
 
-export let getAvailablePairs = async (
+let getAvailablePairs = async (
   krakenApiUrl: string,
   threshold: number
 ): Promise<ExchangePair[]> => {
@@ -78,51 +78,38 @@ export let getAvailablePairs = async (
 
       // convert from array of kraken pairs to exchange pairs
       .map(
-        ([name, pair], index): ExchangePair =>
-          // createExchangePair(name, index, pair as AssetPair, assetPairTicks[name] as Ticker)
-          ({
-            index: index,
-            tradename: pair.wsname!,
-            name: name,
-            decimals: pair.pair_decimals!,
-            baseName: pair.base!,
-            quoteName: pair.quote!,
-            makerFee: Number(pair.fees_maker![0][1]) / 100,
-            takerFee: Number(pair.fees![0][1]) / 100,
-            volume: assetPairTicks[name].t![0],
-            ask: assetPairTicks[name].a![0],
-            bid: assetPairTicks[name].b![0],
-            ordermin: Number(pair.ordermin),
-          })
+        ([name, pair], index): ExchangePair => ({
+          index: index,
+          tradename: pair.wsname!,
+          name: name,
+          decimals: pair.pair_decimals!,
+          baseName: pair.base!,
+          quoteName: pair.quote!,
+          makerFee: Number(pair.fees_maker![0][1]) / 100,
+          takerFee: Number(pair.fees![0][1]) / 100,
+          volume: assetPairTicks[name].t![0],
+          ask: assetPairTicks[name].a![0],
+          bid: assetPairTicks[name].b![0],
+          ordermin: Number(pair.ordermin),
+        })
       )
   )
 }
 
-export let createStopRequest = (): Unsubscribe => {
-  return {
+export let getExchangeInterface = (): TickerExchangeInterface => ({
+  createStopRequest: (): Unsubscribe => ({
     event: 'unsubscribe',
     subscription: {
       name: '*',
     },
-  }
-}
-
-export let createTickSubRequest = (instruments: string[]): Subscribe => {
-  return {
+  }),
+  createTickSubRequest: (instruments: string[]): Subscribe => ({
     event: 'subscribe',
     pair: instruments,
     subscription: {
       name: 'ticker',
     },
-  }
-}
-
-export let getExchangeInterface = (): TickerExchangeInterface => {
-  return {
-    createStopRequest: createStopRequest,
-    createTickSubRequest: createTickSubRequest,
-    getAvailablePairs: getAvailablePairs,
-    isError: isError,
-    parseTick: parseTick,
-  }
-}
+  }),
+  getAvailablePairs: getAvailablePairs,
+  parseTick: parseTick,
+})

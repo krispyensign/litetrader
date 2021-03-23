@@ -1,4 +1,4 @@
-import { AssetPair, Ticker } from 'exchange-models/kraken'
+import type { AssetPair, Ticker } from 'exchange-models/kraken'
 
 interface Dictionary<T> {
   [key: string]: T

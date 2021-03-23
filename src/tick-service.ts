@@ -22,22 +22,18 @@ export let tickService = async (
     }
   })()
 
-  // attempt to get available pairs
-  let pairsResponse = await exi.getAvailablePairs(conf.apiUrl, conf.threshold)
-  if (pairsResponse instanceof Error) throw pairsResponse
-  let pairs = pairsResponse.map(p => p.tradename)
-
   // register handlers
   tickerWS.on('message', async (eventData: string) => {
     if (!isRunning) return
     logger.debug(eventData)
-    // attempt to parse the event
-    let event = exi.parseTick(eventData)
 
-    // log then eat any errors
-    if (exi.isError(event)) {
+    // attempt to parse the event
+    let event: string | PairPriceUpdate
+    try {
+      event = exi.parseTick(eventData)
+    } catch (e) {
       tickerWS.close()
-      throw Error(eventData)
+      throw e
     }
 
     if (typeof event !== 'string') tickCallback(event)
@@ -58,7 +54,13 @@ export let tickService = async (
   logger.info('Socket ready state: ' + tickerWS.readyState)
 
   // subscribe
-  tickerWS.send(JSON.stringify(exi.createTickSubRequest(pairs)))
+  tickerWS.send(
+    JSON.stringify(
+      exi.createTickSubRequest(
+        (await exi.getAvailablePairs(conf.apiUrl, conf.threshold)).map(p => p.tradename)
+      )
+    )
+  )
   logger.info('Subscription request sent')
 
   return tickerWS

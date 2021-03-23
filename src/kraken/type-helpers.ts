@@ -1,4 +1,4 @@
-import { Ticker, Publication, AssetPair } from 'exchange-models/kraken'
+import type { Ticker, Publication, AssetPair } from 'exchange-models/kraken'
 
 let compareTypes = <U>(o: object, ...propertyNames: (keyof U)[]): boolean | string | undefined => {
   // check if object is undefined
