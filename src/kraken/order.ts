@@ -1,4 +1,5 @@
-import { AddOrderStatus, CancelOrderStatus, SubscriptionStatus } from 'exchange-models/kraken'
+import { OrderCreate } from 'exchange-models/exchange'
+import { AddOrder, AddOrderStatus, CancelOrderStatus, SubscriptionStatus } from 'exchange-models/kraken'
 import { OrdersExchangeDriver } from '../types'
 
 let getReqId = (parsedEvent: AddOrderStatus | CancelOrderStatus | SubscriptionStatus): string => {
@@ -13,7 +14,19 @@ let isStatusEvent = (
   return typedEvent?.event !== undefined && typedEvent.reqid !== undefined
 }
 
+let createOrderRequest = (token: string, order: OrderCreate): AddOrder => ({
+  ordertype: order.orderType,
+  event: 'addOrder',
+  pair: order.pair,
+  token: token,
+  type: order.direction,
+  volume: order.amount.toFixed(20),
+  validate: "true",
+  price: order.price,
+})
+
 export let getExchangeInterface = (): OrdersExchangeDriver => ({
   getReqId: getReqId,
   isEvent: isStatusEvent,
+  createOrderRequest: createOrderRequest,
 })

@@ -1,5 +1,4 @@
-import type { ExchangeName, ExchangePair, PairPriceUpdate } from 'exchange-models/exchange'
-import type { Subscribe } from 'exchange-models/kraken'
+import type { ExchangeName, ExchangePair, OrderCreate, PairPriceUpdate } from 'exchange-models/exchange'
 
 export interface TickerConfiguration {
   threshold: number
@@ -9,7 +8,7 @@ export interface TickerConfiguration {
 }
 
 export interface TickerExchangeDriver {
-  createTickSubRequest: { (instruments: string[]): Subscribe }
+  createTickSubRequest: { (instruments: string[]): object }
   parseTick: { (eventData: string): string | PairPriceUpdate }
   createStopRequest: { (): object }
   getAvailablePairs: {
@@ -20,4 +19,5 @@ export interface TickerExchangeDriver {
 export interface OrdersExchangeDriver {
   getReqId(parsedEvent: unknown): string
   isEvent(parsedEvent: unknown): boolean
+  createOrderRequest(token: string, order: OrderCreate): unknown
 }

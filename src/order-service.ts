@@ -31,7 +31,7 @@ export let orderService = async (
 
     // check if its a status event.  if so then get the reqid for the topic
     if (exchangeDriver.isEvent(parsedEvent)) {
-      logger.info(`==event===> ${eventData}`)
+      logger.info(`event ${eventData}`)
       orderCallback(exchangeDriver.getReqId(parsedEvent), parsedEvent)
     }
   })
