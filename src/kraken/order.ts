@@ -1,5 +1,10 @@
 import { OrderCreate } from 'exchange-models/exchange'
-import { AddOrder, AddOrderStatus, CancelOrderStatus, SubscriptionStatus } from 'exchange-models/kraken'
+import {
+  AddOrder,
+  AddOrderStatus,
+  CancelOrderStatus,
+  SubscriptionStatus,
+} from 'exchange-models/kraken'
 import { OrdersExchangeDriver } from '../types'
 
 let getReqId = (parsedEvent: AddOrderStatus | CancelOrderStatus | SubscriptionStatus): string => {
@@ -21,7 +26,7 @@ let createOrderRequest = (token: string, order: OrderCreate): AddOrder => ({
   token: token,
   type: order.direction,
   volume: order.amount.toFixed(20),
-  validate: "true",
+  validate: 'true',
   price: order.price,
 })
 

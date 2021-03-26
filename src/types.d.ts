@@ -1,4 +1,9 @@
-import type { ExchangeName, ExchangePair, OrderCreate, PairPriceUpdate } from 'exchange-models/exchange'
+import type {
+  ExchangeName,
+  ExchangePair,
+  OrderCreate,
+  PairPriceUpdate,
+} from 'exchange-models/exchange'
 
 export interface TickerConfiguration {
   threshold: number

@@ -7,7 +7,10 @@ import { AddOrderStatus, CancelOrderStatus, SubscriptionStatus } from 'exchange-
 export let orderService = async (
   conf: TickerConfiguration,
   orderWS: WebSocket,
-  orderCallback: (reqid: string, arg: AddOrderStatus | CancelOrderStatus | SubscriptionStatus) => void
+  orderCallback: (
+    reqid: string,
+    arg: AddOrderStatus | CancelOrderStatus | SubscriptionStatus
+  ) => void
 ): Promise<void> => {
   let logger = new LoggerFactoryService().getLogger('OrderService')
   let sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
@@ -35,14 +38,17 @@ export let orderService = async (
       orderCallback(exchangeDriver.getReqId(parsedEvent), parsedEvent)
     }
   })
-  
+
   // add shutdown hook for if running locally
-  process.once('SIGINT', async (): Promise<void> => {
-    logger.info('Got shutdown')
-    isRunning = false
-    orderWS.close()
-    logger.info('Shutdown complete')
-  })
+  process.once(
+    'SIGINT',
+    async (): Promise<void> => {
+      logger.info('Got shutdown')
+      isRunning = false
+      orderWS.close()
+      logger.info('Shutdown complete')
+    }
+  )
 
   // wait for it to connect completely
   while (orderWS.readyState === 0) await sleep(100)
