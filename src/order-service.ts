@@ -1,8 +1,8 @@
-import { LoggerFactoryService } from 'socket-comms-libs'
-import WebSocket from 'ws'
+import WebSocket = require('ws')
 import type { OrdersExchangeDriver, TickerConfiguration } from './types'
 import { getExchangeInterface } from './kraken/order'
 import { AddOrderStatus, CancelOrderStatus, SubscriptionStatus } from 'exchange-models/kraken'
+import { LoggerFactoryService } from './logger'
 
 export let orderService = async (
   conf: TickerConfiguration,

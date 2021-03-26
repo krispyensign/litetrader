@@ -1,7 +1,7 @@
 import type { PairPriceUpdate } from 'exchange-models/exchange'
-import { LoggerFactoryService } from 'socket-comms-libs'
-import WebSocket from 'ws'
+import WebSocket = require('ws')
 import { getExchangeInterface } from './kraken/tick'
+import { LoggerFactoryService } from './logger'
 import type { TickerConfiguration, TickerExchangeDriver } from './types'
 
 export let tickService = async (

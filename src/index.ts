@@ -4,7 +4,7 @@ import * as conf from './config.json'
 import yargs = require('yargs/yargs')
 import { tickService } from './tick-service'
 import { PairPriceUpdate } from 'exchange-models/exchange'
-import WebSocket from 'ws'
+import WebSocket = require('ws')
 import { TickerConfiguration } from './types'
 
 let argv = yargs(process.argv.slice(2)).options({
