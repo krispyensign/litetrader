@@ -3,9 +3,9 @@ require('source-map-support').install()
 import * as conf from './config.json'
 import yargs = require('yargs/yargs')
 import { tickService } from './tick-service'
-import { PairPriceUpdate } from 'exchange-models/exchange'
+import type { PairPriceUpdate } from 'exchange-models/exchange'
 import WebSocket = require('ws')
-import { TickerConfiguration } from './types'
+import type { TickerConfiguration } from './types'
 
 let argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: conf.exchange },

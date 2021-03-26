@@ -3,17 +3,16 @@
   "version": "0.0.4",
   "description": "simple platform for crypto exchanges",
   "dependencies": {
+    "@types/ws": "^7.4.0",
+    "@types/yargs": "^15.0.12",
     "exchange-models": "https://gitlab.com/krispyensign/exchange-models/-/archive/v0.0.2/exchange-models-v0.0.2.tar",
     "got": "^11.8.1",
     "source-map-support": "^0.5.19",
     "winston": "^3.3.3",
     "ws": "^7.4.2",
-    "yargs": "^16.2.0",
-    "zeromq": "^6.0.0-beta.6"
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
-    "@types/ws": "^7.4.0",
-    "@types/yargs": "^15.0.12",
     "@typescript-eslint/eslint-plugin": "^4.12.0",
     "@typescript-eslint/parser": "^4.12.0",
     "eslint": "^7.17.0",
@@ -26,6 +25,7 @@
   "scripts": {
     "start": "node --no-lazy ./dist/index.js",
     "build": "npm i && npx tsc",
+    "release": "npm run clean && npm i --production && npx tsc",
     "fix": "npx prettier -w src/ && npx eslint --fix src/",
     "clean": "rimraf dist/ node_modules/ logs/"
   },
