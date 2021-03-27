@@ -1,21 +1,23 @@
 {
   "compilerOptions": {
-    "alwaysStrict": true,
-    "forceConsistentCasingInFileNames": true,
     "target": "ES5",
     "module": "CommonJS",
+
+    "outDir": "dist/",                          
+    "resolveJsonModule": true,
+    "removeComments": false,
+    "rootDir": "src/",
+    "sourceMap": true,
+
+    "strict": true,         
+    "alwaysStrict": true,
+    "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "noEmitOnError": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "outDir": "dist",                          
-    "resolveJsonModule": true,
-    "removeComments": false,
-    "rootDir": "src",
-    "sourceMap": true,
-    "strict": true,         
+    "noUnusedParameters": true
   },
-  "include": [ "src" ]
+  "include": [ "src/" ]
 }

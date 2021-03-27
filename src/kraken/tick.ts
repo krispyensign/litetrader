@@ -1,6 +1,6 @@
 import type { ExchangePair, PairPriceUpdate } from 'exchange-models/exchange'
 import type { Subscribe, Unsubscribe } from 'exchange-models/kraken'
-import { HttpClient } from '../http-client'
+import { getJson } from '../http-client'
 import type { TickerExchangeDriver } from '../types'
 import { isError, isKrakenPair, isLastTick, isPublication, isTicker } from './type-helpers'
 import type { AssetPairsResponse, AssetTicksResponse, ResponseWrapper } from './types'
@@ -45,7 +45,7 @@ let getAvailablePairs = async (
   threshold: number
 ): Promise<ExchangePair[]> => {
   // get the tradeable asset pairs
-  let assetPairsResult = await HttpClient.getJson<ResponseWrapper>(krakenApiUrl + krakenPairsPath)
+  let assetPairsResult = await getJson<ResponseWrapper>(krakenApiUrl + krakenPairsPath)
 
   if (isError(assetPairsResult)) throw assetPairsResult
 
@@ -53,7 +53,7 @@ let getAvailablePairs = async (
   let assetPairs = Object.entries(assetPairsResult.result) as AssetPairsResponse
 
   // get the last tick for each asset pair
-  let assetPairTicksResult = await HttpClient.getJson<AssetTicksResponse>(
+  let assetPairTicksResult = await getJson<AssetTicksResponse>(
     krakenApiUrl + krakenTickerPath + '?pair=' + assetPairs.map(pair => pair[0]).join(',')
   )
   if (isError(assetPairTicksResult)) throw assetPairTicksResult

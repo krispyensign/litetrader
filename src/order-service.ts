@@ -2,7 +2,7 @@ import WebSocket = require('ws')
 import type { OrdersExchangeDriver, TickerConfiguration } from './types'
 import { getExchangeInterface } from './kraken/order'
 import type { AddOrderStatus, CancelOrderStatus, SubscriptionStatus } from 'exchange-models/kraken'
-import { LoggerFactoryService } from './logger'
+import { getLogger } from './logger'
 
 export let orderService = async (
   conf: TickerConfiguration,
@@ -12,7 +12,7 @@ export let orderService = async (
     arg: AddOrderStatus | CancelOrderStatus | SubscriptionStatus
   ) => void
 ): Promise<void> => {
-  let logger = new LoggerFactoryService().getLogger('OrderService')
+  let logger = getLogger('OrderService')
   let sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
   let isRunning = true
   let exchangeDriver = ((): OrdersExchangeDriver => {

@@ -24,8 +24,7 @@
   },
   "scripts": {
     "start": "node --no-lazy ./dist/index.js",
-    "build": "npm i && npx tsc",
-    "release": "npm run clean && npm i --production && npx tsc",
+    "build": "npx tsc",
     "fix": "npx prettier -w src/ && npx eslint --fix src/",
     "clean": "rimraf dist/ node_modules/ logs/"
   },

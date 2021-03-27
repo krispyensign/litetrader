@@ -14,8 +14,7 @@ let argv = yargs(process.argv.slice(2)).options({
   apiUrl: { type: 'string', default: defaults.apiUrl },
 }).argv
 
-let dummyCallback = (update: PairPriceUpdate): void => {
-  console.log('callback')
+let dummyCallback = (update: string | PairPriceUpdate): void => {
   console.log(update)
 }
 

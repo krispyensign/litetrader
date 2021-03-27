@@ -1,18 +1,14 @@
 import type { PairPriceUpdate } from 'exchange-models/exchange'
 import WebSocket = require('ws')
 import { getExchangeInterface } from './kraken/tick'
-import { LoggerFactoryService } from './logger'
 import type { TickerConfiguration, TickerExchangeDriver } from './types'
 
 export let tickService = async (
   conf: TickerConfiguration,
   tickerWS: WebSocket,
-  tickCallback: (arg: PairPriceUpdate) => void
+  tickCallback: (arg: string | PairPriceUpdate) => void
 ): Promise<WebSocket> => {
   // configure ticker behavior
-  let logger = new LoggerFactoryService().getLogger('TickService')
-  let sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
-  let isRunning = true
   let exchangeDriver = ((): TickerExchangeDriver => {
     switch (conf.exchangeName) {
       case 'kraken':
@@ -22,38 +18,28 @@ export let tickService = async (
     }
   })()
 
-  // register handlers
+  // setup parser handler
   tickerWS.on('message', async (eventData: string) => {
-    if (!isRunning) return
-    logger.debug(eventData)
-
-    // attempt to parse the event
-    let event: string | PairPriceUpdate
+    if (tickerWS.readyState !== WebSocket.OPEN) return
     try {
-      event = exchangeDriver.parseTick(eventData)
+      tickCallback(exchangeDriver.parseTick(eventData))
     } catch (e) {
       tickerWS.close()
       throw e
     }
-
-    if (typeof event !== 'string') tickCallback(event)
   })
 
+  // setup ctrl+c handler for local dev
   process.once('SIGINT', async () => {
     // unsubscribe from ticker
-    logger.info('Got shutdown request')
-    isRunning = false
     tickerWS.send(JSON.stringify(exchangeDriver.createStopRequest()))
-    await sleep(10)
+    await new Promise(resolve => setTimeout(resolve, 10))
     tickerWS.close()
-    logger.info('Shutdown complete')
   })
 
-  // sleep while waiting for client socket state
-  while (tickerWS.readyState === 0) await sleep(100)
-  logger.info('Socket ready state: ' + tickerWS.readyState)
-
-  // subscribe
+  // sleep until WS is stable then subscribe
+  while (tickerWS.readyState !== WebSocket.OPEN)
+    await new Promise(resolve => setTimeout(resolve, 100))
   tickerWS.send(
     JSON.stringify(
       exchangeDriver.createTickSubRequest(
@@ -61,7 +47,5 @@ export let tickService = async (
       )
     )
   )
-  logger.info('Subscription request sent')
-
   return tickerWS
 }
