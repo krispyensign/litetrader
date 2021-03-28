@@ -1,13 +1,12 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('source-map-support').install()
-import * as defaults from './defaults.json'
 import yargs = require('yargs/yargs')
 import * as tickService from './tick-service'
 import type { ExchangeName, PairPriceUpdate } from 'exchange-models/exchange'
 import WebSocket = require('ws')
 
 let argv = yargs(process.argv.slice(2)).options({
-  exchangeName: { type: 'string', default: defaults.exchange },
+  exchangeName: { type: 'string', default: 'kraken' },
 }).argv
 
 let dummyCallback = (update: string | PairPriceUpdate): void => {

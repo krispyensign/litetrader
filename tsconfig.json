@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
     "target": "ES5",
-    "module": "CommonJS",
-
     "outDir": "dist/",                          
     "resolveJsonModule": true,
     "removeComments": false,
