@@ -13,7 +13,6 @@ export let orderService = async (
   ) => void
 ): Promise<void> => {
   let logger = getLogger('OrderService')
-  // let sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
   let exchangeDriver = ((): OrdersExchangeDriver => {
     switch (conf.exchangeName) {
       case 'kraken':
