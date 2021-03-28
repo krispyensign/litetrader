@@ -1,6 +1,3 @@
 {
-  "threshold": 0,
-  "exchange": "kraken",
-  "apiUrl": "https://api.kraken.com",
-  "wsUrl": "wss://ws.kraken.com"
+  "exchange": "kraken"
 }

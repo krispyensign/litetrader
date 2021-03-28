@@ -8,17 +8,15 @@ import type {
 export interface TickerConfiguration {
   threshold: number
   wsUrl: string
-  apiUrl: string
   exchangeName: ExchangeName
 }
 
 export interface TickerExchangeDriver {
-  createTickSubRequest: { (instruments: string[]): object }
-  parseTick: { (eventData: string): string | PairPriceUpdate }
-  createStopRequest: { (): object }
-  getAvailablePairs: {
-    (exchangeApiUrl: string, threshold: number): Promise<ExchangePair[]>
-  }
+  createTickSubRequest: () => Promise<object>
+  parseTick: (eventData: string) => string | PairPriceUpdate
+  createStopRequest: () => Promise<object>
+  getAvailablePairs: (threshold?: number) => Promise<ExchangePair[]>
+  getWebSocketUrl: () => string
 }
 
 export interface OrdersExchangeDriver {

@@ -13,8 +13,7 @@ export let orderService = async (
   ) => void
 ): Promise<void> => {
   let logger = getLogger('OrderService')
-  let sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
-  let isRunning = true
+  // let sleep = (ms: number): Promise<unknown> => new Promise(resolve => setTimeout(resolve, ms))
   let exchangeDriver = ((): OrdersExchangeDriver => {
     switch (conf.exchangeName) {
       case 'kraken':
@@ -26,7 +25,7 @@ export let orderService = async (
 
   // setup the message event
   orderWS.on('message', async (eventData: string) => {
-    if (!isRunning) return
+    if (orderWS.readyState !== WebSocket.OPEN) return
     logger.info(eventData)
 
     // parse it
@@ -44,13 +43,11 @@ export let orderService = async (
     'SIGINT',
     async (): Promise<void> => {
       logger.info('Got shutdown')
-      isRunning = false
       orderWS.close()
       logger.info('Shutdown complete')
     }
   )
 
   // wait for it to connect completely
-  while (orderWS.readyState === 0) await sleep(100)
-  logger.info('Socket ready state: ' + orderWS.readyState)
+  while (orderWS.readyState === 0) await new Promise(resolve => setTimeout(resolve, 100))
 }

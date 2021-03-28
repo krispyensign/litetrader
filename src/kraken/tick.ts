@@ -7,6 +7,8 @@ import type { AssetPairsResponse, AssetTicksResponse, ResponseWrapper } from './
 
 let krakenTickerPath = '/0/public/Ticker'
 let krakenPairsPath = '/0/public/AssetPairs'
+let krakenApiUrl = 'https://api.kraken.com'
+let krakenWsUrl = 'wss://ws.kraken.com'
 // let krakenTokenPath = '/0/private/GetWebSocketsToken'
 
 let parseTick = (tickData?: string): string | PairPriceUpdate => {
@@ -40,11 +42,9 @@ let parseTick = (tickData?: string): string | PairPriceUpdate => {
   return tickData
 }
 
-let getAvailablePairs = async (
-  krakenApiUrl: string,
-  threshold: number
-): Promise<ExchangePair[]> => {
+let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
   // get the tradeable asset pairs
+  if (threshold === undefined || threshold === null) threshold = 0
   let assetPairsResult = await getJson<ResponseWrapper>(krakenApiUrl + krakenPairsPath)
 
   if (isError(assetPairsResult)) throw assetPairsResult
@@ -73,7 +73,7 @@ let getAvailablePairs = async (
           isKrakenPair(name, pair) &&
           isLastTick(name, assetPairTicks[name]) &&
           assetPairTicks[name]?.t?.[0] !== undefined &&
-          assetPairTicks[name].t![0] > threshold
+          assetPairTicks[name].t![0] > threshold!
       )
 
       // convert from array of kraken pairs to exchange pairs
@@ -97,19 +97,21 @@ let getAvailablePairs = async (
 }
 
 export let getExchangeInterface = (): TickerExchangeDriver => ({
-  createStopRequest: (): Unsubscribe => ({
+  createStopRequest: async (): Promise<Unsubscribe> => ({
     event: 'unsubscribe',
+    pair: (await getAvailablePairs()).map(p => p.tradename),
     subscription: {
-      name: '*',
+      name: 'ticker',
     },
   }),
-  createTickSubRequest: (instruments: string[]): Subscribe => ({
+  createTickSubRequest: async (): Promise<Subscribe> => ({
     event: 'subscribe',
-    pair: instruments,
+    pair: (await getAvailablePairs()).map(p => p.tradename),
     subscription: {
       name: 'ticker',
     },
   }),
   getAvailablePairs: getAvailablePairs,
   parseTick: parseTick,
+  getWebSocketUrl: (): string => krakenWsUrl,
 })

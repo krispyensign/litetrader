@@ -1,51 +1,38 @@
-import type { PairPriceUpdate } from 'exchange-models/exchange'
+import type { ExchangeName, PairPriceUpdate } from 'exchange-models/exchange'
 import WebSocket = require('ws')
-import { getExchangeInterface } from './kraken/tick'
-import type { TickerConfiguration, TickerExchangeDriver } from './types'
+import * as kraken from './kraken/tick'
+import type { TickerExchangeDriver } from './types'
+
+export let selectExchangeDriver = (exchangeName: ExchangeName): TickerExchangeDriver => {
+  switch (exchangeName) {
+    case 'kraken':
+      return kraken.getExchangeInterface()
+    default:
+      throw Error('Invalid exchange selected')
+  }
+}
+
+export let shutdownTickService = async (
+  tickerWS: WebSocket,
+  exchangeDriver: TickerExchangeDriver
+): Promise<void> => {
+  // unsubscribe from ticker
+  tickerWS.send(JSON.stringify(await exchangeDriver.createStopRequest()))
+}
 
 export let tickService = async (
-  conf: TickerConfiguration,
+  exchangeDriver: TickerExchangeDriver,
   tickerWS: WebSocket,
   tickCallback: (arg: string | PairPriceUpdate) => void
 ): Promise<WebSocket> => {
-  // configure ticker behavior
-  let exchangeDriver = ((): TickerExchangeDriver => {
-    switch (conf.exchangeName) {
-      case 'kraken':
-        return getExchangeInterface()
-      default:
-        throw Error('Invalid exchange selected')
-    }
-  })()
-
   // setup parser handler
-  tickerWS.on('message', async (eventData: string) => {
-    if (tickerWS.readyState !== WebSocket.OPEN) return
-    try {
-      tickCallback(exchangeDriver.parseTick(eventData))
-    } catch (e) {
-      tickerWS.close()
-      throw e
-    }
-  })
-
-  // setup ctrl+c handler for local dev
-  process.once('SIGINT', async () => {
-    // unsubscribe from ticker
-    tickerWS.send(JSON.stringify(exchangeDriver.createStopRequest()))
-    await new Promise(resolve => setTimeout(resolve, 10))
-    tickerWS.close()
-  })
+  tickerWS.on('message', async (eventData: string) =>
+    tickCallback(exchangeDriver.parseTick(eventData))
+  )
 
   // sleep until WS is stable then subscribe
   while (tickerWS.readyState !== WebSocket.OPEN)
     await new Promise(resolve => setTimeout(resolve, 100))
-  tickerWS.send(
-    JSON.stringify(
-      exchangeDriver.createTickSubRequest(
-        (await exchangeDriver.getAvailablePairs(conf.apiUrl, conf.threshold)).map(p => p.tradename)
-      )
-    )
-  )
+  tickerWS.send(JSON.stringify(await exchangeDriver.createTickSubRequest()))
   return tickerWS
 }
