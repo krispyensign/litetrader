@@ -7,6 +7,8 @@ import {
 } from 'exchange-models/kraken'
 import { OrdersExchangeDriver } from '../types'
 
+let krakenWsUrl = 'wss://ws-auth.kraken.com'
+
 let getReqId = (parsedEvent: AddOrderStatus | CancelOrderStatus | SubscriptionStatus): string => {
   return parsedEvent.reqid?.toString() || '0'
 }
@@ -34,4 +36,6 @@ export let getExchangeInterface = (): OrdersExchangeDriver => ({
   getReqId: getReqId,
   isEvent: isStatusEvent,
   createOrderRequest: createOrderRequest,
+  parseEvent: (eventData: string) => eventData,
+  getWebSocketUrl: (): string => krakenWsUrl
 })
