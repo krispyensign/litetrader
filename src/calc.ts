@@ -1,11 +1,11 @@
-import {
+import type {
   ExchangePair,
   IndexedPair,
   OrderCreateRequest,
   PairPriceUpdate,
   PricedPair,
 } from 'exchange-models/exchange'
-import { TickerExchangeDriver } from './types'
+import type { TickerExchangeDriver } from './types'
 
 let getPairByAssets = (
   first: string,
@@ -53,30 +53,17 @@ export let updatePair = (
   pair.bid = pairUpdate.bid
 }
 
-let setupAssetsFromPairs = (pairs: ExchangePair[]): string[] => {
-  // add baseName and quoteName as unique items
-  return [
+export let setupData = async (
+  tickDriver: TickerExchangeDriver
+): Promise<[string[], IndexedPair[], Map<string, number>]> => {
+  let pairs = await tickDriver.getAvailablePairs()
+  let assets = [
     ...pairs.reduce<Set<string>>(
       (prev, pair) => prev.add(pair.baseName).add(pair.quoteName),
       new Set()
     ),
   ]
-}
-
-let setupLookupMapFromPairs = (pairs: ExchangePair[]): Map<string, number> => {
-  return new Map<string, number>(
-    pairs.map(pair => [[pair.baseName, pair.quoteName].join(','), pair.index])
-  )
-}
-
-let setupMapFromPairs = (pairs: ExchangePair[]): Map<string, number> => {
-  // create a mapping of pair names -> index for fast lookup
-  return new Map<string, number>(pairs.map((pair, index) => [pair.tradename, index]))
-}
-
-let setupPairsWithAssetCodes = (pairs: ExchangePair[], assets: string[]): IndexedPair[] => {
-  // for each pair create a new pair with a base and quote index
-  let indexedpairs = pairs.map((pair: ExchangePair) => {
+  let indexedPairs = pairs.map((pair: ExchangePair) => {
     // attempt to get the baseIndex
     let baseIndex = assets.indexOf(pair.baseName)
     if (baseIndex === undefined)
@@ -90,22 +77,53 @@ let setupPairsWithAssetCodes = (pairs: ExchangePair[], assets: string[]): Indexe
     // update the pair with the new values
     return { ...pair, baseIndex: baseIndex, quoteIndex: quoteIndex }
   })
-
-  // return as updated pairs with indices
-  return indexedpairs
-}
-
-export let setupData = async (
-  tickDriver: TickerExchangeDriver
-): Promise<[string[], IndexedPair[], Map<string, number>]> => {
-  let pairs = await tickDriver.getAvailablePairs()
-  let assets = setupAssetsFromPairs(pairs)
-  let indexedPairs = setupPairsWithAssetCodes(pairs, assets)
   let pairMap = new Map([
-    ...setupMapFromPairs(indexedPairs),
-    ...setupLookupMapFromPairs(indexedPairs),
+    ...new Map<string, number>(indexedPairs.map((pair, index) => [pair.tradename, index])),
+    ...new Map<string, number>(
+      indexedPairs.map(pair => [[pair.baseName, pair.quoteName].join(','), pair.index])
+    ),
   ])
   return [assets, indexedPairs, pairMap]
+}
+
+interface Recipe {
+  initialAmount: number
+  initialAssetIndex: number
+  initialAssetName: string
+  steps: OrderCreateRequest[]
+  guardList: string[]
+}
+
+let createRecipe = (
+  cycle: string[],
+  assets: string[],
+  pairs: PricedPair[],
+  pairMap: Map<string, number>,
+  initialAmount: number
+): Recipe => {
+  let pairList = cycle
+    .slice(1)
+    .map((value, index) =>
+      getPairByAssets(assets[Number(cycle[index])], assets[Number(value)], pairs, pairMap)
+    )
+
+  return {
+    initialAmount: initialAmount,
+    initialAssetIndex: Number(cycle[0]),
+    initialAssetName: assets[Number(cycle[0])],
+    steps: pairList.map(
+      (pair: PricedPair): OrderCreateRequest => ({
+        amount: 0,
+        direction: 'buy',
+        event: 'create',
+        orderId: '0',
+        orderType: 'market',
+        pair: pair.tradename,
+        price: 0,
+      })
+    ),
+    guardList: pairList.map((pair: PricedPair): string => pair.tradename),
+  }
 }
 
 let safeRound = (num: number, decimals: number): number => {
@@ -193,46 +211,6 @@ let calcProfit = (
 
   // return current amount
   return currentAmount
-}
-
-interface Recipe {
-  initialAmount: number
-  initialAssetIndex: number
-  initialAssetName: string
-  steps: OrderCreateRequest[]
-  guardList: string[]
-}
-
-let createRecipe = (
-  cycle: string[],
-  assets: string[],
-  pairs: PricedPair[],
-  pairMap: Map<string, number>,
-  initialAmount: number
-): Recipe => {
-  let pairList = cycle
-    .slice(1)
-    .map((value, index) =>
-      getPairByAssets(assets[Number(cycle[index])], assets[Number(value)], pairs, pairMap)
-    )
-
-  return {
-    initialAmount: initialAmount,
-    initialAssetIndex: Number(cycle[0]),
-    initialAssetName: assets[Number(cycle[0])],
-    steps: pairList.map(
-      (pair: PricedPair): OrderCreateRequest => ({
-        amount: 0,
-        direction: 'buy',
-        event: 'create',
-        orderId: '0',
-        orderType: 'market',
-        pair: pair.tradename,
-        price: 0,
-      })
-    ),
-    guardList: pairList.map((pair: PricedPair): string => pair.tradename),
-  }
 }
 
 // calculates if a recipe is profitable or not
