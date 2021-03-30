@@ -40,6 +40,7 @@ export let updatePair = (
   pairUpdate: PairPriceUpdate | string
 ): void => {
   if (typeof pairUpdate === 'string') return
+  console.log(pairUpdate)
   let pair = fastLookup(pairUpdate.tradeName!, pairMap, indexedPairs)
   pair.ask = pairUpdate.ask
   pair.bid = pairUpdate.bid
