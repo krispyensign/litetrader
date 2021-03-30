@@ -5,7 +5,7 @@
   "dependencies": {
     "@types/ws": "^7.4.0",
     "@types/yargs": "^15.0.12",
-    "exchange-models": "https://gitlab.com/krispyensign/exchange-models/-/archive/v0.0.2/exchange-models-v0.0.2.tar",
+    "exchange-models": "https://gitlab.com/krispyensign/exchange-models/-/archive/v0.0.3/exchange-models-v0.0.3.tar",
     "got": "^11.8.1",
     "source-map-support": "^0.5.19",
     "winston": "^3.3.3",

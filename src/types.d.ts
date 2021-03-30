@@ -1,7 +1,8 @@
 import type {
   ExchangeName,
   ExchangePair,
-  OrderCreate,
+  OrderCreateRequest,
+  OrderCancelRequest,
   PairPriceUpdate,
 } from 'exchange-models/exchange'
 
@@ -20,9 +21,10 @@ export interface TickerExchangeDriver {
 }
 
 export interface OrdersExchangeDriver {
-  parseEvent(eventData: string): string | [string, any];
+  parseEvent(eventData: string): string | [string, any]
   getReqId(parsedEvent: unknown): string
   isEvent(parsedEvent: unknown): boolean
-  createOrderRequest(token: string, order: OrderCreate): unknown
+  createOrderRequest(token: string, order: OrderCreateRequest): unknown
+  cancelOrderRequest(token: string, cancel: OrderCancelRequest): unknown
   getWebSocketUrl: () => string
 }

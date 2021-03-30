@@ -1,7 +1,8 @@
-import { OrderCreate } from 'exchange-models/exchange'
+import { OrderCancelRequest, OrderCreateRequest } from 'exchange-models/exchange'
 import {
   AddOrder,
   AddOrderStatus,
+  CancelOrder,
   CancelOrderStatus,
   SubscriptionStatus,
 } from 'exchange-models/kraken'
@@ -21,7 +22,7 @@ let isStatusEvent = (
   return typedEvent?.event !== undefined && typedEvent.reqid !== undefined
 }
 
-let createOrderRequest = (token: string, order: OrderCreate): AddOrder => ({
+let createOrderRequest = (token: string, order: OrderCreateRequest): AddOrder => ({
   ordertype: order.orderType,
   event: 'addOrder',
   pair: order.pair,
@@ -32,10 +33,17 @@ let createOrderRequest = (token: string, order: OrderCreate): AddOrder => ({
   price: order.price,
 })
 
+let cancelOrderRequest = (token: string, cancel: OrderCancelRequest): CancelOrder => ({
+  event: 'cancelOrder',
+  token: token,
+  txid: [cancel.orderId!],
+})
+
 export let getExchangeInterface = (): OrdersExchangeDriver => ({
   getReqId: getReqId,
   isEvent: isStatusEvent,
   createOrderRequest: createOrderRequest,
-  parseEvent: (eventData: string) => eventData,
-  getWebSocketUrl: (): string => krakenWsUrl
+  cancelOrderRequest: cancelOrderRequest,
+  parseEvent: (eventData: string): string => eventData,
+  getWebSocketUrl: (): string => krakenWsUrl,
 })
