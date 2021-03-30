@@ -11,6 +11,7 @@
     "strict": true,         
     "alwaysStrict": true,
     "forceConsistentCasingInFileNames": true,
+
     "noImplicitAny": true,
     "noEmitOnError": true,
     "noImplicitReturns": true,
