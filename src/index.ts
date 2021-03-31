@@ -57,11 +57,19 @@ let app = async (
   // calc profit on new line from stdin
   // setup the reader to process the cycles from external script 1,2,3,4 etc..
   rl.on('line', line => {
-    if (line === 'done')
-      process.exit(0)
+    if (line === 'done') process.exit(0)
     let cycle = line.split(',')
     if (cycle.length < 4) return
-    let result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, indexedPairs, pairMap, eta, '0')
+    let result = calcProfit(
+      initialAssetIndex,
+      initialAmount,
+      cycle,
+      assets,
+      indexedPairs,
+      pairMap,
+      eta,
+      '0'
+    )
     if (typeof result !== 'number') {
       console.log(result)
       process.exit(0)

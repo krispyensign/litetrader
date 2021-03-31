@@ -7,48 +7,14 @@ import type {
 } from 'exchange-models/exchange'
 import type { TickerExchangeDriver, Recipe } from './types'
 
-let getPairByAssets = (
-  first: string,
-  second: string,
-  pairs: PricedPair[],
-  pairLookup: Map<string, number>
-): PricedPair => {
-  // try first/second else second/first
-  let index = pairLookup.get(`${first},${second}`) ?? pairLookup.get(`${second},${first}`)
-
-  // if not found then fail
-  if (index === undefined) throw Error(`Invalid pair requested. quote: ${first}, ${second}`)
-
-  // return the lookup value on success
-  return pairs[index]
-}
-
-let fastLookup = (
-  key: string,
-  mapping: Map<string, number>,
-  resources: PricedPair[]
-): PricedPair => {
-  // try to look it up
-  let resourceIndex = mapping.get(key)
-
-  // try to resolve the resource from the calculated index
-  let resource = resourceIndex !== undefined ? resources[resourceIndex] : null
-
-  // error if the lookup failed
-  if (resource === undefined || resource === null) throw Error(`Invalid pair encountered. ${key}`)
-
-  // return the resource on success
-  return resource
-}
-
 export let updatePair = (
-  pairMap: Map<string, number>,
   indexedPairs: PricedPair[],
   pairUpdate: PairPriceUpdate | string
 ): void => {
   if (typeof pairUpdate === 'string') return
   console.log(pairUpdate)
-  let pair = fastLookup(pairUpdate.tradeName!, pairMap, indexedPairs)
+  let pair = indexedPairs.find(i => i.tradename === pairUpdate.tradeName)
+  if (pair === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
   pair.ask = pairUpdate.ask
   pair.bid = pairUpdate.bid
 }
@@ -66,12 +32,12 @@ export let setupData = async (
   let indexedPairs = pairs.map((pair: ExchangePair) => {
     // attempt to get the baseIndex
     let baseIndex = assets.indexOf(pair.baseName)
-    if (baseIndex === undefined)
+    if (baseIndex === -1)
       throw Error(`${pair.baseName}: baseIndex of pair ${pair.index}, ${pair.name} missing`)
 
     // attempt to get the quoteIndex
     let quoteIndex = assets.indexOf(pair.quoteName)
-    if (quoteIndex === undefined)
+    if (quoteIndex === -1)
       throw Error(`${pair.quoteName}: quoteIndex of pair ${pair.index}, ${pair.name} missing`)
 
     // update the pair with the new values
@@ -94,7 +60,6 @@ let safeDivide = (numA: number, numB: number): number => {
   return numB !== 0 ? numA / numB : 0
 }
 
-// calculates if a recipe is profitable or not
 export let calcProfit = (
   initialAssetIndex: number,
   initialAmount: number,
@@ -106,11 +71,18 @@ export let calcProfit = (
   orderId: string
 ): [number, Recipe] | number => {
   // initialize everything
-  let pairList = cycle
-    .slice(1)
-    .map((value, index) =>
-      getPairByAssets(assets[Number(cycle[index])], assets[Number(value)], pairs, pairMap)
-    )
+  let pairList = cycle.slice(1).map((value, index) => {
+    // try first/second else second/first
+    let tempA = assets[Number(cycle[index])]
+    let tempB = assets[Number(value)]
+    let indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
+
+    // if not found then fail
+    if (indo === undefined) throw Error(`Invalid pair requested. quote: ${tempA}, ${tempB}`)
+
+    // return the lookup value on success
+    return pairs[indo]
+  })
 
   let recipe: Recipe = {
     initialAmount: initialAmount,
@@ -118,7 +90,7 @@ export let calcProfit = (
     initialAssetName: assets[initialAssetIndex],
     guardList: pairList.map(p => p.tradename),
     steps: new Array<OrderCreateRequest>(),
-  };
+  }
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
 
@@ -145,7 +117,7 @@ export let calcProfit = (
 
     // if current exposure is in base asset then create a sell order
     if (currentAsset === pair.baseIndex) {
-      recipe.steps.push({
+      let step: OrderCreateRequest = {
         // round to correct units (placing order in base currency units)
         amount: safeRound(currentAmount, pair.decimals),
         // this is a sell
@@ -154,13 +126,14 @@ export let calcProfit = (
         orderType: 'market',
         pair: pair.tradename,
         price: pair.bid,
-        orderId: orderId
-      })
+        orderId: orderId,
+      }
+      recipe.steps.push(step)
 
       // change the current asset from the base to the quote
       currentAsset = pair.quoteIndex
       // result amount is in quote currency units
-      currentAmount = safeRound(currentAmount, pair.decimals) * pair.bid * (1 - pair.takerFee) * (1 - eta)
+      currentAmount = step.amount * pair.bid * (1 - pair.takerFee) * (1 - eta)
     }
     // if current exposure is in quote asset then create a buy order
     else {
@@ -174,24 +147,19 @@ export let calcProfit = (
         orderId: orderId,
         orderType: 'market',
         pair: pair.tradename,
-        price: pair.ask
+        price: pair.ask,
       }
       recipe.steps.push(step)
 
       // set the current asset to the next base code
       currentAsset = pair.baseIndex
       // calculate the next current amount using the derived price
-      currentAmount = safeRound(
-        safeDivide(currentAmount, pair.ask * (1 + pair.takerFee) * (1 + eta)),
-        pair.decimals
-      )
+      currentAmount = step.amount
     }
   }
 
   // if profitable return the amount and recipe else just the amount
   // this will cause the recipe to get garbage collected seperately
-  if (currentAmount > initialAmount)
-    return [currentAmount, recipe]
+  if (currentAmount > initialAmount) return [currentAmount, recipe]
   return currentAmount
 }
-
