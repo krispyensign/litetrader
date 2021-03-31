@@ -5,7 +5,7 @@ import yargs = require('yargs/yargs')
 import type { ExchangeName } from 'exchange-models/exchange'
 import WebSocket = require('ws')
 import { selector } from './select'
-import { updatePair, setupData } from './calc'
+import { updatePair, setupData, calcProfit } from './calc'
 
 let argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },
@@ -20,10 +20,14 @@ let app = async (
   initialAsset: string,
   eta: number
 ): Promise<[WebSocket, WebSocket, readline.Interface]> => {
+  // configure everything
   let [tickDriver, orderDriver] = selector(exchangeName)
   let tickws = new WebSocket(tickDriver.getWebSocketUrl())
   let orderws = new WebSocket(orderDriver.getWebSocketUrl())
   let [assets, indexedPairs, pairMap] = await setupData(tickDriver)
+  if (argv.initialAsset === null) throw Error('Invalid asset provided')
+  let initialAssetIndex = assets.findIndex(a => a === initialAsset)
+  if (initialAssetIndex === -1) throw Error(`invalid asset ${initialAsset}`)
   let rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -50,9 +54,19 @@ let app = async (
     await new Promise(resolve => setTimeout(resolve, 100))
   tickws.send(JSON.stringify(await tickDriver.createTickSubRequest()))
 
+  // calc profit on new line from stdin
   // setup the reader to process the cycles from external script 1,2,3,4 etc..
-  if (initialAsset === null) throw Error('Invalid asset provided')
-  rl.on('line', line => console.log(line))
+  rl.on('line', line => {
+    if (line === 'done')
+      process.exit(0)
+    let cycle = line.split(',')
+    if (cycle.length < 4) return
+    let result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, indexedPairs, pairMap, eta, '0')
+    if (typeof result !== 'number') {
+      console.log(result)
+      process.exit(0)
+    }
+  })
 
   // return configured sockets and stdin reader
   return [tickws, orderws, rl]

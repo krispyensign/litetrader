@@ -28,3 +28,11 @@ export interface OrdersExchangeDriver {
   cancelOrderRequest(token: string, cancel: OrderCancelRequest): unknown
   getWebSocketUrl: () => string
 }
+
+interface Recipe {
+  initialAmount: number
+  initialAssetIndex: number
+  initialAssetName: string
+  steps: OrderCreateRequest[]
+  guardList: string[]
+}
