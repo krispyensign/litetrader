@@ -30,7 +30,7 @@ let app = async (
     output: process.stdout,
     terminal: false,
   })
-  
+
   // do some error handling
   if (argv.initialAsset === null) throw Error('Invalid asset provided')
   let initialAssetIndex = assets.findIndex(a => a === initialAsset)
@@ -40,10 +40,10 @@ let app = async (
   let shutdown = async (): Promise<void> => {
     // unsubsribe from everything
     tickws.send(JSON.stringify(await tick.createStopRequest()))
-    
+
     // wait for unsubsribe command to be sent
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     // kill the connections ( will also kill detached threads and thus the app )
     tickws.close()
     orderws.close()
@@ -57,13 +57,13 @@ let app = async (
   rl.on('line', async line => {
     // if input gives done then quit
     if (line === 'done') await shutdown()
-    
+
     // split a string 1,2,3,... into [1, 2, 3, ...]
     let cycle = line.split(',')
-    
+
     // cannot hedge so skip anything less than 4
     if (cycle.length < 4) return
-    
+
     // calc profit, hopefully something good is found
     let result = calcProfit(
       initialAssetIndex,
@@ -82,11 +82,11 @@ let app = async (
       await shutdown()
     }
   })
-  
+
   // sleep until tick websocket is stable then subscribe
   while (tickws.readyState !== WebSocket.OPEN)
     await new Promise(resolve => setTimeout(resolve, 100))
-  
+
   // subscribe to all the available pairs
   tickws.send(JSON.stringify(await tick.createTickSubRequest()))
 
