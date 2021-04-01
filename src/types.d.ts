@@ -21,7 +21,7 @@ export interface TickerExchangeDriver {
 }
 
 export interface OrdersExchangeDriver {
-  parseEvent(eventData: string): string | [string, any]
+  parseEvent(eventData: string): string | [string, unknown]
   getReqId(parsedEvent: unknown): string
   isEvent(parsedEvent: unknown): boolean
   createOrderRequest(token: string, order: OrderCreateRequest): unknown

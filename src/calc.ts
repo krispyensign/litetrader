@@ -12,7 +12,6 @@ export let updatePair = (
   pairUpdate: PairPriceUpdate | string
 ): void => {
   if (typeof pairUpdate === 'string') return
-  console.log(pairUpdate)
   let pair = indexedPairs.find(i => i.tradename === pairUpdate.tradeName)
   if (pair === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
   pair.ask = pairUpdate.ask

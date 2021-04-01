@@ -21,10 +21,10 @@ let app = async (
   eta: number
 ): Promise<[WebSocket, WebSocket, readline.Interface]> => {
   // configure everything
-  let [tickDriver, orderDriver] = selector(exchangeName)
-  let tickws = new WebSocket(tickDriver.getWebSocketUrl())
-  let orderws = new WebSocket(orderDriver.getWebSocketUrl())
-  let [assets, indexedPairs, pairMap] = await setupData(tickDriver)
+  let [tick, order] = selector(exchangeName)
+  let tickws = new WebSocket(tick.getWebSocketUrl())
+  let orderws = new WebSocket(order.getWebSocketUrl())
+  let [assets, pairs, pairMap] = await setupData(tick)
   if (argv.initialAsset === null) throw Error('Invalid asset provided')
   let initialAssetIndex = assets.findIndex(a => a === initialAsset)
   if (initialAssetIndex === -1) throw Error(`invalid asset ${initialAsset}`)
@@ -34,30 +34,20 @@ let app = async (
     terminal: false,
   })
 
-  // setup ctrl+c handler for dev
-  process.on('SIGINT', async () => {
-    tickws.send(JSON.stringify(await tickDriver.createStopRequest()))
+  let shutdown = async (): Promise<void> => {
+    tickws.send(JSON.stringify(await tick.createStopRequest()))
+    await new Promise(resolve => setTimeout(resolve, 100))
     tickws.close()
     orderws.close()
     rl.close()
-    console.log('done')
-  })
+  }
 
-  // setup callback handlers
-  tickws.on('message', async (eventData: string) =>
-    updatePair(pairMap, indexedPairs, tickDriver.parseTick(eventData))
-  )
-  orderws.on('message', async (eventData: string) => console.log(orderDriver.parseEvent(eventData)))
-
-  // sleep until tick websocket is stable then subscribe
-  while (tickws.readyState !== WebSocket.OPEN)
-    await new Promise(resolve => setTimeout(resolve, 100))
-  tickws.send(JSON.stringify(await tickDriver.createTickSubRequest()))
-
-  // calc profit on new line from stdin
-  // setup the reader to process the cycles from external script 1,2,3,4 etc..
-  rl.on('line', line => {
-    if (line === 'done') process.exit(0)
+  // setup ctrl+c handler for dev
+  process.on('SIGINT', async () => await shutdown())
+  tickws.on('message', async (eventData: string) => updatePair(pairs, tick.parseTick(eventData)))
+  orderws.on('message', async (eventData: string) => console.log(order.parseEvent(eventData)))
+  rl.on('line', async line => {
+    if (line === 'done') await shutdown()
     let cycle = line.split(',')
     if (cycle.length < 4) return
     let result = calcProfit(
@@ -65,16 +55,21 @@ let app = async (
       initialAmount,
       cycle,
       assets,
-      indexedPairs,
+      pairs,
       pairMap,
       eta,
       '0'
     )
     if (typeof result !== 'number') {
       console.log(result)
-      process.exit(0)
+      await shutdown()
     }
   })
+  
+  // sleep until tick websocket is stable then subscribe
+  while (tickws.readyState !== WebSocket.OPEN)
+    await new Promise(resolve => setTimeout(resolve, 100))
+  tickws.send(JSON.stringify(await tick.createTickSubRequest()))
 
   // return configured sockets and stdin reader
   return [tickws, orderws, rl]
