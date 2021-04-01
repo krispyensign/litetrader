@@ -9,7 +9,6 @@ export let selector = (
   switch (exchangeName) {
     case 'kraken':
       return [krakenTick.getExchangeInterface(), krakenOrder.getExchangeInterface()]
-      break
     default:
       throw Error('Invalid exchange selected')
   }
