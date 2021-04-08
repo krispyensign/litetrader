@@ -1,10 +1,47 @@
-import type {
+import {
   ExchangeName,
   ExchangePair,
-  OrderCreateRequest,
   OrderCancelRequest,
+  OrderCreateRequest,
   PairPriceUpdate,
 } from 'exchange-models/exchange'
+
+import type { AssetPair, Ticker } from 'exchange-models/kraken'
+
+export type {
+  IndexedPair,
+  PricedPair,
+  ExchangePair,
+  PairPriceUpdate,
+  OrderCancelRequest,
+  OrderCreateRequest,
+  ExchangeName
+} from 'exchange-models/exchange'
+
+export type {
+  AddOrder,
+  AddOrderStatus,
+  CancelOrder,
+  CancelOrderStatus,
+  SubscriptionStatus,
+  Subscribe,
+  Unsubscribe,
+  AssetPair,
+  Ticker,
+  Publication,
+} from 'exchange-models/kraken'
+
+export interface Dictionary<T> {
+  [key: string]: T
+}
+
+export type AssetPairsResponse = [string, Partial<AssetPair>][]
+export type AssetTicksResponse = ResponseWrapper<Dictionary<Partial<Ticker>>>
+
+export interface ResponseWrapper<T = object> {
+  error: string[]
+  result: T
+}
 
 export interface TickerConfiguration {
   threshold: number
@@ -29,7 +66,7 @@ export interface OrdersExchangeDriver {
   getWebSocketUrl: () => string
 }
 
-interface Recipe {
+export interface Recipe {
   initialAmount: number
   initialAssetIndex: number
   initialAssetName: string

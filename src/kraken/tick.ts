@@ -1,9 +1,15 @@
-import type { ExchangePair, PairPriceUpdate } from 'exchange-models/exchange'
-import type { Subscribe, Unsubscribe } from 'exchange-models/kraken'
 import { getJson } from '../helpers'
-import type { TickerExchangeDriver } from '../types'
 import { isError, isKrakenPair, isLastTick, isPublication, isTicker } from './type-helpers'
-import type { AssetPairsResponse, AssetTicksResponse, ResponseWrapper } from './types'
+import type {
+  PairPriceUpdate,
+  ExchangePair,
+  ResponseWrapper,
+  AssetPairsResponse,
+  AssetTicksResponse,
+  TickerExchangeDriver,
+  Unsubscribe,
+  Subscribe,
+} from '../types'
 
 let krakenTickerPath = '/0/public/Ticker'
 let krakenPairsPath = '/0/public/AssetPairs'

@@ -1,10 +1,11 @@
 import type {
+  TickerExchangeDriver,
+  Recipe,
+  PricedPair,
+  PairPriceUpdate,
   IndexedPair,
   OrderCreateRequest,
-  PairPriceUpdate,
-  PricedPair,
-} from 'exchange-models/exchange'
-import type { TickerExchangeDriver, Recipe } from './types'
+} from './types'
 
 export let updatePair = (
   indexedPairs: PricedPair[],
@@ -24,7 +25,7 @@ export let setupData = async (
 ): Promise<[string[], IndexedPair[], Map<string, number>]> => {
   // get pairs from exchange
   let pairs = await tickDriver.getAvailablePairs()
-  
+
   // extract assets from pairs
   let assets = [
     ...pairs.reduce<Set<string>>(

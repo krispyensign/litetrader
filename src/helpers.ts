@@ -1,8 +1,7 @@
 import winston = require('winston')
 import { Logger } from 'winston'
 import got = require('got')
-import { ExchangeName } from 'exchange-models/exchange'
-import type { OrdersExchangeDriver, TickerExchangeDriver } from './types'
+import type { ExchangeName, OrdersExchangeDriver, TickerExchangeDriver } from './types'
 import * as krakenTick from './kraken/tick'
 import * as krakenOrder from './kraken/order'
 

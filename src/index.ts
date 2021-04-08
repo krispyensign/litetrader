@@ -1,10 +1,11 @@
 import sourceMap = require('source-map-support')
 import readline = require('readline')
 import yargs = require('yargs/yargs')
-import type { ExchangeName } from 'exchange-models/exchange'
+
 import WebSocket = require('ws')
 import { selector } from './helpers'
 import { updatePair, setupData, calcProfit } from './calc'
+import { ExchangeName } from './types'
 
 sourceMap.install()
 

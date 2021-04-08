@@ -1,12 +1,13 @@
-import { OrderCancelRequest, OrderCreateRequest } from 'exchange-models/exchange'
-import {
+import type {
+  OrdersExchangeDriver,
   AddOrder,
   AddOrderStatus,
   CancelOrder,
   CancelOrderStatus,
+  OrderCancelRequest,
+  OrderCreateRequest,
   SubscriptionStatus,
-} from 'exchange-models/kraken'
-import { OrdersExchangeDriver } from '../types'
+} from '../types'
 
 let krakenWsUrl = 'wss://ws-auth.kraken.com'
 
