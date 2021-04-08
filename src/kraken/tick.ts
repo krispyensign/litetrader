@@ -1,6 +1,6 @@
 import type { ExchangePair, PairPriceUpdate } from 'exchange-models/exchange'
 import type { Subscribe, Unsubscribe } from 'exchange-models/kraken'
-import { getJson } from '../http-client'
+import { getJson } from '../helpers'
 import type { TickerExchangeDriver } from '../types'
 import { isError, isKrakenPair, isLastTick, isPublication, isTicker } from './type-helpers'
 import type { AssetPairsResponse, AssetTicksResponse, ResponseWrapper } from './types'

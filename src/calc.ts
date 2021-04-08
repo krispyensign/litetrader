@@ -71,6 +71,9 @@ export let calcProfit = (
   eta: number,
   orderId: string
 ): [number, Recipe] | number => {
+  // validate initialAssetIndex
+  if (initialAssetIndex !== Number(cycle[0])) return 0
+
   // initialize everything
   let pairList = cycle.slice(1).map((value, index) => {
     // try first/second else second/first
@@ -104,12 +107,8 @@ export let calcProfit = (
     // if there was an issue and the assets were improperly populated
     if (currentAsset !== pair.baseIndex && currentAsset !== pair.quoteIndex) {
       throw Error(
-        'ERROR: Invalid logic somewhere! CurrentAsset' +
-          currentAsset +
-          ',' +
-          pair.quoteIndex +
-          ':' +
-          pair.baseIndex
+        'Invalid logic somewhere! Current Tuple State:' +
+          [currentAsset, pair.quoteIndex, pair.baseIndex].join(', ')
       )
     }
 
