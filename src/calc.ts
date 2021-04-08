@@ -1,5 +1,4 @@
 import type {
-  ExchangePair,
   IndexedPair,
   OrderCreateRequest,
   PairPriceUpdate,
@@ -23,14 +22,19 @@ export let updatePair = (
 export let setupData = async (
   tickDriver: TickerExchangeDriver
 ): Promise<[string[], IndexedPair[], Map<string, number>]> => {
+  // get pairs from exchange
   let pairs = await tickDriver.getAvailablePairs()
+  
+  // extract assets from pairs
   let assets = [
     ...pairs.reduce<Set<string>>(
       (prev, pair) => prev.add(pair.baseName).add(pair.quoteName),
       new Set()
     ),
   ]
-  let indexedPairs = pairs.map((pair: ExchangePair) => {
+
+  // convert pairs to internal index pair format
+  let indexedPairs = pairs.map(pair => {
     // attempt to get the baseIndex
     let baseIndex = assets.indexOf(pair.baseName)
     if (baseIndex === -1)
@@ -44,19 +48,25 @@ export let setupData = async (
     // update the pair with the new values
     return { ...pair, baseIndex: baseIndex, quoteIndex: quoteIndex }
   })
+
+  // create a mapping of baseNamequoteName and baseName,quoteName
   let pairMap = new Map([
     ...new Map<string, number>(indexedPairs.map((pair, index) => [pair.tradename, index])),
     ...new Map<string, number>(
       indexedPairs.map(pair => [[pair.baseName, pair.quoteName].join(','), pair.index])
     ),
   ])
+
+  // return the constructed items
   return [assets, indexedPairs, pairMap]
 }
 
+// helper function to safely round a number
 let safeRound = (num: number, decimals: number): number => {
   return decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
 }
 
+// helper function to safely divide by 0
 let safeDivide = (numA: number, numB: number): number => {
   return numB !== 0 ? numA / numB : 0
 }
@@ -88,6 +98,7 @@ export let calcProfit = (
     return pairs[indo]
   })
 
+  // setup a recipe object to return just in case calculation shows profitable
   let recipe: Recipe = {
     initialAmount: initialAmount,
     initialAssetIndex: initialAssetIndex,
@@ -95,6 +106,8 @@ export let calcProfit = (
     guardList: pairList.map(p => p.tradename),
     steps: new Array<OrderCreateRequest>(),
   }
+
+  // start with initially provided index and amount
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
 
@@ -117,6 +130,7 @@ export let calcProfit = (
 
     // if current exposure is in base asset then create a sell order
     if (currentAsset === pair.baseIndex) {
+      // construct a step for the recipe
       let step: OrderCreateRequest = {
         // round to correct units (placing order in base currency units)
         amount: safeRound(currentAmount, pair.decimals),
@@ -137,6 +151,7 @@ export let calcProfit = (
     }
     // if current exposure is in quote asset then create a buy order
     else {
+      // construct a step for the recipe
       let step: OrderCreateRequest = {
         amount: safeRound(
           safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
