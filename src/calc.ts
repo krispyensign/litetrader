@@ -1,4 +1,4 @@
-import type {
+import {
   TickerExchangeDriver,
   Recipe,
   PricedPair,
@@ -6,11 +6,11 @@ import type {
   IndexedPair,
   OrderCreateRequest,
 } from './types'
+export { updatePair, setupData, calcProfit }
 
-export let updatePair = (pricedPairs: PricedPair[], pairUpdate: PairPriceUpdate | string): void => {
-  let pair: PricedPair | undefined
+const updatePair = (pricedPairs: PricedPair[], pairUpdate: PairPriceUpdate | string): void => {
   if (typeof pairUpdate === 'string') return
-  pair = pricedPairs.find(i => i.tradename === pairUpdate.tradeName)
+  const pair = pricedPairs.find(i => i.tradename === pairUpdate.tradeName)
   if (pair === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
   pair.lastAskPrice = pair.ask
   pair.lastBidPrice = pair.bid
@@ -18,11 +18,11 @@ export let updatePair = (pricedPairs: PricedPair[], pairUpdate: PairPriceUpdate 
   pair.bid = pairUpdate.bid
 }
 
-export let setupData = async (
+const setupData = async (
   tickDriver: TickerExchangeDriver
 ): Promise<[string[], IndexedPair[], Map<string, number>]> => {
   // get pairs from exchange
-  let pairs = await tickDriver.getAvailablePairs(),
+  const pairs = await tickDriver.getAvailablePairs(),
     // extract assets from pairs
     assets = [
       ...pairs.reduce<Set<string>>(
@@ -33,7 +33,7 @@ export let setupData = async (
     // convert pairs to internal index pair format
     indexedPairs = pairs.map(pair => {
       // attempt to get the baseIndex
-      let baseIndex = assets.indexOf(pair.baseName),
+      const baseIndex = assets.indexOf(pair.baseName),
         quoteIndex = assets.indexOf(pair.quoteName)
       if (baseIndex === -1)
         throw Error(`${pair.baseName}: baseIndex of pair ${pair.index}, ${pair.name} missing`)
@@ -58,16 +58,16 @@ export let setupData = async (
 }
 
 // helper function to safely round a number
-let safeRound = (num: number, decimals: number): number => {
+const safeRound = (num: number, decimals: number): number => {
   return decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
 }
 
 // helper function to safely divide by 0
-let safeDivide = (numA: number, numB: number): number => {
+const safeDivide = (numA: number, numB: number): number => {
   return numB !== 0 ? numA / numB : 0
 }
 
-export let calcProfit = (
+const calcProfit = (
   initialAssetIndex: number,
   initialAmount: number,
   cycle: string[],
@@ -77,9 +77,9 @@ export let calcProfit = (
   eta: number,
   orderId: string
 ): [number, Recipe] | number => {
-  let pairList = cycle.slice(1).map((value, index) => {
+  const pairList = cycle.slice(1).map((value, index) => {
       // try first/second else second/first
-      let tempA = assets[Number(cycle[index])],
+      const tempA = assets[Number(cycle[index])],
         tempB = assets[Number(value)],
         indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
 
@@ -96,14 +96,14 @@ export let calcProfit = (
       initialAssetName: assets[initialAssetIndex],
       guardList: pairList.map(p => p.tradename),
       steps: new Array<OrderCreateRequest>(),
-    },
-    // start with initially provided index and amount
+    }
+  let // start with initially provided index and amount
     currentAsset = initialAssetIndex,
     currentAmount = initialAmount,
     step: OrderCreateRequest
 
   // for each trade index of a trade
-  for (let pair of pairList) {
+  for (const pair of pairList) {
     // validate the bid and ask are populated by this point
     if (pair.ask === undefined || pair.bid === undefined)
       throw Error('ask bid spread is not defined')

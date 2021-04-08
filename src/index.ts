@@ -4,18 +4,24 @@ import yargs = require('yargs/yargs')
 import WebSocket = require('ws')
 import { selector } from './helpers'
 import { updatePair, setupData, calcProfit } from './calc'
-import type { ExchangeName, Recipe } from './types'
+import type { ExchangeName } from './types'
+
+// TODO: get token
+// TODO: observe order response
+// TODO: assign valid orderId
 
 sourceMap.install()
 
-let argv = yargs(process.argv.slice(2)).options({
+const token = ''
+
+const argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },
   initialAmount: { type: 'number', default: 0 },
   initialAsset: { type: 'string', default: 'ADA' },
   eta: { type: 'number', default: 0.001 },
 }).argv
 
-let app = async (
+const app = async (
   exchangeName: ExchangeName,
   initialAmount: number,
   initialAsset: string,
@@ -33,17 +39,15 @@ let app = async (
     }),
     stopRequest = await tick.createStopRequest()
 
-  let isUnsubscribe = false,
-    initialAssetIndex: number,
-    shutdown: () => Promise<void>
+  let isUnsubscribe = false
 
   // do some error handling
   if (argv.initialAsset === null) throw Error('Invalid asset provided')
-  initialAssetIndex = assets.findIndex(a => a === initialAsset)
+  const initialAssetIndex = assets.findIndex(a => a === initialAsset)
   if (initialAssetIndex === -1) throw Error(`invalid asset ${initialAsset}`)
 
   // setup a shutdown handler
-  shutdown = async (): Promise<void> => {
+  const shutdown = async (): Promise<void> => {
     if (isUnsubscribe === true) return
     // unsubsribe from everything
     tickws.send(JSON.stringify(stopRequest))
@@ -67,12 +71,11 @@ let app = async (
     console.log(order.parseEvent(eventData.toLocaleString()))
   )
   rl.on('line', async line => {
-    let cycle: string[], result: number | [number, Recipe]
     // if input gives done then quit
     if (line === 'done') await shutdown()
 
     // split a string 1,2,3,... into [1, 2, 3, ...]
-    cycle = line.split(',')
+    const cycle = line.split(',')
 
     // can only trade the approved asset
     if (Number(cycle[0]) !== initialAssetIndex) return
@@ -81,12 +84,23 @@ let app = async (
     if (cycle.length < 4) return
 
     // calc profit, hopefully something good is found
-    result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta, '0')
+    const result = calcProfit(
+      initialAssetIndex,
+      initialAmount,
+      cycle,
+      assets,
+      pairs,
+      pairMap,
+      eta,
+      '0'
+    )
 
     // if not just an amount and is a cycle then do stuff
     if (typeof result !== 'number') {
-      console.log(result)
-      await shutdown()
+      const [, recipe] = result
+      for (const step of recipe.steps) {
+        orderws.send(order.createOrderRequest(token, step))
+      }
     }
   })
 

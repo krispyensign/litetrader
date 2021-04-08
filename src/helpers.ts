@@ -4,10 +4,9 @@ import got = require('got')
 import type { ExchangeName, OrdersExchangeDriver, TickerExchangeDriver } from './types'
 import * as krakenTick from './kraken/tick'
 import * as krakenOrder from './kraken/order'
+export { selector, getJson, getLogger }
 
-export let selector = (
-  exchangeName: ExchangeName
-): [TickerExchangeDriver, OrdersExchangeDriver] => {
+const selector = (exchangeName: ExchangeName): [TickerExchangeDriver, OrdersExchangeDriver] => {
   switch (exchangeName) {
     case 'kraken':
       return [krakenTick.getExchangeInterface(), krakenOrder.getExchangeInterface()]
@@ -16,10 +15,10 @@ export let selector = (
   }
 }
 
-export let getJson = async <T>(url: string): Promise<T | Error> => {
+const getJson = async <T>(url: string): Promise<T | Error> => {
   let result: T | Error
   try {
-    let innerResult: T | undefined = await got.default(url).json<T>()
+    const innerResult: T | undefined = await got.default(url).json<T>()
     if (innerResult !== undefined) result = innerResult
     else result = new Error('Failed to get back response from url: ' + url)
   } catch (e) {
@@ -28,8 +27,8 @@ export let getJson = async <T>(url: string): Promise<T | Error> => {
   return result
 }
 
-export let getLogger = (serviceName: string): Logger => {
-  let myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+const getLogger = (serviceName: string): Logger => {
+  const myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
       let msg = `${timestamp} [${level}] [${serviceName}] : ${message} `
       if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object)) {
         msg += JSON.stringify(metadata)
