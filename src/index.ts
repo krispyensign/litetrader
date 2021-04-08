@@ -1,11 +1,10 @@
 import sourceMap = require('source-map-support')
 import readline = require('readline')
 import yargs = require('yargs/yargs')
-
 import WebSocket = require('ws')
 import { selector } from './helpers'
 import { updatePair, setupData, calcProfit } from './calc'
-import { ExchangeName } from './types'
+import type { ExchangeName, Recipe } from './types'
 
 sourceMap.install()
 
@@ -23,42 +22,44 @@ let app = async (
   eta: number
 ): Promise<[WebSocket, WebSocket, readline.Interface]> => {
   // configure everything
-  let [tick, order] = selector(exchangeName)
-  let tickws = new WebSocket(tick.getWebSocketUrl())
-  let orderws = new WebSocket(order.getWebSocketUrl())
-  let [assets, pairs, pairMap] = await setupData(tick)
-  let rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    terminal: false,
-  })
-  let isUnsubscribe = false
-  let stopRequest = await tick.createStopRequest()
+  const [tick, order] = selector(exchangeName),
+    tickws = new WebSocket(tick.getWebSocketUrl()),
+    orderws = new WebSocket(order.getWebSocketUrl()),
+    [assets, pairs, pairMap] = await setupData(tick),
+    rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: false,
+    }),
+    stopRequest = await tick.createStopRequest()
+
+  let isUnsubscribe = false,
+    initialAssetIndex: number,
+    shutdown: () => Promise<void>
 
   // do some error handling
   if (argv.initialAsset === null) throw Error('Invalid asset provided')
-  let initialAssetIndex = assets.findIndex(a => a === initialAsset)
+  initialAssetIndex = assets.findIndex(a => a === initialAsset)
   if (initialAssetIndex === -1) throw Error(`invalid asset ${initialAsset}`)
 
   // setup a shutdown handler
-  let shutdown = async (): Promise<void> => {
+  shutdown = async (): Promise<void> => {
+    if (isUnsubscribe === true) return
     // unsubsribe from everything
-    if (isUnsubscribe === false) {
-      tickws.send(JSON.stringify(stopRequest))
-      isUnsubscribe = true
-      // wait for unsubsribe command to be sent
-      await new Promise(resolve => setTimeout(resolve, 100))
+    tickws.send(JSON.stringify(stopRequest))
+    isUnsubscribe = true
+    // wait for unsubsribe command to be sent
+    await new Promise(resolve => setTimeout(resolve, 100))
 
-      // kill the connections ( will also kill detached threads and thus the app )
-      tickws.close()
-      orderws.close()
-      rl.close()
-      console.log('done')
-    }
+    // kill the connections ( will also kill detached threads and thus the app )
+    tickws.close()
+    orderws.close()
+    rl.close()
+    console.log('done')
   }
 
   // setup all handlers
-  process.on('SIGINT', async () => await shutdown())
+  process.on('SIGINT', shutdown)
   tickws.on('message', async eventData =>
     updatePair(pairs, tick.parseTick(eventData.toLocaleString()))
   )
@@ -66,34 +67,27 @@ let app = async (
     console.log(order.parseEvent(eventData.toLocaleString()))
   )
   rl.on('line', async line => {
+    let cycle: string[], result: number | [number, Recipe]
     // if input gives done then quit
     if (line === 'done') await shutdown()
 
     // split a string 1,2,3,... into [1, 2, 3, ...]
-    let cycle = line.split(',')
+    cycle = line.split(',')
+
+    // can only trade the approved asset
+    if (Number(cycle[0]) !== initialAssetIndex) return
 
     // cannot hedge so skip anything less than 4
     if (cycle.length < 4) return
 
     // calc profit, hopefully something good is found
-    let result = calcProfit(
-      initialAssetIndex,
-      initialAmount,
-      cycle,
-      assets,
-      pairs,
-      pairMap,
-      eta,
-      '0'
-    )
+    result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta, '0')
 
     // if not just an amount and is a cycle then do stuff
-    // if (typeof result !== 'number') {
-    //   console.log(result)
-    //   await shutdown()
-    // }
-    console.log(result)
-    await shutdown()
+    if (typeof result !== 'number') {
+      console.log(result)
+      await shutdown()
+    }
   })
 
   // sleep until tick websocket is stable then subscribe

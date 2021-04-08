@@ -15,7 +15,7 @@ export type {
   PairPriceUpdate,
   OrderCancelRequest,
   OrderCreateRequest,
-  ExchangeName
+  ExchangeName,
 } from 'exchange-models/exchange'
 
 export type {

@@ -13,8 +13,9 @@ let compareTypes = <U>(o: object, ...propertyNames: (keyof U)[]): boolean | stri
 }
 
 export let isTicker = (payload: object): payload is Ticker => {
+  let result: string | boolean | undefined
   if (!payload) return false
-  let result = compareTypes<Ticker>(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
+  result = compareTypes<Ticker>(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
   if (!result || typeof result === 'string') return false
   return result
 }
@@ -24,16 +25,18 @@ export let isPublication = (event: object): event is Publication => {
 }
 
 export let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is AssetPair => {
+  let result: string | boolean | undefined
   if (!pair) return false
-  let result = compareTypes(pair, 'wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals')
+  result = compareTypes(pair, 'wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals')
   if (!result) throw Error(`Failed to correctly populate pair ${pairName}`)
   if (typeof result === 'string') throw Error(`Missing resource ${result} on pair ${pairName}.`)
   return true
 }
 
 export let isLastTick = (pairName: string, tick?: Partial<Ticker>): tick is Ticker => {
+  let result: string | boolean | undefined
   if (!tick) return false
-  let result = compareTypes(tick, 'a', 'b', 't')
+  result = compareTypes(tick, 'a', 'b', 't')
   if (!result) throw Error(`Failed to correctly populate tick ${pairName}.`)
   if (typeof result === 'string') throw Error(`Missing resource ${result} on pair ${pairName}.`)
   return true
