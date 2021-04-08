@@ -98,9 +98,12 @@ const app = async (
     // if not just an amount and is a cycle then do stuff
     if (typeof result !== 'number') {
       const [, recipe] = result
+      console.log(recipe.steps)
+      console.profile('send')
       for (const step of recipe.steps) {
         orderws.send(order.createOrderRequest(token, step))
       }
+      console.profileEnd('send')
     }
   })
 
