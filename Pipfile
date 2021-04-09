@@ -5,9 +5,11 @@ name = "pypi"
 
 [packages]
 networkx = "*"
+cython = "*"
 
 [dev-packages]
 pylint = "*"
+mypy = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.8"
