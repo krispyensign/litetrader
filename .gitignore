@@ -3,3 +3,4 @@ logs/
 build/
 dist/
 graph.json
+.vscode/
