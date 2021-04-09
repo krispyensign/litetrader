@@ -26,6 +26,7 @@
   "scripts": {
     "start": "node --no-lazy ./dist/index.js",
     "build": "npx tsc",
+    "buildgraph": "npm --silent start -- --buildGraph > graph.json",
     "fix": "npx prettier -w src/ && npx eslint --fix src/",
     "clean": "rimraf dist/ node_modules/ logs/"
   },

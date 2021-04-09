@@ -3,7 +3,7 @@ import readline = require('readline')
 import yargs = require('yargs/yargs')
 import WebSocket = require('ws')
 import { selector } from './helpers'
-import { updatePair, setupData, calcProfit } from './calc'
+import { updatePair, setupData, buildGraph, findProfit, sleep } from './calc'
 import type { ExchangeName } from './types'
 
 // TODO: get token
@@ -19,15 +19,39 @@ const argv = yargs(process.argv.slice(2)).options({
   initialAmount: { type: 'number', default: 0 },
   initialAsset: { type: 'string', default: 'ADA' },
   eta: { type: 'number', default: 0.001 },
+  buildGraph: { type: 'boolean', default: false },
 }).argv
 
-const app = async (
+async function shutdown(
+  isUnsubscribe: Boolean,
+  tickws: WebSocket,
+  orderws: WebSocket,
+  rl: readline.Interface,
+  stopRequest: unknown
+): Promise<void> {
+  if (isUnsubscribe === true) return
+  // unsubsribe from everything
+  tickws.send(JSON.stringify(stopRequest))
+  isUnsubscribe = true
+  // wait for unsubsribe command to be sent
+  await sleep(100)
+
+  // kill the connections ( will also kill detached threads and thus the app )
+  tickws.close()
+  orderws.close()
+  rl.close()
+  console.log('shutdown complete')
+}
+
+async function app(
   exchangeName: ExchangeName,
   initialAmount: number,
   initialAsset: string,
-  eta: number
-): Promise<[WebSocket, WebSocket, readline.Interface]> => {
+  eta: number,
+  buildGraphOnly: boolean
+): Promise<[WebSocket, WebSocket, readline.Interface] | undefined> {
   // configure everything
+
   const [tick, order] = selector(exchangeName),
     tickws = new WebSocket(tick.getWebSocketUrl()),
     orderws = new WebSocket(order.getWebSocketUrl()),
@@ -39,31 +63,20 @@ const app = async (
     }),
     stopRequest = await tick.createStopRequest()
 
-  let isUnsubscribe = false
+  const isUnsubscribe: Boolean = false
+
+  if (buildGraphOnly) {
+    console.log(JSON.stringify(buildGraph(pairs)))
+    return undefined
+  }
 
   // do some error handling
   if (argv.initialAsset === null) throw Error('Invalid asset provided')
   const initialAssetIndex = assets.findIndex(a => a === initialAsset)
   if (initialAssetIndex === -1) throw Error(`invalid asset ${initialAsset}`)
 
-  // setup a shutdown handler
-  const shutdown = async (): Promise<void> => {
-    if (isUnsubscribe === true) return
-    // unsubsribe from everything
-    tickws.send(JSON.stringify(stopRequest))
-    isUnsubscribe = true
-    // wait for unsubsribe command to be sent
-    await new Promise(resolve => setTimeout(resolve, 100))
-
-    // kill the connections ( will also kill detached threads and thus the app )
-    tickws.close()
-    orderws.close()
-    rl.close()
-    console.log('done')
-  }
-
   // setup all handlers
-  process.on('SIGINT', shutdown)
+  process.on('SIGINT', async () => await shutdown(isUnsubscribe, tickws, orderws, rl, stopRequest))
   tickws.on('message', async eventData =>
     updatePair(pairs, tick.parseTick(eventData.toLocaleString()))
   )
@@ -72,54 +85,39 @@ const app = async (
   )
   rl.on('line', async line => {
     // if input gives done then quit
-    if (line === 'done') await shutdown()
-
-    // split a string 1,2,3,... into [1, 2, 3, ...]
-    const cycle = line.split(',')
-
-    // can only trade the approved asset
-    if (Number(cycle[0]) !== initialAssetIndex) return
-
-    // cannot hedge so skip anything less than 4
-    if (cycle.length < 4) return
-
-    // calc profit, hopefully something good is found
-    const result = calcProfit(
+    if (line === 'done') await shutdown(isUnsubscribe, tickws, orderws, rl, stopRequest)
+    await findProfit(
+      line,
       initialAssetIndex,
       initialAmount,
-      cycle,
       assets,
       pairs,
       pairMap,
       eta,
-      '0'
+      orderws,
+      token,
+      order
     )
-
-    // if not just an amount and is a cycle then do stuff
-    if (typeof result !== 'number') {
-      const [, recipe] = result
-      console.log(recipe.steps)
-      console.profile('send')
-      for (const step of recipe.steps) {
-        orderws.send(order.createOrderRequest(token, step))
-      }
-      console.profileEnd('send')
-    }
   })
 
   // sleep until tick websocket is stable then subscribe
-  while (tickws.readyState !== WebSocket.OPEN)
-    await new Promise(resolve => setTimeout(resolve, 100))
+  while (tickws.readyState !== WebSocket.OPEN) await sleep(100)
 
   // subscribe to all the available pairs
   tickws.send(JSON.stringify(await tick.createTickSubRequest()))
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  await sleep(1000)
 
   // return configured sockets and stdin reader
   return [tickws, orderws, rl]
 }
 
 // fire it up
-app(argv.exchangeName as ExchangeName, argv.initialAmount, argv.initialAsset, argv.eta)
+app(
+  argv.exchangeName as ExchangeName,
+  argv.initialAmount,
+  argv.initialAsset,
+  argv.eta,
+  argv.buildGraph
+)
 
 // wait till shutdown of sockets and readline

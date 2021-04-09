@@ -5,10 +5,16 @@ import {
   PairPriceUpdate,
   IndexedPair,
   OrderCreateRequest,
+  Dictionary,
+  OrdersExchangeDriver,
 } from './types'
-export { updatePair, setupData, calcProfit }
+import WebSocket = require('ws')
 
-const updatePair = (pricedPairs: PricedPair[], pairUpdate: PairPriceUpdate | string): void => {
+export async function sleep(timems: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, timems))
+}
+
+export function updatePair(pricedPairs: PricedPair[], pairUpdate: PairPriceUpdate | string): void {
   if (typeof pairUpdate === 'string') return
   const pair = pricedPairs.find(i => i.tradename === pairUpdate.tradeName)
   if (pair === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
@@ -18,9 +24,22 @@ const updatePair = (pricedPairs: PricedPair[], pairUpdate: PairPriceUpdate | str
   pair.bid = pairUpdate.bid
 }
 
-const setupData = async (
+export function buildGraph(indexedPairs: IndexedPair[]): Dictionary<string[]> {
+  const graph: Dictionary<string[]> = {}
+  for (const pair of indexedPairs) {
+    if (graph[pair.baseIndex.toString()] === undefined)
+      graph[pair.baseIndex.toString()] = new Array<string>(pair.quoteIndex.toString())
+    else graph[pair.baseIndex.toString()].push(pair.quoteIndex.toString())
+    if (graph[pair.quoteIndex.toString()] === undefined)
+      graph[pair.quoteIndex.toString()] = new Array<string>(pair.baseIndex.toString())
+    else graph[pair.quoteIndex.toString()].push(pair.baseIndex.toString())
+  }
+  return graph
+}
+
+export async function setupData(
   tickDriver: TickerExchangeDriver
-): Promise<[string[], IndexedPair[], Map<string, number>]> => {
+): Promise<[string[], IndexedPair[], Map<string, number>]> {
   // get pairs from exchange
   const pairs = await tickDriver.getAvailablePairs(),
     // extract assets from pairs
@@ -58,16 +77,16 @@ const setupData = async (
 }
 
 // helper function to safely round a number
-const safeRound = (num: number, decimals: number): number => {
+function safeRound(num: number, decimals: number): number {
   return decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
 }
 
 // helper function to safely divide by 0
-const safeDivide = (numA: number, numB: number): number => {
+function safeDivide(numA: number, numB: number): number {
   return numB !== 0 ? numA / numB : 0
 }
 
-const calcProfit = (
+export function calcProfit(
   initialAssetIndex: number,
   initialAmount: number,
   cycle: string[],
@@ -76,7 +95,7 @@ const calcProfit = (
   pairMap: Map<string, number>,
   eta: number,
   orderId: string
-): [number, Recipe] | number => {
+): [number, Recipe] | number {
   const pairList = cycle.slice(1).map((value, index) => {
       // try first/second else second/first
       const tempA = assets[Number(cycle[index])],
@@ -168,4 +187,50 @@ const calcProfit = (
   // this will cause the recipe to get garbage collected seperately
   if (currentAmount > initialAmount) return [currentAmount, recipe]
   return currentAmount
+}
+
+export async function findProfit(
+  line: string,
+  initialAssetIndex: number,
+  initialAmount: number,
+  assets: string[],
+  pairs: PricedPair[],
+  pairMap: Map<string, number>,
+  eta: number,
+  orderws: WebSocket,
+  token: string,
+  order: OrdersExchangeDriver
+): Promise<void> {
+  // split a string 1,2,3,... into [1, 2, 3, ...]
+  const cycle = line.split(',')
+
+  // can only trade the approved asset
+  if (Number(cycle[0]) !== initialAssetIndex) return
+
+  // cannot hedge so skip anything less than 4
+  if (cycle.length < 4) return
+
+  // calc profit, hopefully something good is found
+  const result = calcProfit(
+    initialAssetIndex,
+    initialAmount,
+    cycle,
+    assets,
+    pairs,
+    pairMap,
+    eta,
+    '0'
+  )
+
+  // if not just an amount and is a cycle then do stuff
+  if (typeof result !== 'number') {
+    const [, recipe] = result
+    console.log(recipe.steps)
+    console.profile('send')
+    for (const step of recipe.steps) {
+      orderws.send(order.createOrderRequest(token, step))
+      await sleep(2)
+    }
+    console.profileEnd('send')
+  }
 }

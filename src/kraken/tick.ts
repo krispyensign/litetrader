@@ -10,7 +10,6 @@ import type {
   Unsubscribe,
   Subscribe,
 } from '../types'
-export { getExchangeInterface }
 
 const krakenTickerPath = '/0/public/Ticker',
   krakenPairsPath = '/0/public/AssetPairs',
@@ -18,7 +17,7 @@ const krakenTickerPath = '/0/public/Ticker',
   krakenWsUrl = 'wss://ws.kraken.com'
 // let krakenTokenPath = '/0/private/GetWebSocketsToken'
 
-const parseTick = (tickData?: string): string | PairPriceUpdate => {
+function parseTick(tickData?: string): string | PairPriceUpdate {
   // make sure we got something if not failure during ws message
   if (!tickData) throw Error('TickData missing. Cannot parse.')
 
@@ -49,7 +48,7 @@ const parseTick = (tickData?: string): string | PairPriceUpdate => {
   return tickData
 }
 
-const getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
+async function getAvailablePairs(threshold?: number): Promise<ExchangePair[]> {
   // get the tradeable asset pairs
   if (threshold === undefined || threshold === null) threshold = 0
   const assetPairsResult = await getJson<ResponseWrapper>(krakenApiUrl + krakenPairsPath)
@@ -103,22 +102,24 @@ const getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> =>
   )
 }
 
-const getExchangeInterface = (): TickerExchangeDriver => ({
-  createStopRequest: async (): Promise<Unsubscribe> => ({
-    event: 'unsubscribe',
-    pair: (await getAvailablePairs()).map(p => p.tradename),
-    subscription: {
-      name: 'ticker',
-    },
-  }),
-  createTickSubRequest: async (): Promise<Subscribe> => ({
-    event: 'subscribe',
-    pair: (await getAvailablePairs()).map(p => p.tradename),
-    subscription: {
-      name: 'ticker',
-    },
-  }),
-  getAvailablePairs: getAvailablePairs,
-  parseTick: parseTick,
-  getWebSocketUrl: (): string => krakenWsUrl,
-})
+export function getExchangeInterface(): TickerExchangeDriver {
+  return {
+    createStopRequest: async (): Promise<Unsubscribe> => ({
+      event: 'unsubscribe',
+      pair: (await getAvailablePairs()).map(p => p.tradename),
+      subscription: {
+        name: 'ticker',
+      },
+    }),
+    createTickSubRequest: async (): Promise<Subscribe> => ({
+      event: 'subscribe',
+      pair: (await getAvailablePairs()).map(p => p.tradename),
+      subscription: {
+        name: 'ticker',
+      },
+    }),
+    getAvailablePairs: getAvailablePairs,
+    parseTick: parseTick,
+    getWebSocketUrl: (): string => krakenWsUrl,
+  }
+}
