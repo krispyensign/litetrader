@@ -118,8 +118,7 @@ export function calcProfit(
     }
   let // start with initially provided index and amount
     currentAsset = initialAssetIndex,
-    currentAmount = initialAmount,
-    step: OrderCreateRequest
+    currentAmount = initialAmount
 
   // for each trade index of a trade
   for (const pair of pairList) {
@@ -141,7 +140,7 @@ export function calcProfit(
     // if current exposure is in base asset then create a sell order
     if (currentAsset === pair.baseIndex) {
       // construct a step for the recipe
-      step = {
+      const step: OrderCreateRequest = {
         // round to correct units (placing order in base currency units)
         amount: safeRound(currentAmount, pair.decimals),
         // this is a sell
@@ -162,7 +161,7 @@ export function calcProfit(
     // if current exposure is in quote asset then create a buy order
     else {
       // construct a step for the recipe
-      step = {
+      const step: OrderCreateRequest = {
         amount: safeRound(
           safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
           pair.decimals
@@ -204,11 +203,8 @@ export async function findProfit(
   // split a string 1,2,3,... into [1, 2, 3, ...]
   const cycle = line.split(',')
 
-  // can only trade the approved asset
-  if (Number(cycle[0]) !== initialAssetIndex) return
-
-  // cannot hedge so skip anything less than 4
-  if (cycle.length < 4) return
+  // can only trade the approved asset and anything greater than or eqaul to 4
+  if (Number(cycle[0]) !== initialAssetIndex && cycle.length < 4) return
 
   // calc profit, hopefully something good is found
   const result = calcProfit(
