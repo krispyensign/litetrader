@@ -29,6 +29,7 @@ export type {
   AssetPair,
   Ticker,
   Publication,
+  Token,
 } from 'exchange-models/kraken'
 
 export interface Dictionary<T> {
@@ -49,10 +50,15 @@ export interface TickerConfiguration {
   exchangeName: ExchangeName
 }
 
+export interface Key {
+  apiKey: string
+  apiPrivateKey: string
+}
+
 export interface TickerExchangeDriver {
-  createTickSubRequest: () => Promise<object>
+  createTickSubRequest: (pairs: string[]) => object
   parseTick: (eventData: string) => string | PairPriceUpdate
-  createStopRequest: () => Promise<object>
+  createStopRequest: (pairs: string[]) => object
   getAvailablePairs: (threshold?: number) => Promise<ExchangePair[]>
   getWebSocketUrl: () => string
 }
@@ -64,6 +70,7 @@ export interface OrdersExchangeDriver {
   createOrderRequest(token: string, order: OrderCreateRequest): unknown
   cancelOrderRequest(token: string, cancel: OrderCancelRequest): unknown
   getWebSocketUrl: () => string
+  getToken: (key: Key) => Promise<string>
 }
 
 export interface Recipe {
@@ -71,5 +78,5 @@ export interface Recipe {
   initialAssetIndex: number
   initialAssetName: string
   steps: OrderCreateRequest[]
-  guardList: string[]
+  guardList?: string[]
 }

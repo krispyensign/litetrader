@@ -4,3 +4,4 @@ build/
 dist/
 graph.json
 .vscode/
+key.json

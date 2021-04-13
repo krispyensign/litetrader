@@ -8,6 +8,7 @@ import type {
   OrderCreateRequest,
   SubscriptionStatus,
 } from '../types'
+import { getToken } from './token'
 export { getExchangeInterface }
 
 const krakenWsUrl = 'wss://ws-auth.kraken.com'
@@ -53,5 +54,6 @@ function getExchangeInterface(): OrdersExchangeDriver {
     cancelOrderRequest: cancelOrderRequest,
     parseEvent: (eventData: string): string => eventData,
     getWebSocketUrl: (): string => krakenWsUrl,
+    getToken: getToken,
   }
 }

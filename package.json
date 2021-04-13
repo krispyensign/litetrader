@@ -1,18 +1,23 @@
 {
   "name": "litetrader",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "simple platform for crypto exchanges",
+  "engines": {
+    "node": ">=12.11.0"
+  },
   "dependencies": {
     "@types/ws": "^7.4.0",
     "@types/yargs": "^15.0.12",
     "exchange-models": "https://gitlab.com/krispyensign/exchange-models/-/archive/v0.0.3/exchange-models-v0.0.3.tar",
     "got": "^11.8.1",
+    "qs": "^6.10.1",
     "source-map-support": "^0.5.19",
     "winston": "^3.3.3",
     "ws": "^7.4.2",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
+    "@types/qs": "^6.9.6",
     "@types/source-map-support": "^0.5.3",
     "@typescript-eslint/eslint-plugin": "^4.12.0",
     "@typescript-eslint/parser": "^4.12.0",
@@ -26,7 +31,6 @@
   "scripts": {
     "start": "node --no-lazy ./dist/index.js",
     "build": "npx tsc",
-    "buildgraph": "npm --silent start -- --buildGraph > graph.json",
     "fix": "npx prettier -w src/ && npx eslint --fix src/",
     "clean": "rimraf dist/ node_modules/ logs/"
   },
