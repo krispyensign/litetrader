@@ -1,4 +1,4 @@
-import { IndexedPair, Dictionary, TickerExchangeDriver } from './types'
+import { IndexedPair, Dictionary, TickerExchangeDriver, TradeDatum } from './types'
 
 export function buildGraph(indexedPairs: IndexedPair[]): Dictionary<string[]> {
   return indexedPairs.reduce((graph, pair) => {
@@ -12,9 +12,7 @@ export function buildGraph(indexedPairs: IndexedPair[]): Dictionary<string[]> {
   }, {} as Dictionary<string[]>)
 }
 
-export async function setupData(
-  tickDriver: TickerExchangeDriver
-): Promise<[string[], IndexedPair[], Map<string, number>, object, object]> {
+export async function setupData(tickDriver: TickerExchangeDriver): Promise<TradeDatum> {
   // get pairs from exchange
   const pairs = await tickDriver.getAvailablePairs(),
     // extract assets from pairs
@@ -50,5 +48,11 @@ export async function setupData(
     subRequest = tickDriver.createTickSubRequest(pairs.map(p => p.tradename))
 
   // return the constructed items
-  return [assets, indexedPairs, pairMap, stopRequest, subRequest]
+  return {
+    assets: assets,
+    pairs: indexedPairs,
+    pairMap: pairMap,
+    unSubRequest: stopRequest,
+    subRequest: subRequest,
+  }
 }

@@ -1,9 +1,10 @@
-import {
+import type {
   ExchangeName,
   ExchangePair,
   OrderCancelRequest,
   OrderCreateRequest,
   PairPriceUpdate,
+  PricedPair,
 } from 'exchange-models/exchange'
 
 import type { AssetPair, Ticker } from 'exchange-models/kraken'
@@ -31,6 +32,31 @@ export type {
   Publication,
   Token,
 } from 'exchange-models/kraken'
+
+import WebSocket = require('ws')
+import { Worker } from 'worker_threads'
+
+export interface TradeDatum {
+  assets: string[]
+  pairs: PricedPair[]
+  pairMap: Map<string, number>
+  unSubRequest: object
+  subRequest: object
+}
+
+export interface Config {
+  exchangeName: ExchangeName
+  initialAmount: number
+  initialAsset: string
+  eta: number
+  key: Key
+}
+
+export interface Connections {
+  tickws: WebSocket
+  orderws: WebSocket
+  worker: Worker
+}
 
 export interface Dictionary<T> {
   [key: string]: T

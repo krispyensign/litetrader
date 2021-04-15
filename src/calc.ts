@@ -1,9 +1,15 @@
 import type { Recipe, PricedPair, PairPriceUpdate, OrderCreateRequest } from './types'
 
-export function updatePair(pricedPairs: PricedPair[], pairUpdate: PairPriceUpdate | string): void {
+export function updatePair(
+  pairMap: Map<string, number>,
+  pricedPairs: PricedPair[],
+  pairUpdate: PairPriceUpdate | string
+): void {
   if (typeof pairUpdate === 'string') return
-  const pair = pricedPairs.find(i => i.tradename === pairUpdate.tradeName)
-  if (pair === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
+  if (pairUpdate.tradeName === undefined) throw Error('Missing tradename from update')
+  const pairIndex = pairMap.get(pairUpdate.tradeName)
+  if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
+  const pair = pricedPairs[pairIndex]
   pair.lastAskPrice = pair.ask
   pair.lastBidPrice = pair.bid
   pair.ask = pairUpdate.ask
