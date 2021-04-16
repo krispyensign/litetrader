@@ -3,7 +3,6 @@ import got from 'got'
 import type { OptionsOfJSONResponseBody } from 'got'
 import * as crypto from 'crypto'
 import qs = require('qs')
-export { getToken }
 
 let krakenTokenPath = '/0/private/GetWebSocketsToken',
   krakenApiUrl = 'https://api.kraken.com'
@@ -57,7 +56,7 @@ let makeAuthCall = async <T = object>(
   return response
 }
 
-let getToken = async (key: Key): Promise<string> => {
+export let getToken = async (key: Key): Promise<string> => {
   let n = new Date().getTime() * 1000
   let requestData = {
     nonce: n,

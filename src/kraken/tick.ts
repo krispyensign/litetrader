@@ -12,7 +12,6 @@ import type {
   Publication,
   Ticker,
 } from '../types'
-export { getExchangeInterface }
 
 let // setup the global constants
   krakenTickerPath = '/0/public/Ticker',
@@ -152,7 +151,7 @@ let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
   )
 }
 
-let getExchangeInterface = (): TickerExchangeDriver => ({
+export let getExchangeInterface = (): TickerExchangeDriver => ({
   createStopRequest: (pairs: string[]): Unsubscribe => ({
     event: 'unsubscribe',
     pair: pairs,

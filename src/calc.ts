@@ -1,7 +1,6 @@
 import type { Recipe, PricedPair, PairPriceUpdate, OrderCreateRequest } from './types'
-export { updatePair, calcProfit }
 
-let updatePair = (
+export let updatePair = (
   pairMap: Map<string, number>,
   pricedPairs: PricedPair[],
   pairUpdate: PairPriceUpdate | string
@@ -17,17 +16,7 @@ let updatePair = (
   pair.bid = pairUpdate.bid
 }
 
-// helper function to safely round a number
-let safeRound = (num: number, decimals: number): number => {
-  return decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
-}
-
-// helper function to safely divide by 0
-let safeDivide = (numA: number, numB: number): number => {
-  return numB !== 0 ? numA / numB : 0
-}
-
-let calcProfit = (
+export let calcProfit = (
   initialAssetIndex: number,
   initialAmount: number,
   cycle: number[],
@@ -37,6 +26,16 @@ let calcProfit = (
   eta: number,
   orderId: string
 ): [number, Recipe] | number => {
+  // helper function to safely round a number
+  let safeRound = (num: number, decimals: number): number => {
+    return decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
+  }
+
+  // helper function to safely divide by 0
+  let safeDivide = (numA: number, numB: number): number => {
+    return numB !== 0 ? numA / numB : 0
+  }
+
   let pairList = cycle.slice(1).map((value, index) => {
     let // try first/second else second/first
       tempA = assets[cycle[index]],

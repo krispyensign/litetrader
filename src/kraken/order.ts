@@ -9,7 +9,6 @@ import type {
   SubscriptionStatus,
 } from '../types'
 import { getToken } from './token'
-export { getExchangeInterface }
 
 let krakenWsUrl = 'wss://ws-auth.kraken.com'
 
@@ -41,7 +40,7 @@ let cancelOrderRequest = (token: string, cancel: OrderCancelRequest): CancelOrde
   txid: [cancel.orderId!],
 })
 
-let getExchangeInterface = (): OrdersExchangeDriver => ({
+export let getExchangeInterface = (): OrdersExchangeDriver => ({
   getReqId: getReqId,
   isEvent: isStatusEvent,
   createOrderRequest: createOrderRequest,

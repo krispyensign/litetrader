@@ -5,7 +5,9 @@ import type { ExchangeName, OrdersExchangeDriver, TickerExchangeDriver } from '.
 import * as krakenTick from './kraken/tick'
 import * as krakenOrder from './kraken/order'
 
-export function selector(exchangeName: ExchangeName): [TickerExchangeDriver, OrdersExchangeDriver] {
+export let selector = (
+  exchangeName: ExchangeName
+): [TickerExchangeDriver, OrdersExchangeDriver] => {
   switch (exchangeName) {
     case 'kraken':
       return [krakenTick.getExchangeInterface(), krakenOrder.getExchangeInterface()]
@@ -14,7 +16,7 @@ export function selector(exchangeName: ExchangeName): [TickerExchangeDriver, Ord
   }
 }
 
-export async function getJson<T>(url: string): Promise<T | Error> {
+export let getJson = async <T>(url: string): Promise<T | Error> => {
   let result: T | Error
   try {
     let innerResult: T | undefined = await got.default(url).json<T>()
@@ -26,7 +28,7 @@ export async function getJson<T>(url: string): Promise<T | Error> {
   return result
 }
 
-export function getLogger(serviceName: string): Logger {
+export let getLogger = (serviceName: string): Logger => {
   let myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
     let msg = `${timestamp} [${level}] [${serviceName}] : ${message}`
     if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object)) {
@@ -34,6 +36,7 @@ export function getLogger(serviceName: string): Logger {
     }
     return msg
   })
+
   let logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),

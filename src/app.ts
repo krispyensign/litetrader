@@ -2,13 +2,15 @@ import {
   Config,
   Connections,
   OrdersExchangeDriver,
+  ThreadData,
   TickerExchangeDriver,
   TradeDatum,
 } from './types'
 import { buildGraph, setupData } from './setup'
 import { selector } from './helpers'
 import WebSocket = require('ws')
-import { Worker } from 'worker_threads'
+import { Worker, parentPort } from 'worker_threads'
+import findCircuits = require("elementary-circuits-directed-graph");
 
 import { updatePair, calcProfit } from './calc'
 // import os = require('os')
@@ -91,6 +93,16 @@ let constructGraphCallback = (
   }
 }
 
+export let workerApp = (data: ThreadData) => {
+  let adjList = Object.entries(data.graph).reduce(
+    (prev: Array<number[]>, [key, value]:[string, number[]]): Array<number[]> => {
+    prev[Number(key)] = value 
+    return prev
+  }, new Array<number[]>())
+  findCircuits(adjList, cp =>parentPort?.postMessage(cp))
+  
+}
+
 export let app = async (config: Config): Promise<Connections | undefined> => {
   // configure everything
   let [tick, order] = selector(config.exchangeName)
@@ -108,26 +120,27 @@ export let app = async (config: Config): Promise<Connections | undefined> => {
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
 
   let conns: Connections = {
-      tickws: new WebSocket(tick.getWebSocketUrl()),
-      orderws: new WebSocket(order.getWebSocketUrl()),
-      worker: new Worker(__filename, {
-        // create the graph worker
-        workerData: {
-          graph: buildGraph(tradeDatum.pairs),
-          initialAssetIndex: tradeDatum.assets.findIndex(a => a === config.initialAsset),
-        },
-      }),
-    },
-    shutdownCallback = constructShutdownCallback(conns, tradeDatum, isUnsubscribe),
-    graphCallback = constructGraphCallback(
-      initialAssetIndex,
-      config,
-      tradeDatum,
-      isSending,
-      conns,
-      order,
-      token
-    )
+    tickws: new WebSocket(tick.getWebSocketUrl()),
+    orderws: new WebSocket(order.getWebSocketUrl()),
+    worker: new Worker(__filename, {
+      // create the graph worker
+      workerData: {
+        graph: buildGraph(tradeDatum.pairs),
+        initialAssetIndex: tradeDatum.assets.findIndex(a => a === config.initialAsset),
+      },
+    }),
+  }
+
+  let shutdownCallback = constructShutdownCallback(conns, tradeDatum, isUnsubscribe)
+  let graphCallback = constructGraphCallback(
+    initialAssetIndex,
+    config,
+    tradeDatum,
+    isSending,
+    conns,
+    order,
+    token
+  )
 
   // setup all thread and process handlers
   process.on('SIGINT', shutdownCallback)

@@ -81,6 +81,11 @@ export interface Key {
   apiPrivateKey: string
 }
 
+export interface ThreadData {
+  graph: Dictionary<number[]>
+  initialAssetIndex: number
+}
+
 export interface TickerExchangeDriver {
   createTickSubRequest: (pairs: string[]) => object
   parseTick: (eventData: string) => string | PairPriceUpdate
