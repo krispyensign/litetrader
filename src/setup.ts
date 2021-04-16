@@ -1,15 +1,18 @@
-import { IndexedPair, Dictionary, TickerExchangeDriver, TradeDatum } from './types'
+import { IndexedPair, TickerExchangeDriver, TradeDatum } from './types'
 
-export let buildGraph = (indexedPairs: IndexedPair[]): Dictionary<string[]> => {
-  return indexedPairs.reduce((graph, pair) => {
-    if (graph[pair.baseIndex.toString()] === undefined)
-      graph[pair.baseIndex.toString()] = new Array<string>(pair.quoteIndex.toString())
-    else graph[pair.baseIndex.toString()].push(pair.quoteIndex.toString())
-    if (graph[pair.quoteIndex.toString()] === undefined)
-      graph[pair.quoteIndex.toString()] = new Array<string>(pair.baseIndex.toString())
-    else graph[pair.quoteIndex.toString()].push(pair.baseIndex.toString())
+export let buildGraph = (indexedPairs: IndexedPair[]): number[][] => {
+  let graph = indexedPairs.reduce((graph, pair) => {
+    if (graph[pair.baseIndex] === undefined)
+      graph[pair.baseIndex] = new Array<number>()
+    graph[pair.baseIndex].push(pair.quoteIndex)
+   
+    if (graph[pair.quoteIndex] === undefined)
+      graph[pair.quoteIndex] = new Array<number>()
+    graph[pair.quoteIndex].push(pair.baseIndex)
+    
     return graph
-  }, {} as Dictionary<string[]>)
+  }, new Array<number[]>())
+  return graph
 }
 
 export let setupData = async (tickDriver: TickerExchangeDriver): Promise<TradeDatum> => {

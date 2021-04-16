@@ -82,7 +82,7 @@ export interface Key {
 }
 
 export interface ThreadData {
-  graph: Dictionary<number[]>
+  graph: Array<number[]>
   initialAssetIndex: number
 }
 
