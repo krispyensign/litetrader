@@ -81,8 +81,8 @@ let parseTick = (tickData?: string): string | PairPriceUpdate => {
 
   // if its not a publication (unlikely) return the tick as a string for logging
   if (!isPublication(event)) return tickData
-  
-  let // split out the publication to the pair and the payload 
+
+  let // split out the publication to the pair and the payload
     pair = event[3],
     payload = event[1]
 

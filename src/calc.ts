@@ -1,5 +1,5 @@
 import type { Recipe, PricedPair, PairPriceUpdate, OrderCreateRequest } from './types'
-export {updatePair, calcProfit}
+export { updatePair, calcProfit }
 
 let updatePair = (
   pairMap: Map<string, number>,
@@ -38,24 +38,25 @@ let calcProfit = (
   orderId: string
 ): [number, Recipe] | number => {
   let pairList = cycle.slice(1).map((value, index) => {
-      let // try first/second else second/first
-        tempA = assets[cycle[index]],
-        tempB = assets[value],
-        indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
+    let // try first/second else second/first
+      tempA = assets[cycle[index]],
+      tempB = assets[value],
+      indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
 
-      // if not found then fail
-      if (indo === undefined) throw Error(`Invalid pair requested. quote: ${tempA}, ${tempB}`)
+    // if not found then fail
+    if (indo === undefined) throw Error(`Invalid pair requested. quote: ${tempA}, ${tempB}`)
 
-      // return the lookup value on success
-      return pairs[indo]
-    }),
-    // setup a recipe object to return just in case calculation shows profitable
-    recipe: Recipe = {
-      initialAmount: initialAmount,
-      initialAssetIndex: initialAssetIndex,
-      initialAssetName: assets[initialAssetIndex],
-      steps: new Array<OrderCreateRequest>(),
-    }
+    // return the lookup value on success
+    return pairs[indo]
+  })
+
+  // setup a recipe object to return just in case calculation shows profitable
+  let recipe: Recipe = {
+    initialAmount: initialAmount,
+    initialAssetIndex: initialAssetIndex,
+    initialAssetName: assets[initialAssetIndex],
+    steps: new Array<OrderCreateRequest>(),
+  }
 
   let // start with initially provided index and amount
     currentAsset = initialAssetIndex,

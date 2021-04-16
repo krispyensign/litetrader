@@ -3,7 +3,7 @@ import got from 'got'
 import type { OptionsOfJSONResponseBody } from 'got'
 import * as crypto from 'crypto'
 import qs = require('qs')
-export {getToken}
+export { getToken }
 
 let krakenTokenPath = '/0/private/GetWebSocketsToken',
   krakenApiUrl = 'https://api.kraken.com'
