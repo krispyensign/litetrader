@@ -10,7 +10,7 @@ import { buildGraph, setupData } from './setup'
 import { selector } from './helpers'
 import WebSocket = require('ws')
 import { Worker, parentPort } from 'worker_threads'
-import findCircuits = require("elementary-circuits-directed-graph");
+import findCircuits = require('elementary-circuits-directed-graph')
 
 import { updatePair, calcProfit } from './calc'
 // import os = require('os')
@@ -93,14 +93,17 @@ let constructGraphCallback = (
   }
 }
 
-export let workerApp = (data: ThreadData) => {
+export let workerApp = (data: ThreadData): void => {
   let adjList = Object.entries(data.graph).reduce(
-    (prev: Array<number[]>, [key, value]:[string, number[]]): Array<number[]> => {
-    prev[Number(key)] = value 
-    return prev
-  }, new Array<number[]>())
-  findCircuits(adjList, cp =>parentPort?.postMessage(cp))
-  
+    (prev: number[][], [key, value]: [string, number[]]): number[][] => {
+      prev[Number(key)] = value
+      return prev
+    },
+    new Array<number[]>()
+  )
+  findCircuits(adjList, cp => {
+    if (cp[0] === data.initialAssetIndex) parentPort?.postMessage(cp)
+  })
 }
 
 export let app = async (config: Config): Promise<Connections | undefined> => {
