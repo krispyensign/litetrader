@@ -17,7 +17,7 @@ export function selector(exchangeName: ExchangeName): [TickerExchangeDriver, Ord
 export async function getJson<T>(url: string): Promise<T | Error> {
   let result: T | Error
   try {
-    const innerResult: T | undefined = await got.default(url).json<T>()
+    let innerResult: T | undefined = await got.default(url).json<T>()
     if (innerResult !== undefined) result = innerResult
     else result = new Error('Failed to get back response from url: ' + url)
   } catch (e) {
@@ -27,26 +27,26 @@ export async function getJson<T>(url: string): Promise<T | Error> {
 }
 
 export function getLogger(serviceName: string): Logger {
-  const myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-      let msg = `${timestamp} [${level}] [${serviceName}] : ${message} `
-      if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object)) {
-        msg += JSON.stringify(metadata)
-      }
-      return msg
-    }),
-    logger = winston.createLogger({
-      level: 'info',
-      format: winston.format.json(),
-      transports: [
-        new winston.transports.File({
-          filename: `logs/${serviceName}-error.log`,
-          options: {
-            level: 'error',
-          },
-        }),
-        new winston.transports.File({ filename: `logs/${serviceName}-combined.log` }),
-      ],
-    })
+  let myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+    let msg = `${timestamp} [${level}] [${serviceName}] : ${message}`
+    if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object)) {
+      msg += JSON.stringify(metadata)
+    }
+    return msg
+  })
+  let logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+      new winston.transports.File({
+        filename: `logs/${serviceName}-error.log`,
+        options: {
+          level: 'error',
+        },
+      }),
+      new winston.transports.File({ filename: `logs/${serviceName}-combined.log` }),
+    ],
+  })
 
   if (process.env.NODE_ENV !== 'production') {
     logger.add(

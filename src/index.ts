@@ -3,14 +3,14 @@ import yargs = require('yargs/yargs')
 import { isMainThread } from 'worker_threads'
 // import os = require('os')
 import type { ExchangeName } from './types'
-import app from './app'
+import { app } from './app'
 
 // TODO: observe order response
 // TODO: add new worker thread to find cycles
 
 sourceMap.install()
 
-const argv = yargs(process.argv.slice(2)).options({
+let argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },
   initialAmount: { type: 'number', default: 0 },
   initialAsset: { type: 'string', default: 'ADA' },

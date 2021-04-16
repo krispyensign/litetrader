@@ -1,18 +1,20 @@
-import { Key, ResponseWrapper, Token } from '../types'
-import got, { OptionsOfJSONResponseBody } from 'got'
+import type { Key, ResponseWrapper, Token } from '../types'
+import got from 'got'
+import type { OptionsOfJSONResponseBody } from 'got'
 import * as crypto from 'crypto'
 import qs = require('qs')
+export {getToken}
 
-const krakenTokenPath = '/0/private/GetWebSocketsToken',
+let krakenTokenPath = '/0/private/GetWebSocketsToken',
   krakenApiUrl = 'https://api.kraken.com'
 
-export async function makeAuthCall<T = object>(
+let makeAuthCall = async <T = object>(
   url: string,
   request: string,
   nonce: number,
   key: Key
-): Promise<ResponseWrapper<T>> {
-  const signature = crypto
+): Promise<ResponseWrapper<T>> => {
+  let signature = crypto
     .createHmac('sha512', Buffer.from(key.apiPrivateKey, 'base64'))
     .update(
       krakenTokenPath +
@@ -24,7 +26,7 @@ export async function makeAuthCall<T = object>(
     )
     .digest('base64')
 
-  const gotOptions: OptionsOfJSONResponseBody = {
+  let gotOptions: OptionsOfJSONResponseBody = {
     url: url,
     headers: {
       'API-Key': key.apiKey,
@@ -37,7 +39,7 @@ export async function makeAuthCall<T = object>(
     isStream: false,
   }
 
-  const response = await got.post(gotOptions).json<ResponseWrapper<T>>()
+  let response = await got.post(gotOptions).json<ResponseWrapper<T>>()
 
   // if there wasn't a response then bomb
   if (!response) throw new Error('Failed to get response back from exchange api!')
@@ -55,13 +57,13 @@ export async function makeAuthCall<T = object>(
   return response
 }
 
-export async function getToken(key: Key): Promise<string> {
-  const n = new Date().getTime() * 1000
-  const requestData = {
+let getToken = async (key: Key): Promise<string> => {
+  let n = new Date().getTime() * 1000
+  let requestData = {
     nonce: n,
   }
 
-  const response = await makeAuthCall<Token>(
+  let response = await makeAuthCall<Token>(
     krakenApiUrl + krakenTokenPath,
     qs.stringify(requestData),
     requestData.nonce,

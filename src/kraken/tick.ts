@@ -12,17 +12,19 @@ import type {
   Publication,
   Ticker,
 } from '../types'
+export { getExchangeInterface }
 
-const krakenTickerPath = '/0/public/Ticker',
+let // setup the global constants
+  krakenTickerPath = '/0/public/Ticker',
   krakenPairsPath = '/0/public/AssetPairs',
   krakenApiUrl = 'https://api.kraken.com',
   krakenWsUrl = 'wss://ws.kraken.com'
 
-function compareTypes<U>(o: object, ...propertyNames: (keyof U)[]): boolean | string | undefined {
+let compareTypes = <U>(o: object, ...propertyNames: (keyof U)[]): boolean | string | undefined => {
   // check if object is undefined
   if (!o) return undefined
   // loop through supplied propertynames
-  for (const prop of propertyNames) {
+  for (let prop of propertyNames) {
     // if property is not in object then return that property
     if (!(prop in o)) return prop.toString()
   }
@@ -30,42 +32,34 @@ function compareTypes<U>(o: object, ...propertyNames: (keyof U)[]): boolean | st
   return true
 }
 
-export function isTicker(payload: object): payload is Ticker {
+let isTicker = (payload: object): payload is Ticker => {
   if (!payload) return false
-  const result = compareTypes<Ticker>(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
+  let result = compareTypes<Ticker>(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
   if (!result || typeof result === 'string') return false
   return result
 }
 
-export function isPublication(event: object): event is Publication {
+let isPublication = (event: object): event is Publication => {
   return (event as Publication).length !== undefined && (event as Publication).length === 4
 }
 
-export function isKrakenPair(pairName: string, pair?: Partial<AssetPair>): pair is AssetPair {
+let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is AssetPair => {
   if (!pair) return false
-  const result = compareTypes(
-    pair,
-    'wsname',
-    'base',
-    'quote',
-    'fees_maker',
-    'fees',
-    'pair_decimals'
-  )
+  let result = compareTypes(pair, 'wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals')
   if (!result) throw Error(`Failed to correctly populate pair ${pairName}`)
   if (typeof result === 'string') throw Error(`Missing resource ${result} on pair ${pairName}.`)
   return true
 }
 
-export function isLastTick(pairName: string, tick?: Partial<Ticker>): tick is Ticker {
+let isLastTick = (pairName: string, tick?: Partial<Ticker>): tick is Ticker => {
   if (!tick) return false
-  const result = compareTypes(tick, 'a', 'b', 't')
+  let result = compareTypes(tick, 'a', 'b', 't')
   if (!result) throw Error(`Failed to correctly populate tick ${pairName}.`)
   if (typeof result === 'string') throw Error(`Missing resource ${result} on pair ${pairName}.`)
   return true
 }
 
-export function isError(err: unknown): err is Error {
+let isError = (err: unknown): err is Error => {
   return (
     typeof err === 'object' &&
     (err as Error).message !== undefined &&
@@ -73,12 +67,12 @@ export function isError(err: unknown): err is Error {
   )
 }
 
-function parseTick(tickData?: string): string | PairPriceUpdate {
+let parseTick = (tickData?: string): string | PairPriceUpdate => {
   // make sure we got something if not failure during ws message
   if (!tickData) throw Error('TickData missing. Cannot parse.')
 
   // parse it
-  const event = JSON.parse(tickData)
+  let event = JSON.parse(tickData)
   if (!event) throw Error(`Failed to parse ${tickData}`)
 
   // check to make sure its not an error.  Something wrong with code itself
@@ -87,9 +81,9 @@ function parseTick(tickData?: string): string | PairPriceUpdate {
 
   // if its not a publication (unlikely) return the tick as a string for logging
   if (!isPublication(event)) return tickData
-
-  // split out the publication to the pair and the payload
-  const pair = event[3],
+  
+  let // split out the publication to the pair and the payload 
+    pair = event[3],
     payload = event[1]
 
   // check if the payload is a ticker if so then return back an update object
@@ -104,24 +98,24 @@ function parseTick(tickData?: string): string | PairPriceUpdate {
   return tickData
 }
 
-async function getAvailablePairs(threshold?: number): Promise<ExchangePair[]> {
+let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
   // get the tradeable asset pairs
   if (threshold === undefined || threshold === null) threshold = 0
-  const assetPairsResult = await getJson<ResponseWrapper>(krakenApiUrl + krakenPairsPath)
+  let assetPairsResult = await getJson<ResponseWrapper>(krakenApiUrl + krakenPairsPath)
 
   if (isError(assetPairsResult)) throw assetPairsResult
 
   // parse the tradeable assetPairs into tuples of name/assetPair
-  const assetPairs = Object.entries(assetPairsResult.result) as AssetPairsResponse
+  let assetPairs = Object.entries(assetPairsResult.result) as AssetPairsResponse
 
   // get the last tick for each asset pair
-  const assetPairTicksResult = await getJson<AssetTicksResponse>(
+  let assetPairTicksResult = await getJson<AssetTicksResponse>(
     krakenApiUrl + krakenTickerPath + '?pair=' + assetPairs.map(pair => pair[0]).join(',')
   )
   if (isError(assetPairTicksResult)) throw assetPairTicksResult
 
   // rename for easy reading
-  const assetPairTicks = assetPairTicksResult.result
+  let assetPairTicks = assetPairTicksResult.result
 
   return (
     assetPairs
@@ -158,24 +152,22 @@ async function getAvailablePairs(threshold?: number): Promise<ExchangePair[]> {
   )
 }
 
-export function getExchangeInterface(): TickerExchangeDriver {
-  return {
-    createStopRequest: (pairs: string[]): Unsubscribe => ({
-      event: 'unsubscribe',
-      pair: pairs,
-      subscription: {
-        name: 'ticker',
-      },
-    }),
-    createTickSubRequest: (pairs: string[]): Subscribe => ({
-      event: 'subscribe',
-      pair: pairs,
-      subscription: {
-        name: 'ticker',
-      },
-    }),
-    getAvailablePairs: getAvailablePairs,
-    parseTick: parseTick,
-    getWebSocketUrl: (): string => krakenWsUrl,
-  }
-}
+let getExchangeInterface = (): TickerExchangeDriver => ({
+  createStopRequest: (pairs: string[]): Unsubscribe => ({
+    event: 'unsubscribe',
+    pair: pairs,
+    subscription: {
+      name: 'ticker',
+    },
+  }),
+  createTickSubRequest: (pairs: string[]): Subscribe => ({
+    event: 'subscribe',
+    pair: pairs,
+    subscription: {
+      name: 'ticker',
+    },
+  }),
+  getAvailablePairs: getAvailablePairs,
+  parseTick: parseTick,
+  getWebSocketUrl: (): string => krakenWsUrl,
+})

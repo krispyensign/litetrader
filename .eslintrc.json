@@ -65,7 +65,7 @@
           "no-loss-of-precision": "off",
           "no-dupe-class-members": "off",
           "require-atomic-updates": "off",
-          "prefer-const": "error"
+          "prefer-const": "off"
         },
         "parserOptions": {
           "ecmaVersion": 2018,

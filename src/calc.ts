@@ -1,15 +1,16 @@
 import type { Recipe, PricedPair, PairPriceUpdate, OrderCreateRequest } from './types'
+export {updatePair, calcProfit}
 
-export function updatePair(
+let updatePair = (
   pairMap: Map<string, number>,
   pricedPairs: PricedPair[],
   pairUpdate: PairPriceUpdate | string
-): void {
+): void => {
   if (typeof pairUpdate === 'string') return
   if (pairUpdate.tradeName === undefined) throw Error('Missing tradename from update')
-  const pairIndex = pairMap.get(pairUpdate.tradeName)
+  let pairIndex = pairMap.get(pairUpdate.tradeName)
   if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
-  const pair = pricedPairs[pairIndex]
+  let pair = pricedPairs[pairIndex]
   pair.lastAskPrice = pair.ask
   pair.lastBidPrice = pair.bid
   pair.ask = pairUpdate.ask
@@ -17,16 +18,16 @@ export function updatePair(
 }
 
 // helper function to safely round a number
-function safeRound(num: number, decimals: number): number {
+let safeRound = (num: number, decimals: number): number => {
   return decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
 }
 
 // helper function to safely divide by 0
-function safeDivide(numA: number, numB: number): number {
+let safeDivide = (numA: number, numB: number): number => {
   return numB !== 0 ? numA / numB : 0
 }
 
-export function calcProfit(
+let calcProfit = (
   initialAssetIndex: number,
   initialAmount: number,
   cycle: number[],
@@ -35,10 +36,10 @@ export function calcProfit(
   pairMap: Map<string, number>,
   eta: number,
   orderId: string
-): [number, Recipe] | number {
-  const pairList = cycle.slice(1).map((value, index) => {
-      // try first/second else second/first
-      const tempA = assets[cycle[index]],
+): [number, Recipe] | number => {
+  let pairList = cycle.slice(1).map((value, index) => {
+      let // try first/second else second/first
+        tempA = assets[cycle[index]],
         tempB = assets[value],
         indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
 
@@ -61,7 +62,7 @@ export function calcProfit(
     currentAmount = initialAmount
 
   // for each trade index of a trade
-  for (const pair of pairList) {
+  for (let pair of pairList) {
     // validate the bid and ask are populated by this point
     if (pair.ask === undefined || pair.bid === undefined)
       throw Error('ask bid spread is not defined')
@@ -80,7 +81,7 @@ export function calcProfit(
     // if current exposure is in base asset then create a sell order
     if (currentAsset === pair.baseIndex) {
       // construct a step for the recipe
-      const step: OrderCreateRequest = {
+      let step: OrderCreateRequest = {
         // round to correct units (placing order in base currency units)
         amount: safeRound(currentAmount, pair.decimals),
         // this is a sell
@@ -101,7 +102,7 @@ export function calcProfit(
     // if current exposure is in quote asset then create a buy order
     else {
       // construct a step for the recipe
-      const step: OrderCreateRequest = {
+      let step: OrderCreateRequest = {
         amount: safeRound(
           safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
           pair.decimals
