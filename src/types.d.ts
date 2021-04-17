@@ -34,7 +34,7 @@ export type {
 } from 'exchange-models/kraken'
 
 import WebSocket = require('ws')
-import { Worker } from 'worker_threads'
+import readline = require('readline')
 
 export interface TradeDatum {
   assets: string[]
@@ -50,12 +50,13 @@ export interface Config {
   initialAsset: string
   eta: number
   key: Key
+  buildGraph: boolean
 }
 
 export interface Connections {
   tickws: WebSocket
   orderws: WebSocket
-  worker: Worker
+  worker: readline.Interface
 }
 
 export interface Dictionary<T> {
@@ -82,7 +83,7 @@ export interface Key {
 }
 
 export interface ThreadData {
-  graph: Array<number[]>
+  graph: number[][]
   initialAssetIndex: number
 }
 

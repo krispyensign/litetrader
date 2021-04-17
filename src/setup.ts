@@ -1,15 +1,98 @@
-import { IndexedPair, TickerExchangeDriver, TradeDatum } from './types'
+import { calcProfit, updatePair } from './calc'
+import { Config, Connections, IndexedPair, OrdersExchangeDriver, TickerExchangeDriver, TradeDatum } from './types'
+import WebSocket = require('ws')
+
+let sleep = async (timems: number): Promise<void> => {
+  await new Promise(resolve => setTimeout(resolve, timems))
+}
+
+export let constructTickCallback = (tradeDatum: TradeDatum, tick: TickerExchangeDriver) => {
+  return (x: WebSocket.MessageEvent): void => {
+    return updatePair(tradeDatum.pairMap, tradeDatum.pairs, tick.parseTick(x.toLocaleString()))
+  }
+}
+
+let setBool = (bool: Boolean, newVal: boolean): Boolean => {
+  bool.valueOf = (): boolean => newVal
+  return bool
+}
+
+export let constructShutdownCallback = (
+  connections: Connections,
+  tradeDatum: TradeDatum,
+  isUnsubscribe: Boolean
+) => {
+  return (): void => {
+    // only run once
+    if (isUnsubscribe.valueOf()) return
+    setBool(isUnsubscribe, true)
+
+    // unsubsribe from everything
+    connections.tickws.send(JSON.stringify(tradeDatum.unSubRequest))
+
+    // kill the connections ( will also kill detached threads and thus the app )
+    connections.tickws.close()
+    connections.orderws.close()
+    connections.worker.close()
+    console.log('shutdown complete')
+  }
+}
+
+export let constructGraphCallback = (
+  initialAssetIndex: number,
+  config: Config,
+  tradeDatum: TradeDatum,
+  isSending: Boolean,
+  conns: Connections,
+  order: OrdersExchangeDriver,
+  token: string
+) => {
+  return async (cycleData: string): Promise<void> => {
+    console.log('Graph callback called')
+    console.log(typeof cycleData === 'string')
+    let cycle = JSON.parse(cycleData)
+    console.log(cycle)
+    // calc profit, hopefully something good is found
+    let result = calcProfit(
+      initialAssetIndex,
+      config.initialAmount,
+      cycle,
+      tradeDatum.assets,
+      tradeDatum.pairs,
+      tradeDatum.pairMap,
+      config.eta,
+      '0'
+    )
+
+    // if not just an amount and is a cycle then do stuff
+    if (typeof result !== 'number') {
+      if (isSending) {
+        console.log('blocked send while already sending')
+        return
+      }
+      setBool(isSending, true)
+      console.time('send')
+      let [amount, recipe] = result
+      console.log(`amounts: ${config.initialAmount} -> ${amount}`)
+      console.log(recipe.steps)
+      for (let step of recipe.steps) {
+        conns.orderws.send(order.createOrderRequest(token, step))
+        await sleep(2)
+      }
+      console.timeEnd('send')
+      setBool(isSending, false)
+    }
+  }
+}
 
 export let buildGraph = (indexedPairs: IndexedPair[]): number[][] => {
   let graph = indexedPairs.reduce((graph, pair) => {
-    if (graph[pair.baseIndex] === undefined)
-      graph[pair.baseIndex] = new Array<number>()
+    if (graph[pair.baseIndex] === undefined) graph[pair.baseIndex] = new Array<number>()
     graph[pair.baseIndex].push(pair.quoteIndex)
-   
-    if (graph[pair.quoteIndex] === undefined)
-      graph[pair.quoteIndex] = new Array<number>()
+
+    if (graph[pair.quoteIndex] === undefined) graph[pair.quoteIndex] = new Array<number>()
     graph[pair.quoteIndex].push(pair.baseIndex)
-    
+
     return graph
   }, new Array<number[]>())
   return graph
