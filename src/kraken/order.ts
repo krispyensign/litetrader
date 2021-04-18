@@ -1,8 +1,6 @@
 import type {
   OrdersExchangeDriver,
-  AddOrder,
   AddOrderStatus,
-  CancelOrder,
   CancelOrderStatus,
   OrderCancelRequest,
   OrderCreateRequest,
@@ -23,7 +21,7 @@ let isStatusEvent = (
   return typedEvent?.event !== undefined && typedEvent.reqid !== undefined
 }
 
-let createOrderRequest = (token: string, order: OrderCreateRequest): AddOrder => ({
+let createOrderRequest = (token: string, order: OrderCreateRequest): string => JSON.stringify({
   ordertype: order.orderType,
   event: 'addOrder',
   pair: order.pair,
@@ -34,7 +32,7 @@ let createOrderRequest = (token: string, order: OrderCreateRequest): AddOrder =>
   price: order.price,
 })
 
-let cancelOrderRequest = (token: string, cancel: OrderCancelRequest): CancelOrder => ({
+let cancelOrderRequest = (token: string, cancel: OrderCancelRequest): string => JSON.stringify({
   event: 'cancelOrder',
   token: token,
   txid: [cancel.orderId!],

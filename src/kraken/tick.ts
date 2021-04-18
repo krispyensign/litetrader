@@ -6,8 +6,6 @@ import type {
   AssetPairsResponse,
   AssetTicksResponse,
   TickerExchangeDriver,
-  Unsubscribe,
-  Subscribe,
   AssetPair,
   Publication,
   Ticker,
@@ -152,14 +150,14 @@ let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
 }
 
 export let getExchangeInterface = (): TickerExchangeDriver => ({
-  createStopRequest: (pairs: string[]): Unsubscribe => ({
+  createStopRequest: (pairs: string[]): string => JSON.stringify({
     event: 'unsubscribe',
     pair: pairs,
     subscription: {
       name: 'ticker',
     },
   }),
-  createTickSubRequest: (pairs: string[]): Subscribe => ({
+  createTickSubRequest: (pairs: string[]): string => JSON.stringify({
     event: 'subscribe',
     pair: pairs,
     subscription: {

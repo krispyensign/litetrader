@@ -88,9 +88,9 @@ export interface ThreadData {
 }
 
 export interface TickerExchangeDriver {
-  createTickSubRequest: (pairs: string[]) => object
+  createTickSubRequest: (pairs: string[]) => string
   parseTick: (eventData: string) => string | PairPriceUpdate
-  createStopRequest: (pairs: string[]) => object
+  createStopRequest: (pairs: string[]) => string
   getAvailablePairs: (threshold?: number) => Promise<ExchangePair[]>
   getWebSocketUrl: () => string
 }
@@ -99,8 +99,8 @@ export interface OrdersExchangeDriver {
   parseEvent(eventData: string): string | [string, unknown]
   getReqId(parsedEvent: unknown): string
   isEvent(parsedEvent: unknown): boolean
-  createOrderRequest(token: string, order: OrderCreateRequest): unknown
-  cancelOrderRequest(token: string, cancel: OrderCancelRequest): unknown
+  createOrderRequest(token: string, order: OrderCreateRequest): string
+  cancelOrderRequest(token: string, cancel: OrderCancelRequest): string
   getWebSocketUrl: () => string
   getToken: (key: Key) => Promise<string>
 }
