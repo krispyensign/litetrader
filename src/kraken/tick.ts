@@ -10,11 +10,11 @@ import type {
   Ticker,
 } from '../types'
 
-export let // setup the global constants
-  krakenTickerPath = '/0/public/Ticker',
-  krakenPairsPath = '/0/public/AssetPairs',
-  krakenApiUrl = 'https://api.kraken.com',
-  krakenWsUrl = 'wss://ws.kraken.com'
+// setup the global constants
+let krakenTickerPath = '/0/public/Ticker'
+let krakenPairsPath = '/0/public/AssetPairs'
+let krakenApiUrl = 'https://api.kraken.com'
+let krakenWsUrl = 'wss://ws.kraken.com'
 
 let compareTypes = <U>(o: object, ...propertyNames: (keyof U)[]): boolean | string | undefined => {
   // check if object is undefined
@@ -28,18 +28,18 @@ let compareTypes = <U>(o: object, ...propertyNames: (keyof U)[]): boolean | stri
   return true
 }
 
-export let isTicker = (payload: object): payload is Ticker => {
+let isTicker = (payload: object): payload is Ticker => {
   if (!payload) return false
   let result = compareTypes<Ticker>(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
   if (!result || typeof result === 'string') return false
   return result
 }
 
-export let isPublication = (event: object): event is Publication => {
+let isPublication = (event: object): event is Publication => {
   return (event as Publication).length !== undefined && (event as Publication).length === 4
 }
 
-export let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is AssetPair => {
+let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is AssetPair => {
   if (!pair) return false
   let result = compareTypes(pair, 'wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals')
   if (!result) throw Error(`Failed to correctly populate pair ${pairName}`)
@@ -47,7 +47,7 @@ export let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is
   return true
 }
 
-export let isLastTick = (pairName: string, tick?: Partial<Ticker>): tick is Ticker => {
+let isLastTick = (pairName: string, tick?: Partial<Ticker>): tick is Ticker => {
   if (!tick) return false
   let result = compareTypes(tick, 'a', 'b', 't')
   if (!result) throw Error(`Failed to correctly populate tick ${pairName}.`)
@@ -55,7 +55,7 @@ export let isLastTick = (pairName: string, tick?: Partial<Ticker>): tick is Tick
   return true
 }
 
-export let isError = (err: unknown): err is Error => {
+let isError = (err: unknown): err is Error => {
   return (
     typeof err === 'object' &&
     (err as Error).message !== undefined &&
@@ -78,9 +78,9 @@ export let parseTick = (tickData?: string): string | PairPriceUpdate => {
   // if its not a publication (unlikely) return the tick as a string for logging
   if (!isPublication(event)) return tickData
 
-  let // split out the publication to the pair and the payload
-    pair = event[3],
-    payload = event[1]
+  // split out the publication to the pair and the payload
+  let pair = event[3]
+  let payload = event[1]
 
   // check if the payload is a ticker if so then return back an update object
   if (isTicker(payload))
@@ -163,4 +163,5 @@ export let createTickSubRequest = (pairs: string[]): string =>
       name: 'ticker',
     },
   })
+
 export let getWebSocketUrl = (): string => krakenWsUrl

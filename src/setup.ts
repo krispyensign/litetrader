@@ -3,7 +3,7 @@ import { tickSelector } from './helpers'
 import { IndexedPair } from './types'
 
 export let buildGraph = (indexedPairs: IndexedPair[]): number[][] => {
-  let graph = indexedPairs.reduce((graph, pair) => {
+  return indexedPairs.reduce((graph, pair) => {
     if (graph[pair.baseIndex] === undefined) graph[pair.baseIndex] = new Array<number>()
     graph[pair.baseIndex].push(pair.quoteIndex)
 
@@ -12,7 +12,6 @@ export let buildGraph = (indexedPairs: IndexedPair[]): number[][] => {
 
     return graph
   }, new Array<number[]>())
-  return graph
 }
 
 export let setupData = async (
@@ -32,9 +31,8 @@ export let setupData = async (
 
   // convert pairs to internal index pair format
   let pairs = tradePairs.map(pair => {
-    let // attempt to get the baseIndex
-      baseIndex = assets.indexOf(pair.baseName),
-      quoteIndex = assets.indexOf(pair.quoteName)
+    let baseIndex = assets.indexOf(pair.baseName)
+    let quoteIndex = assets.indexOf(pair.quoteName)
 
     if (baseIndex === -1 || quoteIndex === -1)
       throw Error(`${pair.baseName}: ${baseIndex} / ${pair.quoteName}: ${quoteIndex} missing`)
