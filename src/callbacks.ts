@@ -71,11 +71,16 @@ export let newGraphProfitCallback = (
   isSending: Boolean,
   orderws: WebSocket,
   token: string,
-  createOrderRequest: (token: string, step: OrderCreateRequest) => string
+  createOrderRequest: (token: string, step: OrderCreateRequest) => string,
+  shutdownCallback: () => void
 ) => {
   return async (cycleData: string): Promise<void> => {
     console.log('Graph callback called')
     console.log(typeof cycleData === 'string')
+    if (cycleData === 'done') {
+      shutdownCallback()
+      return
+    }
     let cycle = JSON.parse(cycleData)
     console.log(cycle)
     // calc profit, hopefully something good is found
@@ -107,6 +112,8 @@ export let newGraphProfitCallback = (
       }
       console.timeEnd('send')
       setBool(isSending, false)
+    } else {
+      console.log(result)
     }
   }
 }

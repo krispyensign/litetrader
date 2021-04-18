@@ -70,7 +70,8 @@ export let app = async (
     isSending,
     orderws,
     token,
-    order.createOrderRequest
+    order.createOrderRequest,
+    shutdownCallback
   )
 
   // setup all thread and process handlers
