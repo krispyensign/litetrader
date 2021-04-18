@@ -1,19 +1,18 @@
 import type {
-  OrdersExchangeDriver,
   AddOrderStatus,
   CancelOrderStatus,
   OrderCancelRequest,
   OrderCreateRequest,
   SubscriptionStatus,
 } from '../types'
-import { getToken } from './token'
 
-let krakenWsUrl = 'wss://ws-auth.kraken.com'
+let wsUrl = 'wss://ws-auth.kraken.com'
 
-let getReqId = (parsedEvent: AddOrderStatus | CancelOrderStatus | SubscriptionStatus): string =>
-  parsedEvent.reqid?.toString() || '0'
+export let getReqId = (
+  parsedEvent: AddOrderStatus | CancelOrderStatus | SubscriptionStatus
+): string => parsedEvent.reqid?.toString() || '0'
 
-let isStatusEvent = (
+export let isStatusEvent = (
   event: unknown
 ): event is AddOrderStatus | CancelOrderStatus | SubscriptionStatus => {
   if (typeof event !== 'object') return false
@@ -21,29 +20,24 @@ let isStatusEvent = (
   return typedEvent?.event !== undefined && typedEvent.reqid !== undefined
 }
 
-let createOrderRequest = (token: string, order: OrderCreateRequest): string => JSON.stringify({
-  ordertype: order.orderType,
-  event: 'addOrder',
-  pair: order.pair,
-  token: token,
-  type: order.direction,
-  volume: order.amount.toFixed(20),
-  validate: 'true',
-  price: order.price,
-})
+export let createOrderRequest = (token: string, order: OrderCreateRequest): string =>
+  JSON.stringify({
+    ordertype: order.orderType,
+    event: 'addOrder',
+    pair: order.pair,
+    token: token,
+    type: order.direction,
+    volume: order.amount.toFixed(20),
+    validate: 'true',
+    price: order.price,
+  })
 
-let cancelOrderRequest = (token: string, cancel: OrderCancelRequest): string => JSON.stringify({
-  event: 'cancelOrder',
-  token: token,
-  txid: [cancel.orderId!],
-})
+export let cancelOrderRequest = (token: string, cancel: OrderCancelRequest): string =>
+  JSON.stringify({
+    event: 'cancelOrder',
+    token: token,
+    txid: [cancel.orderId!],
+  })
 
-export let getExchangeInterface = (): OrdersExchangeDriver => ({
-  getReqId: getReqId,
-  isEvent: isStatusEvent,
-  createOrderRequest: createOrderRequest,
-  cancelOrderRequest: cancelOrderRequest,
-  parseEvent: (eventData: string): string => eventData,
-  getWebSocketUrl: (): string => krakenWsUrl,
-  getToken: getToken,
-})
+export let parseEvent = (eventData: string): string => eventData
+export let getWebSocketUrl = (): string => wsUrl

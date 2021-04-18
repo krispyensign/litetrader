@@ -1,4 +1,6 @@
-import { IndexedPair, TickerExchangeDriver } from "./types"
+import { ExchangeName } from 'exchange-models/exchange'
+import { tickSelector } from './helpers'
+import { IndexedPair } from './types'
 
 export let buildGraph = (indexedPairs: IndexedPair[]): number[][] => {
   let graph = indexedPairs.reduce((graph, pair) => {
@@ -13,35 +15,39 @@ export let buildGraph = (indexedPairs: IndexedPair[]): number[][] => {
   return graph
 }
 
-export let setupData = async (tickDriver: TickerExchangeDriver): Promise<[string[], IndexedPair[], Map<string, number>, string, string]> => {
+export let setupData = async (
+  exchangeName: ExchangeName
+): Promise<[string[], IndexedPair[], Map<string, number>]> => {
+  let tick = tickSelector(exchangeName)
   // get pairs from exchange
-  let tradePairs = await tickDriver.getAvailablePairs()
+  let tradePairs = await tick.getAvailablePairs()
 
   // extract assets from pairs
   let assets = [
-    ...tradePairs.reduce((prev, pair) => prev.add(pair.baseName).add(pair.quoteName), new Set<string>()),
+    ...tradePairs.reduce(
+      (prev, pair) => prev.add(pair.baseName).add(pair.quoteName),
+      new Set<string>()
+    ),
   ]
 
-    // convert pairs to internal index pair format
+  // convert pairs to internal index pair format
   let pairs = tradePairs.map(pair => {
-      let // attempt to get the baseIndex
-        baseIndex = assets.indexOf(pair.baseName),
-        quoteIndex = assets.indexOf(pair.quoteName)
+    let // attempt to get the baseIndex
+      baseIndex = assets.indexOf(pair.baseName),
+      quoteIndex = assets.indexOf(pair.quoteName)
 
-      if (baseIndex === -1 || quoteIndex === -1)
-        throw Error(`${pair.baseName}: ${baseIndex} / ${pair.quoteName}: ${quoteIndex} missing`)
+    if (baseIndex === -1 || quoteIndex === -1)
+      throw Error(`${pair.baseName}: ${baseIndex} / ${pair.quoteName}: ${quoteIndex} missing`)
 
-      // update the pair with the new values
-      return { ...pair, baseIndex: baseIndex, quoteIndex: quoteIndex }
-    })
-    // create a mapping of baseNamequoteName and baseName,quoteName
+    // update the pair with the new values
+    return { ...pair, baseIndex: baseIndex, quoteIndex: quoteIndex }
+  })
+  // create a mapping of baseNamequoteName and baseName,quoteName
   let pairMap = new Map([
-      ...new Map<string, number>(tradePairs.map((pair, index) => [pair.tradename, index])),
-      ...new Map<string, number>(
-        tradePairs.map(pair => [[pair.baseName, pair.quoteName].join(','), pair.index])
-      ),
-    ])
-  let unSubRequest = JSON.stringify(tickDriver.createStopRequest(tradePairs.map(p => p.tradename)))
-  let subRequest = JSON.stringify(tickDriver.createTickSubRequest(tradePairs.map(p => p.tradename)))
-  return [assets, pairs, pairMap, unSubRequest, subRequest]
+    ...new Map<string, number>(tradePairs.map((pair, index) => [pair.tradename, index])),
+    ...new Map<string, number>(
+      tradePairs.map(pair => [[pair.baseName, pair.quoteName].join(','), pair.index])
+    ),
+  ])
+  return [assets, pairs, pairMap]
 }

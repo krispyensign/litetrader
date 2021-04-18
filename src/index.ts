@@ -1,9 +1,7 @@
 import sourceMap = require('source-map-support')
 import yargs = require('yargs/yargs')
 import { app } from './app'
-import type {
-  ExchangeName
-} from './types'
+import type { ExchangeName } from './types'
 
 sourceMap.install()
 
@@ -14,7 +12,7 @@ let argv = yargs(process.argv.slice(2)).options({
   eta: { type: 'number', default: 0.001 },
   apiKey: { type: 'string', default: '' },
   apiPrivateKey: { type: 'string', default: '' },
-  buildGraph: { type: 'boolean', default: false}
+  buildGraph: { type: 'boolean', default: false },
 }).argv
 
 // do some error handling
@@ -30,7 +28,7 @@ app({
     apiKey: argv.apiKey,
     apiPrivateKey: argv.apiPrivateKey,
   },
-  buildGraph: argv.buildGraph
+  buildGraph: argv.buildGraph,
 })
 
 // wait till shutdown of sockets and readline

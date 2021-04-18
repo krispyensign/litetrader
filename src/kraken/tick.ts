@@ -5,13 +5,12 @@ import type {
   ResponseWrapper,
   AssetPairsResponse,
   AssetTicksResponse,
-  TickerExchangeDriver,
   AssetPair,
   Publication,
   Ticker,
 } from '../types'
 
-let // setup the global constants
+export let // setup the global constants
   krakenTickerPath = '/0/public/Ticker',
   krakenPairsPath = '/0/public/AssetPairs',
   krakenApiUrl = 'https://api.kraken.com',
@@ -29,18 +28,18 @@ let compareTypes = <U>(o: object, ...propertyNames: (keyof U)[]): boolean | stri
   return true
 }
 
-let isTicker = (payload: object): payload is Ticker => {
+export let isTicker = (payload: object): payload is Ticker => {
   if (!payload) return false
   let result = compareTypes<Ticker>(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
   if (!result || typeof result === 'string') return false
   return result
 }
 
-let isPublication = (event: object): event is Publication => {
+export let isPublication = (event: object): event is Publication => {
   return (event as Publication).length !== undefined && (event as Publication).length === 4
 }
 
-let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is AssetPair => {
+export let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is AssetPair => {
   if (!pair) return false
   let result = compareTypes(pair, 'wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals')
   if (!result) throw Error(`Failed to correctly populate pair ${pairName}`)
@@ -48,7 +47,7 @@ let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is AssetP
   return true
 }
 
-let isLastTick = (pairName: string, tick?: Partial<Ticker>): tick is Ticker => {
+export let isLastTick = (pairName: string, tick?: Partial<Ticker>): tick is Ticker => {
   if (!tick) return false
   let result = compareTypes(tick, 'a', 'b', 't')
   if (!result) throw Error(`Failed to correctly populate tick ${pairName}.`)
@@ -56,7 +55,7 @@ let isLastTick = (pairName: string, tick?: Partial<Ticker>): tick is Ticker => {
   return true
 }
 
-let isError = (err: unknown): err is Error => {
+export let isError = (err: unknown): err is Error => {
   return (
     typeof err === 'object' &&
     (err as Error).message !== undefined &&
@@ -64,7 +63,7 @@ let isError = (err: unknown): err is Error => {
   )
 }
 
-let parseTick = (tickData?: string): string | PairPriceUpdate => {
+export let parseTick = (tickData?: string): string | PairPriceUpdate => {
   // make sure we got something if not failure during ws message
   if (!tickData) throw Error('TickData missing. Cannot parse.')
 
@@ -95,7 +94,7 @@ let parseTick = (tickData?: string): string | PairPriceUpdate => {
   return tickData
 }
 
-let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
+export let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
   // get the tradeable asset pairs
   if (threshold === undefined || threshold === null) threshold = 0
   let assetPairsResult = await getJson<ResponseWrapper>(krakenApiUrl + krakenPairsPath)
@@ -148,23 +147,20 @@ let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
       )
   )
 }
-
-export let getExchangeInterface = (): TickerExchangeDriver => ({
-  createStopRequest: (pairs: string[]): string => JSON.stringify({
+export let createStopRequest = (pairs: string[]): string =>
+  JSON.stringify({
     event: 'unsubscribe',
     pair: pairs,
     subscription: {
       name: 'ticker',
     },
-  }),
-  createTickSubRequest: (pairs: string[]): string => JSON.stringify({
+  })
+export let createTickSubRequest = (pairs: string[]): string =>
+  JSON.stringify({
     event: 'subscribe',
     pair: pairs,
     subscription: {
       name: 'ticker',
     },
-  }),
-  getAvailablePairs: getAvailablePairs,
-  parseTick: parseTick,
-  getWebSocketUrl: (): string => krakenWsUrl,
-})
+  })
+export let getWebSocketUrl = (): string => krakenWsUrl

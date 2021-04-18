@@ -1,16 +1,23 @@
 import winston = require('winston')
 import { Logger } from 'winston'
 import got = require('got')
-import type { ExchangeName, OrdersExchangeDriver, TickerExchangeDriver } from './types'
+import type { ExchangeName } from './types'
 import * as krakenTick from './kraken/tick'
 import * as krakenOrder from './kraken/order'
 
-export let selector = (
-  exchangeName: ExchangeName
-): [TickerExchangeDriver, OrdersExchangeDriver] => {
+export let tickSelector = (exchangeName: ExchangeName): typeof krakenTick => {
   switch (exchangeName) {
     case 'kraken':
-      return [krakenTick.getExchangeInterface(), krakenOrder.getExchangeInterface()]
+      return krakenTick
+    default:
+      throw Error('Invalid exchange selected')
+  }
+}
+
+export let orderSelector = (exchangeName: ExchangeName): typeof krakenOrder => {
+  switch (exchangeName) {
+    case 'kraken':
+      return krakenOrder
     default:
       throw Error('Invalid exchange selected')
   }

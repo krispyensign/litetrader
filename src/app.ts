@@ -1,10 +1,7 @@
-
 import sourceMap = require('source-map-support')
-import type {
-  Config,
-} from './types'
+import type { Config } from './types'
 import { buildGraph, setupData } from './setup'
-import { selector } from './helpers'
+import { orderSelector, tickSelector } from './helpers'
 import WebSocket = require('ws')
 import readline = require('readline')
 import { newTickCallback, newShutdownCallback, newGraphProfitCallback } from './callbacks'
@@ -16,42 +13,55 @@ let sleep = async (timems: number): Promise<void> => {
   await new Promise(resolve => setTimeout(resolve, timems))
 }
 
-export let app = async (config: Config): Promise<[WebSocket, WebSocket, readline.Interface] | undefined> => {
+export let app = async (
+  config: Config
+): Promise<[WebSocket, WebSocket, readline.Interface] | undefined> => {
   // configure everything
-  let [tick, order] = selector(config.exchangeName)
-  let [assets, pairs, pairMap, unSubRequest, subRequest] = await setupData(tick)
+  let tick = tickSelector(config.exchangeName)
+  let order = orderSelector(config.exchangeName)
+  let [assets, pairs, pairMap] = await setupData(config.exchangeName)
+  let unSubRequest = tick.createStopRequest(pairs.map(p => p.tradename))
+  let subRequest = tick.createTickSubRequest(pairs.map(p => p.tradename))
+
   // token = await order.getToken(config.key)
   let token = ''
-  
+
   // setup mutex
   let isUnsubscribe = new Boolean(false)
   let isSending = new Boolean(false)
-  
-  let initialAssetIndex = assets.findIndex(a => a === config.initialAsset)
 
   // validate asset before continuing
+  let initialAssetIndex = assets.findIndex(a => a === config.initialAsset)
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
 
   // build the graph from the data and quit if this option was selected
   if (config.buildGraph) {
-    console.log(JSON.stringify({
-      graph: buildGraph(pairs),
-      initialIndex: initialAssetIndex
-    }))
+    console.log(
+      JSON.stringify({
+        graph: buildGraph(pairs),
+        initialIndex: initialAssetIndex,
+      })
+    )
     return
   }
 
-  let // setup sockets and graph worker
-    tickws = new WebSocket(tick.getWebSocketUrl()),
-    orderws = new WebSocket(order.getWebSocketUrl()),
-    graphWorker = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    })
+  // setup sockets and graph worker
+  let tickws = new WebSocket(tick.getWebSocketUrl())
+  let orderws = new WebSocket(order.getWebSocketUrl())
+  let graphWorker = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  })
 
   // setup closures for later portable
   let tickCallback = newTickCallback(pairs, pairMap, tick.parseTick)
-  let shutdownCallback = newShutdownCallback(isUnsubscribe, tickws, orderws, graphWorker, unSubRequest)
+  let shutdownCallback = newShutdownCallback(
+    isUnsubscribe,
+    tickws,
+    orderws,
+    graphWorker,
+    unSubRequest
+  )
   let graphWorkerCallback = newGraphProfitCallback(
     initialAssetIndex,
     config.initialAmount,
@@ -68,9 +78,7 @@ export let app = async (config: Config): Promise<[WebSocket, WebSocket, readline
   // setup all thread and process handlers
   process.on('SIGINT', shutdownCallback)
   tickws.on('message', tickCallback)
-  orderws.on('message', eventData =>
-    console.log(order.parseEvent(eventData.toLocaleString()))
-  )
+  orderws.on('message', eventData => console.log(order.parseEvent(eventData.toLocaleString())))
   graphWorker.on('line', graphWorkerCallback)
 
   // sleep until tick websocket is stable then subscribe
