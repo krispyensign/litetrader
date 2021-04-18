@@ -20,8 +20,6 @@ export let app = async (
   let tick = tickSelector(config.exchangeName)
   let order = orderSelector(config.exchangeName)
   let [assets, pairs, pairMap] = await setupData(config.exchangeName)
-  let unSubRequest = tick.createStopRequest(pairs.map(p => p.tradename))
-  let subRequest = tick.createTickSubRequest(pairs.map(p => p.tradename))
 
   // token = await order.getToken(config.key)
   let token = ''
@@ -60,7 +58,7 @@ export let app = async (
     tickws,
     orderws,
     graphWorker,
-    unSubRequest
+    tick.createStopRequest(pairs.map(p => p.tradename))
   )
   let graphWorkerCallback = newGraphProfitCallback(
     initialAssetIndex,
@@ -83,7 +81,7 @@ export let app = async (
 
   // sleep until tick websocket is stable then subscribe
   while (tickws.readyState !== WebSocket.OPEN) await sleep(100)
-  tickws.send(subRequest)
+  tickws.send(tick.createTickSubRequest(pairs.map(p => p.tradename)))
 
   // return configured threads
   return [tickws, orderws, graphWorker]

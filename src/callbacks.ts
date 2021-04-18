@@ -1,4 +1,4 @@
-import { calcProfit, updatePair } from './calc'
+import { calcProfit } from './calc'
 import WebSocket = require('ws')
 import { OrderCreateRequest, PairPriceUpdate, PricedPair } from 'exchange-models/exchange'
 import readline = require('readline')
@@ -10,6 +10,22 @@ let sleep = async (timems: number): Promise<void> => {
 let setBool = (bool: Boolean, newVal: boolean): Boolean => {
   bool.valueOf = (): boolean => newVal
   return bool
+}
+
+let updatePair = (
+  pairMap: Map<string, number>,
+  pricedPairs: PricedPair[],
+  pairUpdate: PairPriceUpdate | string
+): void => {
+  if (typeof pairUpdate === 'string') return
+  if (pairUpdate.tradeName === undefined) throw Error('Missing tradename from update')
+  let pairIndex = pairMap.get(pairUpdate.tradeName)
+  if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
+  let pair = pricedPairs[pairIndex]
+  pair.lastAskPrice = pair.ask
+  pair.lastBidPrice = pair.bid
+  pair.ask = pairUpdate.ask
+  pair.bid = pairUpdate.bid
 }
 
 export let newTickCallback = (

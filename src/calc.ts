@@ -1,29 +1,4 @@
-import type { Recipe, PricedPair, PairPriceUpdate, OrderCreateRequest } from './types'
-
-export function createEdgeList(pairs: PricedPair[]): [string, string][] {
-  // convert pairs to an undirected edgelist with every edge supporting both directions
-  return pairs.reduce((prev, pair) => {
-    prev.push([String(pair.baseIndex), String(pair.quoteIndex)] as [string, string])
-    prev.push([String(pair.quoteIndex), String(pair.baseIndex)] as [string, string])
-    return prev
-  }, new Array<[string, string]>())
-}
-
-export let updatePair = (
-  pairMap: Map<string, number>,
-  pricedPairs: PricedPair[],
-  pairUpdate: PairPriceUpdate | string
-): void => {
-  if (typeof pairUpdate === 'string') return
-  if (pairUpdate.tradeName === undefined) throw Error('Missing tradename from update')
-  let pairIndex = pairMap.get(pairUpdate.tradeName)
-  if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
-  let pair = pricedPairs[pairIndex]
-  pair.lastAskPrice = pair.ask
-  pair.lastBidPrice = pair.bid
-  pair.ask = pairUpdate.ask
-  pair.bid = pairUpdate.bid
-}
+import type { Recipe, PricedPair, OrderCreateRequest } from './types'
 
 export let calcProfit = (
   initialAssetIndex: number,

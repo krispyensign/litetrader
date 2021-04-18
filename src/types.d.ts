@@ -1,11 +1,4 @@
-import type {
-  ExchangeName,
-  ExchangePair,
-  OrderCancelRequest,
-  OrderCreateRequest,
-  PairPriceUpdate,
-  PricedPair,
-} from 'exchange-models/exchange'
+import type { ExchangeName, OrderCreateRequest, PricedPair } from 'exchange-models/exchange'
 
 import type { AssetPair, Ticker } from 'exchange-models/kraken'
 
@@ -71,38 +64,9 @@ export interface ResponseWrapper<T = object> {
   result: T
 }
 
-export interface TickerConfiguration {
-  threshold: number
-  wsUrl: string
-  exchangeName: ExchangeName
-}
-
 export interface Key {
   apiKey: string
   apiPrivateKey: string
-}
-
-export interface ThreadData {
-  graph: number[][]
-  initialAssetIndex: number
-}
-
-export interface TickerExchangeDriver {
-  createTickSubRequest: (pairs: string[]) => string
-  parseTick: (eventData: string) => string | PairPriceUpdate
-  createStopRequest: (pairs: string[]) => string
-  getAvailablePairs: (threshold?: number) => Promise<ExchangePair[]>
-  getWebSocketUrl: () => string
-}
-
-export interface OrdersExchangeDriver {
-  parseEvent(eventData: string): string | [string, unknown]
-  getReqId(parsedEvent: unknown): string
-  isEvent(parsedEvent: unknown): boolean
-  createOrderRequest(token: string, order: OrderCreateRequest): string
-  cancelOrderRequest(token: string, cancel: OrderCancelRequest): string
-  getWebSocketUrl: () => string
-  getToken: (key: Key) => Promise<string>
 }
 
 export interface Recipe {
