@@ -7,7 +7,7 @@ sourceMap.install()
 
 let argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },
-  initialAmount: { type: 'number', default: 0 },
+  initialAmount: { type: 'number', default: 200 },
   initialAsset: { type: 'string', default: 'ADA' },
   eta: { type: 'number', default: 0.001 },
   apiKey: { type: 'string', default: '' },
