@@ -5,3 +5,4 @@ dist/
 graph.json
 .vscode/
 key.json
+__pycache__/
