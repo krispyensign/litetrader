@@ -25,10 +25,6 @@ export let app = async (
   // token = await order.getToken(config.key)
   let token = ''
 
-  // setup mutex
-  let isUnsubscribe = new Boolean(false)
-  let isSending = new Boolean(false)
-
   // validate asset before continuing
   let initialAssetIndex = assets.findIndex(a => a === config.initialAsset)
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
@@ -60,7 +56,6 @@ export let app = async (
   // setup closures for later portable
   let tickCallback = newTickCallback(pairs, pairMap, tick.parseTick)
   let shutdownCallback = newShutdownCallback(
-    isUnsubscribe,
     tickws,
     orderws,
     graphWorker,
@@ -73,12 +68,15 @@ export let app = async (
     pairs,
     pairMap,
     config.eta,
-    isSending,
     orderws,
     token,
     order.createOrderRequest,
     shutdownCallback
   )
+
+  // sleep until websockets are stable before proceeding
+  while (tickws.readyState !== WebSocket.OPEN || orderws.readyState !== WebSocket.OPEN)
+    await sleep(1000)
 
   // setup all thread and process handlers
   process.on('SIGINT', shutdownCallback)
@@ -86,8 +84,6 @@ export let app = async (
   orderws.on('message', eventData => console.log(order.parseEvent(eventData.toLocaleString())))
   graphWorker.on('line', graphWorkerCallback)
 
-  // sleep until tick websocket is stable then subscribe
-  while (tickws.readyState !== WebSocket.OPEN) await sleep(100)
   tickws.send(tick.createTickSubRequest(pairs.map(p => p.tradename)))
 
   // return configured threads

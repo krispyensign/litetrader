@@ -3,15 +3,6 @@ import WebSocket = require('ws')
 import { OrderCreateRequest, PairPriceUpdate, PricedPair } from './types'
 import readline = require('readline')
 
-let sleep = async (timems: number): Promise<void> => {
-  await new Promise(resolve => setTimeout(resolve, timems))
-}
-
-let setBool = (bool: Boolean, newVal: boolean): Boolean => {
-  bool.valueOf = (): boolean => newVal
-  return bool
-}
-
 let updatePair = (
   pairMap: Map<string, number>,
   pricedPairs: PricedPair[],
@@ -39,16 +30,16 @@ export let newTickCallback = (
 }
 
 export let newShutdownCallback = (
-  isUnsubscribe: Boolean,
   tickws: WebSocket,
   orderws: WebSocket,
   worker: readline.Interface,
   unSubRequest: string
-) => {
+): (() => void) => {
+  let isUnsubscribe = new Boolean(false)
   return (): void => {
     // only run once
-    if (isUnsubscribe.valueOf()) return
-    setBool(isUnsubscribe, true)
+    if (isUnsubscribe) return
+    isUnsubscribe = true
 
     // unsubsribe from everything
     tickws.send(unSubRequest)
@@ -68,13 +59,14 @@ export let newGraphProfitCallback = (
   pairs: PricedPair[],
   pairMap: Map<string, number>,
   eta: number,
-  isSending: Boolean,
   orderws: WebSocket,
   token: string,
   createOrderRequest: (token: string, step: OrderCreateRequest) => string,
   shutdownCallback: () => void
-) => {
+): ((arg: string) => Promise<void>) => {
   let count = 0
+  let isSending = false
+
   return async (cycleData: string): Promise<void> => {
     if (cycleData === 'done') {
       shutdownCallback()
@@ -105,20 +97,21 @@ export let newGraphProfitCallback = (
     // if not just an amount and is a cycle then do stuff
     if (typeof result !== 'number') {
       if (isSending) {
-        console.log('blocked send while already sending')
         return
       }
-      setBool(isSending, true)
+      isSending = true
       console.time('send')
       let [amount, recipe] = result
-      console.log(`amounts: ${initialAmount} -> ${amount}`)
-      console.log(recipe.steps)
       for (let step of recipe.steps) {
         orderws.send(createOrderRequest(token, step))
-        await sleep(1)
       }
       console.timeEnd('send')
-      setBool(isSending, false)
+      console.log('====')
+      console.log(`amounts: ${initialAmount} -> ${amount}`)
+      console.log(recipe.steps)
+      isSending = false
+      shutdownCallback()
+      process.abort()
     }
   }
 }
