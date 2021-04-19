@@ -82,10 +82,11 @@ export let newGraphProfitCallback = (
     }
 
     let cycle: number[] = JSON.parse(cycleData)
-    count += 1
-    if (count % 1000 === 0) console.log(`${count}: ${cycle}`)
 
-    if (cycle[0] !== initialAssetIndex) return
+    if (cycle[0] !== initialAssetIndex) {
+      console.log(`filter failed ${cycle[0]}, ${initialAssetIndex}}`)
+    }
+
     // calc profit, hopefully something good is found
     let result = calcProfit(
       initialAssetIndex,
@@ -97,7 +98,10 @@ export let newGraphProfitCallback = (
       eta,
       '0'
     )
-    
+
+    count += 1
+    if (count % 10000 === 0) console.log(`${count / 10000}: ${cycle} : ${result}`)
+
     // if not just an amount and is a cycle then do stuff
     if (typeof result !== 'number') {
       if (isSending) {
@@ -115,6 +119,6 @@ export let newGraphProfitCallback = (
       }
       console.timeEnd('send')
       setBool(isSending, false)
-    } 
+    }
   }
 }

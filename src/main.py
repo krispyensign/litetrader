@@ -1,6 +1,7 @@
 import argparse
 import json
 import networkx as nx
+from customcycle import simple_custom_cycles
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -16,7 +17,7 @@ if __name__ == '__main__':
   for k, v in graph.items():
     for vertex in v:
       G.add_edge(int(k), vertex)
-  for cycle in nx.simple_cycles(G):
+  for cycle in simple_custom_cycles(G, initialIndex):
     cycle.append(cycle[0])
     print(cycle)
   print('done')

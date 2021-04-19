@@ -62,6 +62,8 @@ export let calcProfit = (
     // mark as 0 if processing results in an impossible trade
     currentAmount = currentAmount > pair.ordermin ? currentAmount : 0
 
+    if (currentAmount === 0) break
+
     // if current exposure is in base asset then create a sell order
     if (currentAsset === pair.baseIndex) {
       // construct a step for the recipe
