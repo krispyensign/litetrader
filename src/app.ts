@@ -54,7 +54,7 @@ export let app = async (
   let orderws = new WebSocket(order.getWebSocketUrl())
   let graphWorker = readline.createInterface({
     input: process.stdin,
-    output: process.stdout,
+    output: undefined,
   })
 
   // setup closures for later portable

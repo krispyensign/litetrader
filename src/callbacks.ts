@@ -1,6 +1,6 @@
 import { calcProfit } from './calc'
 import WebSocket = require('ws')
-import { OrderCreateRequest, PairPriceUpdate, PricedPair } from 'exchange-models/exchange'
+import { OrderCreateRequest, PairPriceUpdate, PricedPair } from './types'
 import readline = require('readline')
 
 let sleep = async (timems: number): Promise<void> => {
@@ -74,15 +74,18 @@ export let newGraphProfitCallback = (
   createOrderRequest: (token: string, step: OrderCreateRequest) => string,
   shutdownCallback: () => void
 ) => {
+  let count = 0
   return async (cycleData: string): Promise<void> => {
-    console.log('Graph callback called')
-    console.log(typeof cycleData === 'string')
     if (cycleData === 'done') {
       shutdownCallback()
       return
     }
-    let cycle = JSON.parse(cycleData)
-    console.log(cycle)
+
+    let cycle: number[] = JSON.parse(cycleData)
+    count += 1
+    if (count % 1000 === 0) console.log(`${count}: ${cycle}`)
+
+    if (cycle[0] !== initialAssetIndex) return
     // calc profit, hopefully something good is found
     let result = calcProfit(
       initialAssetIndex,
@@ -94,7 +97,7 @@ export let newGraphProfitCallback = (
       eta,
       '0'
     )
-
+    
     // if not just an amount and is a cycle then do stuff
     if (typeof result !== 'number') {
       if (isSending) {
@@ -112,8 +115,6 @@ export let newGraphProfitCallback = (
       }
       console.timeEnd('send')
       setBool(isSending, false)
-    } else {
-      console.log(result)
-    }
+    } 
   }
 }

@@ -21,10 +21,10 @@ export let calcProfit = (
   }
 
   let pairList = cycle.slice(1).map((value, index) => {
-    let // try first/second else second/first
-      tempA = assets[cycle[index]],
-      tempB = assets[value],
-      indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
+    // try first/second else second/first
+    let tempA = assets[cycle[index]]
+    let tempB = assets[value]
+    let indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
 
     // if not found then fail
     if (indo === undefined) throw Error(`Invalid pair requested. quote: ${tempA}, ${tempB}`)
@@ -41,9 +41,9 @@ export let calcProfit = (
     steps: new Array<OrderCreateRequest>(),
   }
 
-  let // start with initially provided index and amount
-    currentAsset = initialAssetIndex,
-    currentAmount = initialAmount
+  // start with initially provided index and amount
+  let currentAsset = initialAssetIndex
+  let currentAmount = initialAmount
 
   // for each trade index of a trade
   for (let pair of pairList) {

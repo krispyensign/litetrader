@@ -12,14 +12,12 @@ if __name__ == '__main__':
   json_data = json.load(file)
   graph = json_data['graph']
   initialIndex = json_data['initialIndex']
-  G = nx.Graph()
+  G = nx.DiGraph()
   for k, v in graph.items():
     for vertex in v:
       G.add_edge(int(k), vertex)
   for cycle in nx.simple_cycles(G):
+    cycle.append(cycle[0])
     print(cycle)
-    break
+  print('done')
   file.close()
-      
-
-
