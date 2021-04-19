@@ -1,17 +1,17 @@
 import { ExchangeName } from 'exchange-models/exchange'
 import { tickSelector } from './helpers'
-import { IndexedPair } from './types'
+import { Dictionary, IndexedPair } from './types'
 
-export let buildGraph = (indexedPairs: IndexedPair[]): number[][] => {
+export let buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
   return indexedPairs.reduce((graph, pair) => {
-    if (graph[pair.baseIndex] === undefined) graph[pair.baseIndex] = new Array<number>()
-    graph[pair.baseIndex].push(pair.quoteIndex)
+    if (graph[pair.baseIndex.toString()] === undefined) graph[pair.baseIndex.toString()] = new Array<number>()
+    graph[pair.baseIndex.toString()].push(pair.quoteIndex)
 
-    if (graph[pair.quoteIndex] === undefined) graph[pair.quoteIndex] = new Array<number>()
-    graph[pair.quoteIndex].push(pair.baseIndex)
+    if (graph[pair.quoteIndex.toString()] === undefined) graph[pair.quoteIndex.toString()] = new Array<number>()
+    graph[pair.quoteIndex.toString()].push(pair.baseIndex)
 
     return graph
-  }, new Array<number[]>())
+  }, {} as Dictionary<number[]>)
 }
 
 export let setupData = async (

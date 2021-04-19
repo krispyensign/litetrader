@@ -12,7 +12,7 @@ let argv = yargs(process.argv.slice(2)).options({
   eta: { type: 'number', default: 0.001 },
   apiKey: { type: 'string', default: '' },
   apiPrivateKey: { type: 'string', default: '' },
-  buildGraph: { type: 'boolean', default: false },
+  buildGraph: { type: 'string', default: '' },
 }).argv
 
 // do some error handling

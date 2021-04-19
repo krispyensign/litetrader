@@ -43,7 +43,7 @@ export interface Config {
   initialAsset: string
   eta: number
   key: Key
-  buildGraph: boolean
+  buildGraph: string
 }
 
 export interface Connections {

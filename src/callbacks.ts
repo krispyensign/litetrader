@@ -108,7 +108,7 @@ export let newGraphProfitCallback = (
       console.log(recipe.steps)
       for (let step of recipe.steps) {
         orderws.send(createOrderRequest(token, step))
-        await sleep(2)
+        await sleep(1)
       }
       console.timeEnd('send')
       setBool(isSending, false)

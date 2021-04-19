@@ -5,6 +5,7 @@ import { orderSelector, tickSelector } from './helpers'
 import WebSocket = require('ws')
 import readline = require('readline')
 import { newTickCallback, newShutdownCallback, newGraphProfitCallback } from './callbacks'
+import fs = require('fs')
 // import os = require('os')
 
 sourceMap.install()
@@ -33,12 +34,17 @@ export let app = async (
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
 
   // build the graph from the data and quit if this option was selected
-  if (config.buildGraph) {
-    console.log(
+  if (config.buildGraph !== '') {
+    fs.writeFile(
+      config.buildGraph,
       JSON.stringify({
         graph: buildGraph(pairs),
         initialIndex: initialAssetIndex,
-      })
+      }),
+      (err): void => {
+        if (err) throw err
+        console.log("It's saved!")
+      }
     )
     return
   }
