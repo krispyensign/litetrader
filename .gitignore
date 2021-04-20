@@ -6,3 +6,6 @@ graph.json
 .vscode/
 key.json
 __pycache__/
+graph_data
+*.swp
+*.pyc

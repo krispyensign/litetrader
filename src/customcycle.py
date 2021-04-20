@@ -1,16 +1,10 @@
-"""
-========================
-Cycle finding algorithms
-========================
-"""
-
 from collections import defaultdict
 
 import networkx as nx
 from networkx.utils import not_implemented_for, pairwise
 
 @not_implemented_for("undirected")
-def simple_custom_cycles(G, initial_vertex):
+def simple_custom_cycles(G, path_prefix):
     """Find simple cycles (elementary circuits) of a directed graph.
 
     A `simple cycle`, or `elementary circuit`, is a closed path where
@@ -96,27 +90,59 @@ def simple_custom_cycles(G, initial_vertex):
             yield [v]
             subG.remove_edge(v, v)
 
+    # loop through each component
     while sccs:
+        # get a component
         scc = sccs.pop()
-        if initial_vertex not in scc: 
+
+        # check to make sure all vertices of prefix are in the component
+        vertices_in_scc = True
+        for vertex in path_prefix:
+            if vertex not in scc:
+                vertices_in_scc = False
+                break
+        
+        # skip component if any vertices were not in the component
+        if not vertices_in_scc:
             continue
+
+        # clone the subgraph for neigborhood computations
         sccG = subG.subgraph(scc)
-        # order of scc determines ordering of nodes
-        scc.remove(initial_vertex)
+
+        # remove the vertices from component since they are already under consideration
+        for vertex in path_prefix:
+            scc.remove(vertex)
+
         # Processing node runs "circuit" routine from recursive version
-        path = [initial_vertex]
-        blocked = set()  # vertex: blocked from search?
-        closed = set()  # nodes involved in a cycle
-        blocked.add(initial_vertex)
-        B = defaultdict(set)  # graph portions that yield no elementary circuit
-        stack = [(initial_vertex, list(sccG[initial_vertex]))]  # sccG gives comp nbrs
+        path = path_prefix
+
+        # vertex: blocked from search?
+        blocked = set() 
+        
+        # nodes involved in a cycle
+        closed = set()  
+
+        # mark prefix as "blocked"
+        for vertex in path_prefix[1:]:
+            blocked.add(path_prefix)
+        
+        # graph portions that yield no elementary circuit
+        B = defaultdict(set)  
+
+        # compute stack
+        stack = []
+        for vertex in path_prefix:
+            stack.append((vertex, list(sccG[vertex])))
+
+        # main DFS loop
         while stack:
-            if len(path) < 1 or path[0] != initial_vertex:
+            # only process those paths that start with the prefix
+            if len(path) < len(path_prefix) or path[:len(path_prefix)] != path_prefix:
                 break
             thisnode, nbrs = stack[-1]
             if nbrs:
                 nextnode = nbrs.pop()
-                if nextnode == initial_vertex:
+                if nextnode == path[0]:
                     yield path[:]
                     closed.update(path)
                 #                        print "Found a cycle", path, closed
