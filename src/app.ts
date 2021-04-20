@@ -53,7 +53,7 @@ export let app = async (
     output: undefined,
   })
 
-  // setup closures for later portable
+  // setup callbacks
   let tickCallback = newTickCallback(pairs, pairMap, tick.parseTick)
   let shutdownCallback = newShutdownCallback(
     tickws,
