@@ -1,26 +1,23 @@
 import { calcProfit } from './calc'
 import WebSocket = require('ws')
-import type { OrderCreateRequest, PairPriceUpdate, PricedPair } from './types'
+import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types'
 import { Worker } from 'worker_threads'
 
 let updatePair = (
   pairMap: Map<string, number>,
-  pricedPairs: PricedPair[],
+  pair: IndexedPair[],
   pairUpdate: PairPriceUpdate | string
 ): void => {
   if (typeof pairUpdate === 'string') return
   if (pairUpdate.tradeName === undefined) throw Error('Missing tradename from update')
   let pairIndex = pairMap.get(pairUpdate.tradeName)
   if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
-  let pair = pricedPairs[pairIndex]
-  pair.lastAskPrice = pair.ask
-  pair.lastBidPrice = pair.bid
-  pair.ask = pairUpdate.ask
-  pair.bid = pairUpdate.bid
+  pair[pairIndex].ask = pairUpdate.ask
+  pair[pairIndex].bid = pairUpdate.bid
 }
 
 export let newTickCallback = (
-  pairs: PricedPair[],
+  pairs: IndexedPair[],
   pairMap: Map<string, number>,
   parseTick: (arg: string) => PairPriceUpdate | string
 ) => {
@@ -56,7 +53,7 @@ export let newGraphProfitCallback = (
   initialAssetIndex: number,
   initialAmount: number,
   assets: string[],
-  pairs: PricedPair[],
+  pairs: IndexedPair[],
   pairMap: Map<string, number>,
   eta: number,
   orderws: WebSocket,

@@ -1,10 +1,8 @@
-import type { ExchangeName, OrderCreateRequest, PricedPair } from 'exchange-models/exchange'
+import type { ExchangeName, OrderCreateRequest } from 'exchange-models/exchange'
 
 import type { AssetPair, Ticker } from 'exchange-models/kraken'
 
 export type {
-  IndexedPair,
-  PricedPair,
   ExchangePair,
   PairPriceUpdate,
   OrderCancelRequest,
@@ -29,9 +27,26 @@ export type {
 import WebSocket = require('ws')
 import readline = require('readline')
 
+export interface IndexedPair {
+  index: number
+  name: string
+  tradename: string
+  decimals: number
+  baseName: string
+  quoteName: string
+  makerFee: number
+  takerFee: number
+  volume: number
+  ordermin: number
+  ask?: number
+  bid?: number
+  quoteIndex: number
+  baseIndex: number
+}
+
 export interface TradeDatum {
   assets: string[]
-  pairs: PricedPair[]
+  pairs: IndexedPair[]
   pairMap: Map<string, number>
   unSubRequest: object
   subRequest: object

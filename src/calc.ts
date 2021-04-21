@@ -1,11 +1,11 @@
-import type { Recipe, PricedPair, OrderCreateRequest } from './types'
+import type { Recipe, IndexedPair, OrderCreateRequest } from './types'
 
 export let calcProfit = (
   initialAssetIndex: number,
   initialAmount: number,
   cycle: number[],
   assets: string[],
-  pairs: PricedPair[],
+  pairs: IndexedPair[],
   pairMap: Map<string, number>,
   eta: number,
   orderId: string
