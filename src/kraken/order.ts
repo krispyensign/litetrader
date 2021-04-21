@@ -8,8 +8,10 @@ import type {
 
 let wsUrl = 'wss://ws-auth.kraken.com'
 
+type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
+
 export let getReqId = (
-  parsedEvent: AddOrderStatus | CancelOrderStatus | SubscriptionStatus
+  parsedEvent: StatusEvent
 ): string => parsedEvent.reqid?.toString() || '0'
 
 export let isStatusEvent = (

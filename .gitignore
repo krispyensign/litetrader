@@ -9,3 +9,4 @@ __pycache__/
 graph_data
 *.swp
 *.pyc
+.tscc_temp/

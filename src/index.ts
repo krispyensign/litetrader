@@ -1,7 +1,8 @@
 import sourceMap = require('source-map-support')
-import yargs = require('yargs/yargs')
-import { app } from './app'
+import yargs = require('yargs')
+import { app, worker } from './app'
 import type { ExchangeName } from './types'
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 
 sourceMap.install()
 
@@ -19,16 +20,20 @@ let argv = yargs(process.argv.slice(2)).options({
 if (argv.initialAsset === null) throw Error('Invalid asset provided')
 
 // fire it up
-app({
-  exchangeName: argv.exchangeName as ExchangeName,
-  initialAmount: argv.initialAmount,
-  initialAsset: argv.initialAsset,
-  eta: argv.eta,
-  key: {
-    apiKey: argv.apiKey,
-    apiPrivateKey: argv.apiPrivateKey,
-  },
-  buildGraph: argv.buildGraph,
-})
+if (isMainThread) {
+  app({
+    exchangeName: argv.exchangeName as ExchangeName,
+    initialAmount: argv.initialAmount,
+    initialAsset: argv.initialAsset,
+    eta: argv.eta,
+    key: {
+      apiKey: argv.apiKey,
+      apiPrivateKey: argv.apiPrivateKey,
+    },
+    buildGraph: argv.buildGraph,
+  })
+} else {
+  worker()
+}
 
 // wait till shutdown of sockets and readline

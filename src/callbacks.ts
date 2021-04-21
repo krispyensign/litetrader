@@ -1,7 +1,7 @@
 import { calcProfit } from './calc'
 import WebSocket = require('ws')
 import { OrderCreateRequest, PairPriceUpdate, PricedPair } from './types'
-import readline = require('readline')
+import { Worker } from 'worker_threads'
 
 let updatePair = (
   pairMap: Map<string, number>,
@@ -32,7 +32,7 @@ export let newTickCallback = (
 export let newShutdownCallback = (
   tickws: WebSocket,
   orderws: WebSocket,
-  worker: readline.Interface,
+  worker: Worker,
   unSubRequest: string
 ): (() => void) => {
   let isUnsubscribe = new Boolean(false)
@@ -47,7 +47,7 @@ export let newShutdownCallback = (
     // kill the connections ( will also kill detached threads and thus the app )
     tickws.close()
     orderws.close()
-    worker.close()
+    worker.terminate()
     console.log('shutdown complete')
   }
 }

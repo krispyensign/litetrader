@@ -1,12 +1,11 @@
 import sourceMap = require('source-map-support')
-import type { Config } from './types'
+import type { Config, Dictionary } from './types'
 import { buildGraph, setupData } from './setup'
 import { orderSelector, tickSelector } from './helpers'
 import WebSocket = require('ws')
-import readline = require('readline')
 import { newTickCallback, newShutdownCallback, newGraphProfitCallback } from './callbacks'
-import fs = require('fs')
-// import os = require('os')
+import { Worker, parentPort, workerData } from 'worker_threads'
+import { findCycles } from './unicycle/unicycle'
 
 sourceMap.install()
 
@@ -14,9 +13,17 @@ let sleep = async (timems: number): Promise<void> => {
   await new Promise(resolve => setTimeout(resolve, timems))
 }
 
+export let worker = async () => {
+  let graph: Dictionary<number[]> = workerData.graph
+  let initialAssetIndex: number = workerData.initialAssetIndex
+  for (let cycle of findCycles([initialAssetIndex], graph)) {
+    
+  }
+}
+
 export let app = async (
   config: Config
-): Promise<[WebSocket, WebSocket, readline.Interface] | undefined> => {
+): Promise<[WebSocket, WebSocket, Worker] | undefined> => {
   // configure everything
   let tick = tickSelector(config.exchangeName)
   let order = orderSelector(config.exchangeName)
@@ -29,29 +36,15 @@ export let app = async (
   let initialAssetIndex = assets.findIndex(a => a === config.initialAsset)
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
 
-  // build the graph from the data and quit if this option was selected
-  if (config.buildGraph !== '') {
-    fs.writeFile(
-      config.buildGraph,
-      JSON.stringify({
-        graph: buildGraph(pairs),
-        initialIndex: initialAssetIndex,
-      }),
-      (err): void => {
-        if (err) throw err
-        console.log("It's saved!")
-      }
-    )
-    return
-  }
-
   // setup sockets and graph worker
   let tickws = new WebSocket(tick.getWebSocketUrl())
   let orderws = new WebSocket(order.getWebSocketUrl())
-  let graphWorker = readline.createInterface({
-    input: process.stdin,
-    output: undefined,
-  })
+  let graphWorker = new Worker(__dirname + "/index.js", {
+    workerData: {
+      graph: buildGraph(pairs),
+      initialAssetIndex: initialAssetIndex
+    }
+  }) 
 
   // setup callbacks
   let tickCallback = newTickCallback(pairs, pairMap, tick.parseTick)
@@ -82,7 +75,7 @@ export let app = async (
   process.on('SIGINT', shutdownCallback)
   tickws.on('message', tickCallback)
   orderws.on('message', eventData => console.log(order.parseEvent(eventData.toLocaleString())))
-  graphWorker.on('line', graphWorkerCallback)
+  graphWorker.on('message', graphWorkerCallback)
 
   tickws.send(tick.createTickSubRequest(pairs.map(p => p.tradename)))
 
