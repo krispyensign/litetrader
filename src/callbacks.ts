@@ -96,7 +96,7 @@ export let newGraphProfitCallback = (
         return
       }
       isSending = true
-      
+
       // send orders
       console.time('send')
       let [amount, recipe] = result
@@ -104,7 +104,7 @@ export let newGraphProfitCallback = (
         orderws.send(createOrderRequest(token, step))
       }
       console.timeEnd('send')
-      
+
       // log value and die for now
       console.log('====')
       console.log(`amounts: ${initialAmount} -> ${amount}`)

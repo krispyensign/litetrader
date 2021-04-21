@@ -1,6 +1,5 @@
 import winston = require('winston')
-import { Logger } from 'winston'
-import got = require('got')
+import type { Logger } from 'winston'
 import type { ExchangeName } from './types'
 import * as krakenTick from './kraken/tick'
 import * as krakenOrder from './kraken/order'
@@ -21,18 +20,6 @@ export let orderSelector = (exchangeName: ExchangeName): typeof krakenOrder => {
     default:
       throw Error('Invalid exchange selected')
   }
-}
-
-export let getJson = async <T>(url: string): Promise<T | Error> => {
-  let result: T | Error
-  try {
-    let innerResult: T | undefined = await got.default(url).json<T>()
-    if (innerResult !== undefined) result = innerResult
-    else result = new Error('Failed to get back response from url: ' + url)
-  } catch (e) {
-    result = e
-  }
-  return result
 }
 
 export let getLogger = (serviceName: string): Logger => {

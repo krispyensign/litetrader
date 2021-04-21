@@ -6,6 +6,7 @@
     "node": ">=12.11.0"
   },
   "dependencies": {
+    "exchange-models": "https://gitlab.com/krispyensign/exchange-models/-/archive/v0.0.3/exchange-models-v0.0.3.tar",
     "got": "^11.8.1",
     "qs": "^6.10.1",
     "winston": "^3.3.3",
@@ -13,8 +14,10 @@
     "yargs": "^16.2.0"
   },
   "devDependencies": {
+    "@tscc/tscc": "^0.6.4",
     "@types/node": "^14.14.41",
     "@types/qs": "^6.9.6",
+    "@types/winston": "^2.4.4",
     "@types/ws": "^7.4.0",
     "@types/yargs": "^15.0.12",
     "@typescript-eslint/eslint-plugin": "^4.12.0",
@@ -23,7 +26,6 @@
     "eslint-config-prettier": "^7.1.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.3.1",
-    "exchange-models": "https://gitlab.com/krispyensign/exchange-models/-/archive/v0.0.3/exchange-models-v0.0.3.tar",
     "prettier": "^2.2.1",
     "typescript": "^4.1.3"
   },

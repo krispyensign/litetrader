@@ -1,4 +1,3 @@
-import { getJson } from '../helpers'
 import type {
   PairPriceUpdate,
   ExchangePair,
@@ -10,11 +9,25 @@ import type {
   Ticker,
 } from '../types'
 
+import got = require('got')
+
 // setup the global constants
 let krakenTickerPath = '/0/public/Ticker'
 let krakenPairsPath = '/0/public/AssetPairs'
 let krakenApiUrl = 'https://api.kraken.com'
 let krakenWsUrl = 'wss://ws.kraken.com'
+
+let getJson = async <T>(url: string): Promise<T | Error> => {
+  let result: T | Error
+  try {
+    let innerResult: T | undefined = await got.default(url).json<T>()
+    if (innerResult !== undefined) result = innerResult
+    else result = new Error('Failed to get back response from url: ' + url)
+  } catch (e) {
+    result = e
+  }
+  return result
+}
 
 let compareTypes = <U>(o: object, ...propertyNames: (keyof U)[]): boolean | string | undefined => {
   // check if object is undefined
@@ -39,7 +52,7 @@ let isPublication = (event: object): event is Publication => {
   return (event as Publication).length !== undefined && (event as Publication).length === 4
 }
 
-let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is AssetPair => {
+let isKrakenPair = (pairName: string, pair?: object): pair is AssetPair => {
   if (!pair) return false
   let result = compareTypes(pair, 'wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals')
   if (!result) throw Error(`Failed to correctly populate pair ${pairName}`)
@@ -47,7 +60,7 @@ let isKrakenPair = (pairName: string, pair?: Partial<AssetPair>): pair is AssetP
   return true
 }
 
-let isLastTick = (pairName: string, tick?: Partial<Ticker>): tick is Ticker => {
+let isLastTick = (pairName: string, tick?: object): tick is Ticker => {
   if (!tick) return false
   let result = compareTypes(tick, 'a', 'b', 't')
   if (!result) throw Error(`Failed to correctly populate tick ${pairName}.`)

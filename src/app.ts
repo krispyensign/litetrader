@@ -1,7 +1,7 @@
 import type { Config, Dictionary } from './types'
 import { buildGraph, setupData } from './setup'
 import { orderSelector, tickSelector } from './helpers'
-import WebSocket = require('ws')
+import ws = require('ws')
 import { newTickCallback, newShutdownCallback, newGraphProfitCallback } from './callbacks'
 import { Worker, parentPort, workerData } from 'worker_threads'
 import { findCycles } from './unicycle/unicycle'
@@ -10,7 +10,7 @@ let sleep = async (timems: number): Promise<void> => {
   await new Promise(resolve => setTimeout(resolve, timems))
 }
 
-export let worker = async () => {
+export let worker = async (): Promise<void> => {
   // recover worker data before processing
   let graphData: Dictionary<number[]> = workerData.graph
   let initialAssetIndex: number = workerData.initialAssetIndex
@@ -28,9 +28,7 @@ export let worker = async () => {
   }
 }
 
-export let app = async (
-  config: Config
-): Promise<[WebSocket, WebSocket, Worker] | undefined> => {
+export let app = async (config: Config): Promise<[ws, ws, Worker] | undefined> => {
   // configure everything
   let tick = tickSelector(config.exchangeName)
   let order = orderSelector(config.exchangeName)
@@ -44,14 +42,14 @@ export let app = async (
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
 
   // setup sockets and graph worker
-  let tickws = new WebSocket(tick.getWebSocketUrl())
-  let orderws = new WebSocket(order.getWebSocketUrl())
-  let graphWorker = new Worker(__dirname + "/index.js", {
+  let tickws = new ws(tick.getWebSocketUrl())
+  let orderws = new ws(order.getWebSocketUrl())
+  let graphWorker = new Worker(__dirname + '/index.js', {
     workerData: {
       graph: buildGraph(pairs),
-      initialAssetIndex: initialAssetIndex
-    }
-  }) 
+      initialAssetIndex: initialAssetIndex,
+    },
+  })
 
   // setup callbacks
   let tickCallback = newTickCallback(pairs, pairMap, tick.parseTick)
@@ -75,8 +73,7 @@ export let app = async (
   )
 
   // sleep until websockets are stable before proceeding
-  while (tickws.readyState !== WebSocket.OPEN || orderws.readyState !== WebSocket.OPEN)
-    await sleep(1000)
+  while (tickws.readyState !== ws.OPEN || orderws.readyState !== ws.OPEN) await sleep(1000)
 
   // setup all thread and process handlers
   process.on('SIGINT', shutdownCallback)

@@ -1,0 +1,14 @@
+{
+    "modules": {
+        "out": "src/index.ts"
+    },
+    "external": {
+        "worker_threads": "worker_threads",
+        "yargs": "yargs",
+        "winston": "winston",
+        "got": "got",
+        "ws": "ws",
+        "logform": "logform"
+    },
+    "prefix": "dist/"
+}

@@ -10,15 +10,11 @@ let wsUrl = 'wss://ws-auth.kraken.com'
 
 type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
 
-export let getReqId = (
-  parsedEvent: StatusEvent
-): string => parsedEvent.reqid?.toString() || '0'
+export let getReqId = (parsedEvent: StatusEvent): string => parsedEvent.reqid?.toString() || '0'
 
-export let isStatusEvent = (
-  event: unknown
-): event is StatusEvent => {
+export let isStatusEvent = (event: unknown): event is StatusEvent => {
   if (typeof event !== 'object') return false
-  let typedEvent = event as StatusEvent 
+  let typedEvent = event as StatusEvent
   return typedEvent?.event !== undefined && typedEvent.reqid !== undefined
 }
 
