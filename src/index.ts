@@ -2,7 +2,7 @@ import sourceMap = require('source-map-support')
 import yargs = require('yargs')
 import { app, worker } from './app'
 import type { ExchangeName } from './types'
-const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+import { isMainThread } from 'worker_threads'
 
 sourceMap.install()
 

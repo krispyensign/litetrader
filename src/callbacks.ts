@@ -1,6 +1,6 @@
 import { calcProfit } from './calc'
 import WebSocket = require('ws')
-import { OrderCreateRequest, PairPriceUpdate, PricedPair } from './types'
+import type { OrderCreateRequest, PairPriceUpdate, PricedPair } from './types'
 import { Worker } from 'worker_threads'
 
 let updatePair = (
@@ -63,18 +63,12 @@ export let newGraphProfitCallback = (
   token: string,
   createOrderRequest: (token: string, step: OrderCreateRequest) => string,
   shutdownCallback: () => void
-): ((arg: string) => Promise<void>) => {
+): ((arg: number[]) => Promise<void>) => {
   let count = 0
   let isSending = false
 
-  return async (cycleData: string): Promise<void> => {
-    if (cycleData === 'done') {
-      shutdownCallback()
-      return
-    }
-
-    let cycle: number[] = JSON.parse(cycleData)
-
+  return async (cycle: number[]): Promise<void> => {
+    // filter paths that don't start with initial index
     if (cycle[0] !== initialAssetIndex) {
       console.log(`filter failed ${cycle[0]}, ${initialAssetIndex}}`)
     }
@@ -91,21 +85,27 @@ export let newGraphProfitCallback = (
       '0'
     )
 
+    // occassionally print to console if 10000 or so cycles have been processed
     count += 1
     if (count % 10000 === 0) console.log(`${count / 10000}: ${cycle} : ${result}`)
 
     // if not just an amount and is a cycle then do stuff
     if (typeof result !== 'number') {
+      // don't allow any other processes to send while this one is sending
       if (isSending) {
         return
       }
       isSending = true
+      
+      // send orders
       console.time('send')
       let [amount, recipe] = result
       for (let step of recipe.steps) {
         orderws.send(createOrderRequest(token, step))
       }
       console.timeEnd('send')
+      
+      // log value and die for now
       console.log('====')
       console.log(`amounts: ${initialAmount} -> ${amount}`)
       console.log(recipe.steps)

@@ -14,10 +14,20 @@ let sleep = async (timems: number): Promise<void> => {
 }
 
 export let worker = async () => {
-  let graph: Dictionary<number[]> = workerData.graph
+  // recover worker data before processing
+  let graphData: Dictionary<number[]> = workerData.graph
   let initialAssetIndex: number = workerData.initialAssetIndex
+
+  // map from object to map
+  let graph = new Map<number, number[]>()
+  for (let [key, nbrs] of Object.entries(graphData)) {
+    graph.set(Number(key), nbrs)
+  }
+
+  // post each cycle
   for (let cycle of findCycles([initialAssetIndex], graph)) {
-    
+    console.log(cycle)
+    parentPort?.postMessage(cycle)
   }
 }
 

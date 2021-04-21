@@ -16,9 +16,9 @@ export let getReqId = (
 
 export let isStatusEvent = (
   event: unknown
-): event is AddOrderStatus | CancelOrderStatus | SubscriptionStatus => {
+): event is StatusEvent => {
   if (typeof event !== 'object') return false
-  let typedEvent = event as AddOrderStatus | CancelOrderStatus | SubscriptionStatus
+  let typedEvent = event as StatusEvent 
   return typedEvent?.event !== undefined && typedEvent.reqid !== undefined
 }
 

@@ -1,5 +1,5 @@
 import { tickSelector } from './helpers'
-import { Dictionary, ExchangeName, IndexedPair } from './types'
+import type { Dictionary, ExchangeName, IndexedPair } from './types'
 
 export let buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
   return indexedPairs.reduce((graph, pair) => {
