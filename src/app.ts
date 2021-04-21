@@ -1,4 +1,3 @@
-import sourceMap = require('source-map-support')
 import type { Config, Dictionary } from './types'
 import { buildGraph, setupData } from './setup'
 import { orderSelector, tickSelector } from './helpers'
@@ -6,8 +5,6 @@ import WebSocket = require('ws')
 import { newTickCallback, newShutdownCallback, newGraphProfitCallback } from './callbacks'
 import { Worker, parentPort, workerData } from 'worker_threads'
 import { findCycles } from './unicycle/unicycle'
-
-sourceMap.install()
 
 let sleep = async (timems: number): Promise<void> => {
   await new Promise(resolve => setTimeout(resolve, timems))

@@ -1,10 +1,7 @@
-import sourceMap = require('source-map-support')
 import yargs = require('yargs')
 import { app, worker } from './app'
 import type { ExchangeName } from './types'
 import { isMainThread } from 'worker_threads'
-
-sourceMap.install()
 
 let argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },
