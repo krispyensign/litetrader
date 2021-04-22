@@ -1,6 +1,6 @@
 import { calcProfit } from './calc'
 import WebSocket = require('ws')
-import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types'
+import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types/types'
 import { Worker } from 'worker_threads'
 
 let updatePair = (
@@ -32,7 +32,7 @@ export let newShutdownCallback = (
   worker: Worker,
   unSubRequest: string
 ): (() => void) => {
-  let isUnsubscribe = new Boolean(false)
+  let isUnsubscribe = false
   return (): void => {
     // only run once
     if (isUnsubscribe) return

@@ -6,9 +6,9 @@ export interface LazyIterable<T> {
 
 abstract class Lazy<T, U, V> implements LazyIterable<U> {
   public abstract [Symbol.iterator](): IterableIterator<U>
-  protected fn: undefined | ((value: T) => V)
+  protected fn?: (value: T) => V
   protected it: Iterable<T>
-  constructor(it: Iterable<T>, fn: undefined | ((value: T) => V)) {
+  constructor(it: Iterable<T>, fn?: (value: T) => V) {
     this.it = it
     this.fn = fn
   }
@@ -29,7 +29,7 @@ class LazyFilter<T> extends Lazy<T, T, boolean> {
 class LazyMap<T, U> extends Lazy<T, U, U> {
   *[Symbol.iterator](): IterableIterator<U> {
     for (let item of this.it) {
-      yield this.fn!(item)!
+      yield this.fn!(item)
     }
   }
 }
@@ -124,7 +124,7 @@ export function mapl<T, U>(it: Iterable<T>, fn: (value: T) => U): LazyIterable<U
 }
 
 export function flattenl<T>(it: Iterable<Iterable<T>>): LazyIterable<T> {
-  return new LazyFlatten(it, undefined)
+  return new LazyFlatten(it)
 }
 
 export function flatMapl<T, U>(it: Iterable<T>, fn: (value: T) => Iterable<U>): LazyIterable<U> {

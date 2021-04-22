@@ -1,4 +1,10 @@
-import type { ExchangeName, OrderCreateRequest } from 'exchange-models/exchange'
+import type {
+  ExchangeName,
+  ExchangePair,
+  OrderCancelRequest,
+  OrderCreateRequest,
+  PairPriceUpdate,
+} from 'exchange-models/exchange'
 
 import type { AssetPair, Ticker } from 'exchange-models/kraken'
 
@@ -12,7 +18,6 @@ export type {
 
 export type {
   AddOrder,
-  AddOrderStatus,
   CancelOrder,
   CancelOrderStatus,
   SubscriptionStatus,
@@ -26,6 +31,23 @@ export type {
 
 import WebSocket = require('ws')
 import readline = require('readline')
+
+export type TickModule = [
+  (pairs: string[]) => string,
+  (pairs: string[]) => string,
+  (threshold?: number | undefined) => Promise<ExchangePair[]>,
+  () => string,
+  (tickData?: string | undefined) => string | PairPriceUpdate
+]
+
+export type OrderModule = [
+  (token: string, cancel: OrderCancelRequest) => string,
+  (token: string, order: OrderCreateRequest) => string,
+  (parsedEvent: unknown) => string,
+  () => string,
+  (event: unknown) => boolean,
+  (eventData: string) => string
+]
 
 export interface IndexedPair {
   index: number
@@ -72,7 +94,6 @@ export interface Dictionary<T> {
 }
 
 export type AssetPairsResponse = [string, Partial<AssetPair>][]
-export type AssetTicksResponse = ResponseWrapper<Dictionary<Partial<Ticker>>>
 
 export interface ResponseWrapper<T = object> {
   error: string[]

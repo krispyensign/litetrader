@@ -1,4 +1,4 @@
-import type { Recipe, IndexedPair, OrderCreateRequest } from './types'
+import type { Recipe, IndexedPair, OrderCreateRequest } from './types/types'
 
 export let calcProfit = (
   initialAssetIndex: number,

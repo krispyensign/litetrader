@@ -1,5 +1,4 @@
-import { tickSelector } from './helpers'
-import type { Dictionary, ExchangeName, IndexedPair } from './types'
+import type { Dictionary, ExchangePair, IndexedPair } from './types/types'
 
 export let buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
   return indexedPairs.reduce((graph, pair) => {
@@ -16,11 +15,10 @@ export let buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
 }
 
 export let setupData = async (
-  exchangeName: ExchangeName
+  getAvailablePairs: (threshold?: number | undefined) => Promise<ExchangePair[]>
 ): Promise<[string[], IndexedPair[], Map<string, number>]> => {
-  let tick = tickSelector(exchangeName)
   // get pairs from exchange
-  let tradePairs = await tick.getAvailablePairs()
+  let tradePairs = await getAvailablePairs()
 
   // extract assets from pairs
   let assets = [

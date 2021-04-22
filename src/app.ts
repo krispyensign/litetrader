@@ -1,4 +1,4 @@
-import type { Config, Dictionary } from './types'
+import type { Config, Dictionary } from './types/types'
 import { buildGraph, setupData } from './setup'
 import { orderSelector, tickSelector } from './helpers'
 import ws = require('ws')
@@ -30,9 +30,17 @@ export let worker = async (): Promise<void> => {
 
 export let app = async (config: Config): Promise<[ws, ws, Worker] | undefined> => {
   // configure everything
-  let tick = tickSelector(config.exchangeName)
-  let order = orderSelector(config.exchangeName)
-  let [assets, pairs, pairMap] = await setupData(config.exchangeName)
+  let [
+    createStopRequest,
+    createTickSubRequest,
+    getAvailablePairs,
+    getWebSocketUrl,
+    parseTick,
+  ] = tickSelector(config.exchangeName)
+  let [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = orderSelector(
+    config.exchangeName
+  )
+  let [assets, pairs, pairMap] = await setupData(getAvailablePairs)
 
   // token = await order.getToken(config.key)
   let token = ''
@@ -42,8 +50,8 @@ export let app = async (config: Config): Promise<[ws, ws, Worker] | undefined> =
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
 
   // setup sockets and graph worker
-  let tickws = new ws(tick.getWebSocketUrl())
-  let orderws = new ws(order.getWebSocketUrl())
+  let tickws = new ws(getWebSocketUrl())
+  let orderws = new ws(getAuthWebSocketUrl())
   let graphWorker = new Worker(__dirname + '/index.js', {
     workerData: {
       graph: buildGraph(pairs),
@@ -52,12 +60,12 @@ export let app = async (config: Config): Promise<[ws, ws, Worker] | undefined> =
   })
 
   // setup callbacks
-  let tickCallback = newTickCallback(pairs, pairMap, tick.parseTick)
+  let tickCallback = newTickCallback(pairs, pairMap, parseTick)
   let shutdownCallback = newShutdownCallback(
     tickws,
     orderws,
     graphWorker,
-    tick.createStopRequest(pairs.map(p => p.tradename))
+    createStopRequest(pairs.map(p => p.tradename))
   )
   let graphWorkerCallback = newGraphProfitCallback(
     initialAssetIndex,
@@ -68,7 +76,7 @@ export let app = async (config: Config): Promise<[ws, ws, Worker] | undefined> =
     config.eta,
     orderws,
     token,
-    order.createOrderRequest,
+    createOrderRequest,
     shutdownCallback
   )
 
@@ -78,10 +86,10 @@ export let app = async (config: Config): Promise<[ws, ws, Worker] | undefined> =
   // setup all thread and process handlers
   process.on('SIGINT', shutdownCallback)
   tickws.on('message', tickCallback)
-  orderws.on('message', eventData => console.log(order.parseEvent(eventData.toLocaleString())))
+  orderws.on('message', eventData => console.log(parseEvent(eventData.toLocaleString())))
   graphWorker.on('message', graphWorkerCallback)
 
-  tickws.send(tick.createTickSubRequest(pairs.map(p => p.tradename)))
+  tickws.send(createTickSubRequest(pairs.map(p => p.tradename)))
 
   // return configured threads
   return [tickws, orderws, graphWorker]

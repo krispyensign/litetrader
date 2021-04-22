@@ -32,8 +32,9 @@
   "scripts": {
     "start": "node --no-lazy ./dist/index.js",
     "build": "npx tsc",
+    "build:tscc": "npx tscc",
     "fix": "npx prettier -w src/ && npx eslint --fix src/",
-    "clean": "rimraf dist/ node_modules/ logs/"
+    "clean": "rimraf dist/ node_modules/ logs/ .tscc_temp/"
   },
   "repository": {
     "type": "git",

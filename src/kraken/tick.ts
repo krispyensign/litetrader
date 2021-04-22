@@ -3,13 +3,13 @@ import type {
   ExchangePair,
   ResponseWrapper,
   AssetPairsResponse,
-  AssetTicksResponse,
   AssetPair,
   Publication,
   Ticker,
-} from '../types'
+} from '../types/types'
 
 import got = require('got')
+import { AssetTicksResponse } from '../types/kraken'
 
 // setup the global constants
 let krakenTickerPath = '/0/public/Ticker'
@@ -29,7 +29,7 @@ let getJson = async <T>(url: string): Promise<T | Error> => {
   return result
 }
 
-let compareTypes = <U>(o: object, ...propertyNames: (keyof U)[]): boolean | string | undefined => {
+let compareTypes = (o: object, ...propertyNames: string[]): boolean | string | undefined => {
   // check if object is undefined
   if (!o) return undefined
   // loop through supplied propertynames
@@ -43,7 +43,7 @@ let compareTypes = <U>(o: object, ...propertyNames: (keyof U)[]): boolean | stri
 
 let isTicker = (payload: object): payload is Ticker => {
   if (!payload) return false
-  let result = compareTypes<Ticker>(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
+  let result = compareTypes(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
   if (!result || typeof result === 'string') return false
   return result
 }

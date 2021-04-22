@@ -1,11 +1,11 @@
-import type { Key, ResponseWrapper, Token } from '../types'
+import type { Key, ResponseWrapper, Token } from '../types/types'
 import got from 'got'
 import type { OptionsOfJSONResponseBody } from 'got'
 import * as crypto from 'crypto'
 import qs = require('qs')
 
-let krakenTokenPath = '/0/private/GetWebSocketsToken',
-  krakenApiUrl = 'https://api.kraken.com'
+let krakenTokenPath = '/0/private/GetWebSocketsToken'
+let krakenApiUrl = 'https://api.kraken.com'
 
 let makeAuthCall = async <T = object>(
   url: string,

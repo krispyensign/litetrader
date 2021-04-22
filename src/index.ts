@@ -1,6 +1,6 @@
 import yargs = require('yargs')
 import { app, worker } from './app'
-import type { ExchangeName } from './types'
+import type { ExchangeName } from './types/types'
 import { isMainThread } from 'worker_threads'
 
 let argv = yargs(process.argv.slice(2)).options({

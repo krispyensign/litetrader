@@ -1,16 +1,13 @@
-import type {
-  AddOrderStatus,
-  CancelOrderStatus,
-  OrderCancelRequest,
-  OrderCreateRequest,
-  SubscriptionStatus,
-} from '../types'
+import type { OrderCancelRequest, OrderCreateRequest } from '../types/types'
+import type { StatusEvent } from '../types/kraken'
 
 let wsUrl = 'wss://ws-auth.kraken.com'
 
-type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
-
-export let getReqId = (parsedEvent: StatusEvent): string => parsedEvent.reqid?.toString() || '0'
+export let getReqId = (parsedEvent: unknown): string => {
+  if (isStatusEvent(parsedEvent))
+    return parsedEvent.reqid?.toString() || '0' 
+  return '0'
+}
 
 export let isStatusEvent = (event: unknown): event is StatusEvent => {
   if (typeof event !== 'object') return false
