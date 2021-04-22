@@ -13,10 +13,6 @@ import { buildGraph, setupData } from './setup.js'
 import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
 
-let sleep = async (timems: number): Promise<void> => {
-  await new Promise(resolve => setTimeout(resolve, timems))
-}
-
 export let worker = async (): Promise<void> => {
   // recover worker data before processing
   let graphData: Dictionary<number[]> = workerData.graph
@@ -88,7 +84,7 @@ export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker] 
 
   // sleep until websockets are stable before proceeding
   while (tickws.readyState !== WebSocket.OPEN || orderws.readyState !== WebSocket.OPEN)
-    await sleep(1000)
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
   // setup all thread and process handlers
   process.on('SIGINT', shutdownCallback)
