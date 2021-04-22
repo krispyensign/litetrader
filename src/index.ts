@@ -1,8 +1,8 @@
 import yargs from 'yargs'
 import { install as sourceMapInstall } from 'source-map-support'
+import { isMainThread } from 'worker_threads'
 import { app, worker } from './app.js'
 import type { ExchangeName } from './types/types'
-import { isMainThread } from 'worker_threads'
 
 sourceMapInstall()
 

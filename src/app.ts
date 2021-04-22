@@ -2,7 +2,6 @@ import WebSocket from 'ws'
 import { Worker, parentPort, workerData } from 'worker_threads'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
-
 import {
   createTickCallback,
   createShutdownCallback,

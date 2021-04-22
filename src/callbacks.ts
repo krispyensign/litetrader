@@ -1,7 +1,7 @@
-import { calcProfit } from './calc.js'
 import WebSocket from 'ws'
-import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types/types'
 import { Worker } from 'worker_threads'
+import { calcProfit } from './calc.js'
+import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types/types'
 
 let updatePair = (
   pairMap: Map<string, number>,
