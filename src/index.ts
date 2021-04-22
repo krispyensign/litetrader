@@ -16,12 +16,7 @@ let argv = yargs(process.argv.slice(2)).options({
 }).argv
 
 // do some error handling
-if (argv.initialAsset === null) {
-  let t = (): void => {
-    throw Error('Invalid asset provided')
-  }
-  t()
-}
+if (argv.initialAsset === null) throw Error('Invalid asset provided')
 
 // fire it up
 if (isMainThread) {
