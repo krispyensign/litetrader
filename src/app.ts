@@ -13,8 +13,6 @@ import { buildGraph, setupData } from './setup.js'
 import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-
 let sleep = async (timems: number): Promise<void> => {
   await new Promise(resolve => setTimeout(resolve, timems))
 }
@@ -60,7 +58,7 @@ export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker] 
   // setup sockets and graph worker
   let tickws = new WebSocket(getWebSocketUrl())
   let orderws = new WebSocket(getAuthWebSocketUrl())
-  let graphWorker = new Worker(__dirname + '/index.js', {
+  let graphWorker = new Worker(dirname(fileURLToPath(import.meta.url)) + '/index.js', {
     workerData: {
       graph: buildGraph(pairs),
       initialAssetIndex: initialAssetIndex,
