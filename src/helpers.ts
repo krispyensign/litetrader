@@ -1,8 +1,8 @@
-import winston = require('winston')
+import * as winston from 'winston'
 import type { Logger } from 'winston'
 import type { ExchangeName, OrderModule, TickModule } from './types/types'
-import * as krakenTick from './kraken/tick'
-import * as krakenOrder from './kraken/order'
+import * as krakenTick from './kraken/tick.js'
+import * as krakenOrder from './kraken/order.js'
 
 export let tickSelector = (exchangeName: ExchangeName): TickModule => {
   switch (exchangeName) {

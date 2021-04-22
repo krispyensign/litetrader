@@ -1,7 +1,10 @@
-import yargs = require('yargs')
-import { app, worker } from './app'
+import yargs from 'yargs'
+import { install } from 'source-map-support'
+import { app, worker } from './app.js'
 import type { ExchangeName } from './types/types'
 import { isMainThread } from 'worker_threads'
+
+install()
 
 let argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },
@@ -10,7 +13,6 @@ let argv = yargs(process.argv.slice(2)).options({
   eta: { type: 'number', default: 0.001 },
   apiKey: { type: 'string', default: '' },
   apiPrivateKey: { type: 'string', default: '' },
-  buildGraph: { type: 'string', default: '' },
 }).argv
 
 // do some error handling
@@ -32,7 +34,6 @@ if (isMainThread) {
       apiKey: argv.apiKey,
       apiPrivateKey: argv.apiPrivateKey,
     },
-    buildGraph: argv.buildGraph,
   })
 } else {
   worker()

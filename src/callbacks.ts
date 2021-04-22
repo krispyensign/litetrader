@@ -1,5 +1,5 @@
-import { calcProfit } from './calc'
-import WebSocket = require('ws')
+import { calcProfit } from './calc.js'
+import WebSocket from 'ws'
 import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types/types'
 import { Worker } from 'worker_threads'
 
@@ -16,7 +16,7 @@ let updatePair = (
   pair[pairIndex].bid = pairUpdate.bid
 }
 
-export let newTickCallback = (
+export let createTickCallback = (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   parseTick: (arg: string) => PairPriceUpdate | string
@@ -26,7 +26,7 @@ export let newTickCallback = (
   }
 }
 
-export let newShutdownCallback = (
+export let createShutdownCallback = (
   tickws: WebSocket,
   orderws: WebSocket,
   worker: Worker,
@@ -49,7 +49,7 @@ export let newShutdownCallback = (
   }
 }
 
-export let newGraphProfitCallback = (
+export let createGraphProfitCallback = (
   initialAssetIndex: number,
   initialAmount: number,
   assets: string[],
@@ -106,9 +106,8 @@ export let newGraphProfitCallback = (
       console.log('====')
       console.log(`amounts: ${initialAmount} -> ${amount}`)
       console.log(recipe.steps)
-      isSending = false
       shutdownCallback()
-      process.abort()
+      // isSending = false
     }
   }
 }

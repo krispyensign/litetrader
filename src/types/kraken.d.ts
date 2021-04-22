@@ -1,4 +1,4 @@
-import { Dictionary, ResponseWrapper } from "./types"
+import { Dictionary, ResponseWrapper } from './types'
 
 export type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
 export type AssetTicksResponse = ResponseWrapper<Dictionary<TickerResponse>>

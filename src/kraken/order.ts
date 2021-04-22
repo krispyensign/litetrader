@@ -3,16 +3,15 @@ import type { StatusEvent } from '../types/kraken'
 
 let wsUrl = 'wss://ws-auth.kraken.com'
 
-export let getReqId = (parsedEvent: unknown): string => {
-  if (isStatusEvent(parsedEvent))
-    return parsedEvent.reqid?.toString() || '0' 
-  return '0'
-}
-
 export let isStatusEvent = (event: unknown): event is StatusEvent => {
   if (typeof event !== 'object') return false
   let typedEvent = event as StatusEvent
   return typedEvent?.event !== undefined && typedEvent.reqid !== undefined
+}
+
+export let getReqId = (parsedEvent: unknown): string => {
+  if (isStatusEvent(parsedEvent)) return parsedEvent.reqid?.toString() || '0'
+  return '0'
 }
 
 export let createOrderRequest = (token: string, order: OrderCreateRequest): string =>

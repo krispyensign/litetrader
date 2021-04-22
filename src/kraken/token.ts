@@ -2,7 +2,7 @@ import type { Key, ResponseWrapper, Token } from '../types/types'
 import got from 'got'
 import type { OptionsOfJSONResponseBody } from 'got'
 import * as crypto from 'crypto'
-import qs = require('qs')
+import * as qs from 'qs'
 
 let krakenTokenPath = '/0/private/GetWebSocketsToken'
 let krakenApiUrl = 'https://api.kraken.com'

@@ -6,7 +6,7 @@ import type {
   PairPriceUpdate,
 } from 'exchange-models/exchange'
 
-import type { AssetPair, Ticker } from 'exchange-models/kraken'
+import type { AssetPair } from 'exchange-models/kraken'
 
 export type {
   ExchangePair,
@@ -66,21 +66,12 @@ export interface IndexedPair {
   baseIndex: number
 }
 
-export interface TradeDatum {
-  assets: string[]
-  pairs: IndexedPair[]
-  pairMap: Map<string, number>
-  unSubRequest: object
-  subRequest: object
-}
-
 export interface Config {
   exchangeName: ExchangeName
   initialAmount: number
   initialAsset: string
   eta: number
   key: Key
-  buildGraph: string
 }
 
 export interface Connections {

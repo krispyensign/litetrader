@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
-    "module": "CommonJS",
+    "target": "ESNext",
+    "module": "ESNext",
     "outDir": "dist/",                          
     "removeComments": false,
     "rootDir": "src/",
     "sourceMap": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
 
     "strict": true,         
     "alwaysStrict": true,

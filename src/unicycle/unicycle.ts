@@ -2,20 +2,12 @@ import {
   filterl,
   filterMapl,
   flatMapl,
-  getValue,
   hasValue,
   Label,
   LazyIterable,
   partitionl,
   peekl,
-} from './lib'
-
-export function createNbrsFromEdgeList(edgeList: [Label, Label][]): Map<Label, Label[]> {
-  return edgeList.reduce((nbrMap, edge) => {
-    nbrMap.has(edge[0]) ? nbrMap.get(edge[0])?.push(edge[1]) : nbrMap.set(edge[0], [edge[1]])
-    return nbrMap
-  }, new Map<Label, Label[]>())
-}
+} from './lib.js'
 
 /*
   path[-1] !== nbr  | path.includes(nbr)  |  path[0] === nbr  | result
@@ -68,13 +60,8 @@ export function* findCycles(
     // partition into cycles and paths
     let [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
 
-    console.log('Peek Cycles!')
-    let hasCycles = hasValue(peekl(cycles))
-    console.log(getValue(peekl(cycles)))
-    console.log('Done Peek!')
-
     // report back the cycles
-    if (hasCycles) for (let cycle of cycles) yield cycle
+    if (hasValue(peekl(cycles))) for (let cycle of cycles) yield cycle
 
     // if nothing at all was found then break
     if (!hasValue(peekl(paths))) break
