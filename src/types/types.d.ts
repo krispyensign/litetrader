@@ -1,18 +1,8 @@
-import type {
-  ExchangeName,
-  OrderCancelRequest,
-  OrderCreateRequest,
-  PairPriceUpdate,
-} from 'exchange-models/exchange'
+import type { ExchangeName, OrderCancelRequest, OrderCreateRequest } from 'exchange-models/exchange'
 
 import type { AssetPair } from 'exchange-models/kraken'
 
-export type {
-  PairPriceUpdate,
-  OrderCancelRequest,
-  OrderCreateRequest,
-  ExchangeName,
-} from 'exchange-models/exchange'
+export type { OrderCancelRequest, OrderCreateRequest, ExchangeName } from 'exchange-models/exchange'
 
 export type {
   AddOrder,
@@ -29,6 +19,12 @@ export type {
 
 import WebSocket = require('ws')
 import readline = require('readline')
+
+export interface PairPriceUpdate {
+  tradeName: string
+  ask: number
+  bid: number
+}
 
 export type TickModule = [
   (pairs: string[]) => string,
