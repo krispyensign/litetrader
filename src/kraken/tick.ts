@@ -99,8 +99,8 @@ export let parseTick = (tickData?: string): string | PairPriceUpdate => {
   if (isTicker(payload))
     return {
       tradeName: pair,
-      ask: payload.a?.[0], // ask price
-      bid: payload.b?.[0], // bid price
+      ask: payload.a[0], // ask price
+      bid: payload.b[0], // bid price
     }
 
   // for now return all other publications as strings for logging

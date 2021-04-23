@@ -10,11 +10,10 @@ export let createTickCallback = (
 ) => (x: WebSocket.MessageEvent): void => {
   let pairUpdate = parseTick(x.toLocaleString())
   if (typeof pairUpdate === 'string') return
-  if (pairUpdate.tradeName === undefined) throw Error('Missing tradename from update')
   let pairIndex = pairMap.get(pairUpdate.tradeName)
   if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
-  if (pairUpdate.ask !== undefined) pairs[pairIndex].ask = pairUpdate.ask
-  if (pairUpdate.bid !== undefined) pairs[pairIndex].bid = pairUpdate.bid
+  pairs[pairIndex].ask = pairUpdate.ask
+  pairs[pairIndex].bid = pairUpdate.bid
 }
 
 export let createShutdownCallback = (
