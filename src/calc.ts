@@ -1,26 +1,19 @@
-import type { Recipe, IndexedPair, OrderCreateRequest } from './types/types'
+import type { Recipe, OrderCreateRequest, IndexedPair } from './types/types'
 
-export let calcProfit = (
-  initialAssetIndex: number,
-  initialAmount: number,
+// helper function to safely round a number
+let safeRound = (num: number, decimals: number): number =>
+  decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
+
+// helper function to safely divide by 0
+let safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
+
+let translateSequence = (
   cycle: number[],
   assets: string[],
   pairs: IndexedPair[],
-  pairMap: Map<string, number>,
-  eta: number,
-  orderId: string
-): [number, Recipe] | number => {
-  // helper function to safely round a number
-  let safeRound = (num: number, decimals: number): number => {
-    return decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
-  }
-
-  // helper function to safely divide by 0
-  let safeDivide = (numA: number, numB: number): number => {
-    return numB !== 0 ? numA / numB : 0
-  }
-
-  let pairList = cycle.slice(1).map((value, index) => {
+  pairMap: Map<string, number>
+): IndexedPair[] =>
+  cycle.slice(1).map((value, index) => {
     // try first/second else second/first
     let tempA = assets[cycle[index]]
     let tempB = assets[value]
@@ -33,24 +26,36 @@ export let calcProfit = (
     return pairs[indo]
   })
 
+let createRecipe = (
+  initialAmount: number,
+  initialAssetIndex: number,
+  assets: string[]
+): Recipe => ({
+  initialAmount: initialAmount,
+  initialAssetIndex: initialAssetIndex,
+  initialAssetName: assets[initialAssetIndex],
+  steps: new Array<OrderCreateRequest>(),
+})
+
+export let calcProfit = (
+  initialAssetIndex: number,
+  initialAmount: number,
+  cycle: number[],
+  assets: string[],
+  pairs: IndexedPair[],
+  pairMap: Map<string, number>,
+  eta: number,
+  orderId: string
+): [number, Recipe] | number => {
   // setup a recipe object to return just in case calculation shows profitable
-  let recipe: Recipe = {
-    initialAmount: initialAmount,
-    initialAssetIndex: initialAssetIndex,
-    initialAssetName: assets[initialAssetIndex],
-    steps: new Array<OrderCreateRequest>(),
-  }
+  let recipe = createRecipe(initialAmount, initialAssetIndex, assets)
 
   // start with initially provided index and amount
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
 
-  // for each trade index of a trade
+  let pairList = translateSequence(cycle, assets, pairs, pairMap)
   for (let pair of pairList) {
-    // validate the bid and ask are populated by this point
-    if (pair.ask === undefined || pair.bid === undefined)
-      throw Error('ask bid spread is not defined')
-
     // if there was an issue and the assets were improperly populated
     if (currentAsset !== pair.baseIndex && currentAsset !== pair.quoteIndex) {
       throw Error(

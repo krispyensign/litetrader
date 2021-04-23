@@ -1,6 +1,5 @@
 import type {
   ExchangeName,
-  ExchangePair,
   OrderCancelRequest,
   OrderCreateRequest,
   PairPriceUpdate,
@@ -9,7 +8,6 @@ import type {
 import type { AssetPair } from 'exchange-models/kraken'
 
 export type {
-  ExchangePair,
   PairPriceUpdate,
   OrderCancelRequest,
   OrderCreateRequest,
@@ -49,6 +47,21 @@ export type OrderModule = [
   (eventData: string) => string
 ]
 
+export interface ExchangePair {
+  index: number
+  name: string
+  tradename: string
+  decimals: number
+  baseName: string
+  quoteName: string
+  makerFee: number
+  takerFee: number
+  volume: number
+  ordermin: number
+  ask: number
+  bid: number
+}
+
 export interface IndexedPair {
   index: number
   name: string
@@ -60,8 +73,8 @@ export interface IndexedPair {
   takerFee: number
   volume: number
   ordermin: number
-  ask?: number
-  bid?: number
+  ask: number
+  bid: number
   quoteIndex: number
   baseIndex: number
 }
