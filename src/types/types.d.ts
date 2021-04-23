@@ -17,9 +17,6 @@ export type {
   Token,
 } from 'exchange-models/kraken'
 
-import WebSocket = require('ws')
-import readline = require('readline')
-
 export interface PairPriceUpdate {
   tradeName: string
   ask: number
@@ -81,12 +78,6 @@ export interface Config {
   initialAsset: string
   eta: number
   key: Key
-}
-
-export interface Connections {
-  tickws: WebSocket
-  orderws: WebSocket
-  worker: readline.Interface
 }
 
 export interface Dictionary<T> {
