@@ -39,6 +39,7 @@ export let setupData = async (
     // update the pair with the new values
     return { ...pair, baseIndex: baseIndex, quoteIndex: quoteIndex }
   })
+
   // create a mapping of baseNamequoteName and baseName,quoteName
   let pairMap = new Map([
     ...new Map<string, number>(tradePairs.map((pair, index) => [pair.tradename, index])),
@@ -46,5 +47,6 @@ export let setupData = async (
       tradePairs.map(pair => [[pair.baseName, pair.quoteName].join(','), pair.index])
     ),
   ])
+
   return [assets, pairs, pairMap]
 }
