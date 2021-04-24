@@ -38,9 +38,8 @@ export let orderSelector = (exchangeName: ExchangeName): OrderModule => {
 export let getLogger = (serviceName: string): Logger => {
   let myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
     let msg = `${timestamp} [${level}] [${serviceName}] : ${message}`
-    if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object)) {
+    if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object))
       msg += JSON.stringify(metadata)
-    }
     return msg
   })
 
@@ -58,7 +57,7 @@ export let getLogger = (serviceName: string): Logger => {
     ],
   })
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production')
     logger.add(
       new winston.transports.Console({
         format: winston.format.combine(
@@ -68,6 +67,5 @@ export let getLogger = (serviceName: string): Logger => {
         ),
       })
     )
-  }
   return logger
 }
