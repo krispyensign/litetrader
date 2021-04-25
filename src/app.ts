@@ -25,7 +25,7 @@ export let worker = async (): Promise<void> => {
   for (let cycle of findCycles([initialAssetIndex], graph)) parentPort?.postMessage(cycle)
 }
 
-export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker] | undefined> => {
+export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker]> => {
   // configure everything
   let [
     createStopRequest,
