@@ -15,7 +15,7 @@ export let buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
 }
 
 export let setupData = async (
-  getAvailablePairs: (threshold?: number | undefined) => Promise<ExchangePair[]>
+  getAvailablePairs: (threshold?: number) => Promise<ExchangePair[]>
 ): Promise<[string[], IndexedPair[], Map<string, number>]> => {
   // get pairs from exchange
   let tradePairs = await getAvailablePairs()

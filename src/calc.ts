@@ -57,12 +57,11 @@ export let calcProfit = (
   let pairList = translateSequence(cycle, assets, pairs, pairMap)
   for (let pair of pairList) {
     // if there was an issue and the assets were improperly populated
-    if (currentAsset !== pair.baseIndex && currentAsset !== pair.quoteIndex) {
+    if (currentAsset !== pair.baseIndex && currentAsset !== pair.quoteIndex)
       throw Error(
         'Invalid logic somewhere! Current Tuple State:' +
           [currentAsset, pair.quoteIndex, pair.baseIndex].join(', ')
       )
-    }
 
     // mark as 0 if processing results in an impossible trade
     currentAmount = currentAmount > pair.ordermin ? currentAmount : 0

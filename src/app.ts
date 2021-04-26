@@ -18,17 +18,13 @@ export let worker = async (): Promise<void> => {
 
   // map from object to map
   let graph = new Map<number, number[]>()
-  for (let [key, nbrs] of Object.entries(graphData)) {
-    graph.set(Number(key), nbrs)
-  }
+  for (let [key, nbrs] of Object.entries(graphData)) graph.set(Number(key), nbrs)
 
   // post each cycle
-  for (let cycle of findCycles([initialAssetIndex], graph)) {
-    parentPort?.postMessage(cycle)
-  }
+  for (let cycle of findCycles([initialAssetIndex], graph)) parentPort?.postMessage(cycle)
 }
 
-export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker] | undefined> => {
+export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker]> => {
   // configure everything
   let [
     createStopRequest,

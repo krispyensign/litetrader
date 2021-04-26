@@ -29,30 +29,42 @@ let getJson = async <T>(url: string): Promise<T | Error> => {
   return result
 }
 
-let compareTypes = (o: object, ...propertyNames: string[]): boolean | string | undefined => {
-  // check if object is undefined
-  if (!o) return undefined
-  // loop through supplied propertynames
-  for (let prop of propertyNames) {
-    // if property is not in object then return that property
-    if (!(prop in o)) return prop.toString()
-  }
-  // return true if all properties requested are on object
-  return true
+let isObject = (o: unknown): o is object => {
+  return o !== null && o !== undefined && typeof o === 'object'
 }
 
-let isTicker = (payload: object): payload is Ticker => {
+let compareTypes = (o: unknown, ...propertyNames: string[]): boolean | string => {
+  // check if object is undefined
+  if (isObject(o)) {
+    // loop through supplied propertynames
+    for (let prop of propertyNames) {
+      // if property is not in object then return that property
+      if (!(prop in o)) return prop.toString()
+    }
+    // return true if all properties requested are on object
+    return true
+  }
+  return false
+}
+
+let isTickerPayload = (payload: unknown): payload is Ticker => {
   if (!payload) return false
   let result = compareTypes(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
   if (!result || typeof result === 'string') return false
-  return result
+  let tickerPayload = payload as Ticker
+  return (
+    typeof tickerPayload.a === 'object' &&
+    tickerPayload.a.length > 0 &&
+    typeof tickerPayload.b === 'object' &&
+    tickerPayload.b.length > 0
+  )
 }
 
-let isPublication = (event: object): event is Publication => {
+let isPublication = (event: unknown): event is Publication => {
   return (event as Publication).length !== undefined && (event as Publication).length === 4
 }
 
-let isKrakenPair = (pairName: string, pair?: object): pair is AssetPair => {
+let isKrakenPair = (pairName: string, pair?: unknown): pair is AssetPair => {
   if (!pair) return false
   let result = compareTypes(pair, 'wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals')
   if (!result) throw Error(`Failed to correctly populate pair ${pairName}`)
@@ -60,7 +72,7 @@ let isKrakenPair = (pairName: string, pair?: object): pair is AssetPair => {
   return true
 }
 
-let isLastTick = (pairName: string, tick?: object): tick is Ticker => {
+let isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
   if (!tick) return false
   let result = compareTypes(tick, 'a', 'b', 't')
   if (!result) throw Error(`Failed to correctly populate tick ${pairName}.`)
@@ -96,11 +108,11 @@ export let parseTick = (tickData?: string): string | PairPriceUpdate => {
   let payload = event[1]
 
   // check if the payload is a ticker if so then return back an update object
-  if (isTicker(payload))
+  if (isTickerPayload(payload))
     return {
       tradeName: pair,
-      ask: payload.a[0], // ask price
-      bid: payload.b[0], // bid price
+      ask: payload.a[0],
+      bid: payload.b[0],
     }
 
   // for now return all other publications as strings for logging
