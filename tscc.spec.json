@@ -1,0 +1,20 @@
+{
+  "modules": {
+    "bundle": "./src/index.ts"
+  },
+  "external": {
+    "worker_threads": "worker_threads",
+    "path": "path",
+    "source-map-support": "sourceMap",
+    "logform": "logform",
+    "yargs": "yargs",
+    "got": "got",
+    "qs": "qs",
+    "ws": "WebSocket",
+    "crypto": "crypto"
+  },
+  "prefix": "./dist/",
+  "compilerFlags": {
+    "compilation_level": "ADVANCED"
+  }
+}

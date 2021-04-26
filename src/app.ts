@@ -1,7 +1,6 @@
 import WebSocket from 'ws'
-import { Worker, parentPort, workerData } from 'worker_threads'
 import { dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { Worker, parentPort, workerData } from 'worker_threads'
 import {
   createTickCallback,
   createShutdownCallback,
@@ -41,7 +40,8 @@ export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker] 
   let [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = orderSelector(
     config.exchangeName
   )
-  let [assets, pairs, pairMap] = await setupData(getAvailablePairs)
+  let exchangeData = await setupData(getAvailablePairs)
+  let [assets, pairs, pairMap] = exchangeData 
 
   // token = await order.getToken(config.key)
   let token = ''
@@ -51,9 +51,10 @@ export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker] 
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
 
   // setup sockets and graph worker
+  let dirName = dirname(process.argv[1])
   let tickws = new WebSocket(getWebSocketUrl())
   let orderws = new WebSocket(getAuthWebSocketUrl())
-  let graphWorker = new Worker(dirname(fileURLToPath(import.meta.url)) + '/index.js', {
+  let graphWorker = new Worker(dirName + '/index.js', {
     workerData: {
       graph: buildGraph(pairs),
       initialAssetIndex: initialAssetIndex,

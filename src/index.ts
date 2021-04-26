@@ -1,10 +1,10 @@
 import yargs from 'yargs'
-import { install as sourceMapInstall } from 'source-map-support'
+import * as sourceMap from 'source-map-support'
 import { isMainThread } from 'worker_threads'
 import { app, worker } from './app.js'
 import type { ExchangeName } from './types/types'
 
-sourceMapInstall()
+sourceMap.install()
 
 let argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },
@@ -16,7 +16,10 @@ let argv = yargs(process.argv.slice(2)).options({
 }).argv
 
 // do some error handling
-if (argv.initialAsset === null) throw Error('Invalid asset provided')
+if (argv.initialAsset === null)
+  ((): void => {
+    throw Error('Invalid asset provided')
+  })()
 
 // fire it up
 if (isMainThread) {
