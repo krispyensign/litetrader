@@ -149,7 +149,7 @@ export let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[
           pair.wsname &&
           isKrakenPair(name, pair) &&
           isLastTick(name, assetPairTicks[name]) &&
-          assetPairTicks[name]?.t?.[0] !== undefined &&
+          assetPairTicks[name].t?.[0] !== undefined &&
           assetPairTicks[name].t![0] > threshold!
       )
 
@@ -172,6 +172,7 @@ export let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[
       )
   )
 }
+
 export let createStopRequest = (pairs: string[]): string =>
   JSON.stringify({
     event: 'unsubscribe',
@@ -180,6 +181,7 @@ export let createStopRequest = (pairs: string[]): string =>
       name: 'ticker',
     },
   })
+
 export let createTickSubRequest = (pairs: string[]): string =>
   JSON.stringify({
     event: 'subscribe',

@@ -1,8 +1,6 @@
 import type { AddOrder, CancelOrder, OrderCancelRequest, OrderCreateRequest } from '../types/types'
 import type { StatusEvent } from '../types/kraken'
 
-let wsUrl = 'wss://ws-auth.kraken.com'
-
 export let isStatusEvent = (event: unknown): event is StatusEvent => {
   if (typeof event !== 'object') return false
   let typedEvent = event as StatusEvent
@@ -35,4 +33,4 @@ export let cancelOrderRequest = (token: string, cancel: OrderCancelRequest): str
   } as CancelOrder)
 
 export let parseEvent = (eventData: string): string => eventData
-export let getWebSocketUrl = (): string => wsUrl
+export let getWebSocketUrl = (): string => 'wss://ws-auth.kraken.com'

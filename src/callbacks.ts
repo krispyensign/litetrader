@@ -60,15 +60,7 @@ export let createGraphProfitCallback = (
       console.log(`filter failed ${cycle[0]}, ${initialAssetIndex}}`)
 
     // calc profit, hopefully something good is found
-    let result = calcProfit(
-      initialAssetIndex,
-      initialAmount,
-      cycle,
-      assets,
-      pairs,
-      pairMap,
-      eta
-    )
+    let result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta)
 
     // occassionally print to console if 10000 or so cycles have been processed
     count += 1

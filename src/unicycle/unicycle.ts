@@ -3,11 +3,12 @@ import {
   filterMapl,
   flatMapl,
   hasValue,
-  Label,
   LazyIterable,
   partitionl,
   peekl,
 } from './lib.js'
+
+type Label = number | string
 
 /*
   path[-1] !== nbr  | path.includes(nbr)  |  path[0] === nbr  | result
@@ -18,11 +19,8 @@ import {
             F         *                       *                 F  <-- self loop discard remaining
                                                                        checks
 */
-function growPaths(
-  paths: Iterable<Label[]>,
-  neighbors: Map<Label, Label[]>
-): LazyIterable<Label[]> {
-  return flatMapl(
+let growPaths = (paths: Iterable<Label[]>, neighbors: Map<Label, Label[]>): LazyIterable<Label[]> =>
+  flatMapl(
     filterl(
       paths,
       // only perform grow operation if there are neighbors
@@ -45,7 +43,6 @@ function growPaths(
           currentPath.includes(neighbor) === (currentPath[0] === neighbor)
       )
   )
-}
 
 export function* findCycles(
   startAssets: Label[],

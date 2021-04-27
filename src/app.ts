@@ -37,7 +37,7 @@ export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker]>
     config.exchangeName
   )
   let exchangeData = await setupData(getAvailablePairs)
-  let [assets, pairs, pairMap] = exchangeData 
+  let [assets, pairs, pairMap] = exchangeData
 
   // token = await order.getToken(config.key)
   let token = ''
