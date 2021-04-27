@@ -44,8 +44,7 @@ export let calcProfit = (
   assets: string[],
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
-  eta: number,
-  orderId: string
+  eta: number
 ): [number, Recipe] | number => {
   // setup a recipe object to return just in case calculation shows profitable
   let recipe = createRecipe(initialAmount, initialAssetIndex, assets)
@@ -80,7 +79,6 @@ export let calcProfit = (
         orderType: 'market',
         pair: pair.tradename,
         price: pair.bid,
-        orderId: orderId,
       }
       recipe.steps.push(step)
 
@@ -99,7 +97,6 @@ export let calcProfit = (
         ),
         direction: 'buy',
         event: 'create',
-        orderId: orderId,
         orderType: 'market',
         pair: pair.tradename,
         price: pair.ask,

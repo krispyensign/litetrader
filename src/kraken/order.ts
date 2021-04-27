@@ -1,4 +1,4 @@
-import type { OrderCancelRequest, OrderCreateRequest } from '../types/types'
+import type { AddOrder, CancelOrder, OrderCancelRequest, OrderCreateRequest } from '../types/types'
 import type { StatusEvent } from '../types/kraken'
 
 let wsUrl = 'wss://ws-auth.kraken.com'
@@ -24,14 +24,15 @@ export let createOrderRequest = (token: string, order: OrderCreateRequest): stri
     volume: order.amount.toFixed(20),
     validate: 'true',
     price: order.price,
-  })
+    userref: order.orderId,
+  } as AddOrder)
 
 export let cancelOrderRequest = (token: string, cancel: OrderCancelRequest): string =>
   JSON.stringify({
     event: 'cancelOrder',
     token: token,
-    txid: [cancel.orderId!],
-  })
+    txid: [cancel.orderId],
+  } as CancelOrder)
 
 export let parseEvent = (eventData: string): string => eventData
 export let getWebSocketUrl = (): string => wsUrl

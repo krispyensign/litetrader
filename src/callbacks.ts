@@ -67,8 +67,7 @@ export let createGraphProfitCallback = (
       assets,
       pairs,
       pairMap,
-      eta,
-      '0'
+      eta
     )
 
     // occassionally print to console if 10000 or so cycles have been processed

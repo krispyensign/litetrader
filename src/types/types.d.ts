@@ -1,8 +1,8 @@
-import type { ExchangeName, OrderCancelRequest, OrderCreateRequest } from 'exchange-models/exchange'
+import type { ExchangeName  } from 'exchange-models/exchange'
 
 import type { AssetPair } from 'exchange-models/kraken'
 
-export type { OrderCancelRequest, OrderCreateRequest, ExchangeName } from 'exchange-models/exchange'
+export type { ExchangeName } from 'exchange-models/exchange'
 
 export type {
   AddOrder,
@@ -39,6 +39,28 @@ export type OrderModule = [
   (event: unknown) => boolean,
   (eventData: string) => string
 ]
+
+export interface OrderCancelRequest {
+  event: "cancel";
+  orderId: string;
+}
+
+export interface OrderCreateRequest {
+  event: "create";
+  requestId?: string;
+  orderId?: string;
+  pair: string;
+  /**
+   * Which way a trade goes
+   */
+  direction: "buy" | "sell";
+  /**
+   * What kind of order
+   */
+  orderType: "market" | "limit";
+  amount: number;
+  price?: number;
+}
 
 export interface ExchangePair {
   index: number
