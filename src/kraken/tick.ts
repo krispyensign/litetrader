@@ -30,9 +30,7 @@ const getJson = async <T>(url: string): Promise<T | Error> => {
   return result
 }
 
-const isObject = (o: unknown): o is object => {
-  return o !== null && o !== undefined && typeof o === 'object'
-}
+const isObject = (o: unknown): o is object => o !== null && o !== undefined && typeof o === 'object'
 
 const compareTypes = (o: unknown, ...propertyNames: string[]): boolean | string => {
   // check if object is undefined
