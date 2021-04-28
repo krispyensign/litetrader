@@ -10,6 +10,7 @@ import type {
 
 import got from 'got'
 import { AssetTicksResponse } from '../types/kraken'
+import { isError } from './common'
 
 // setup the global constants
 const krakenTickerPath = '/0/public/Ticker'
@@ -60,9 +61,8 @@ const isTickerPayload = (payload: unknown): payload is Ticker => {
   )
 }
 
-const isPublication = (event: unknown): event is Publication => {
-  return (event as Publication).length !== undefined && (event as Publication).length === 4
-}
+const isPublication = (event: unknown): event is Publication =>
+  (event as Publication).length !== undefined && (event as Publication).length === 4
 
 const isKrakenPair = (pairName: string, pair?: unknown): pair is AssetPair => {
   if (!pair) return false
@@ -88,22 +88,24 @@ const isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
   return true
 }
 
-const isError = (err: unknown): err is Error =>
-  typeof err === 'object' &&
-  (err as Error).message !== undefined &&
-  (err as Error).stack !== undefined
+type KrakenErrorMessage = {
+  errorMessage: string
+}
+
+const isKrakenErrorMessage = (err: unknown): err is KrakenErrorMessage =>
+  typeof err === 'object' && (err as KrakenErrorMessage).errorMessage !== undefined
 
 export const parseTick = (tickData?: string): string | PairPriceUpdate => {
   // make sure we got something if not failure during ws message
   if (!tickData) throw Error('TickData missing. Cannot parse.')
 
   // parse it
-  const event = JSON.parse(tickData)
+  const event: unknown = JSON.parse(tickData)
   if (!event) throw Error(`Failed to parse ${tickData}`)
 
   // check to make sure its not an error.  Something wrong with code itself
   // so need to hard error on this one
-  if ('errorMessage' in event) throw Error(event.errorMessage)
+  if (isKrakenErrorMessage(event)) throw Error(event.errorMessage)
 
   // if its not a publication (unlikely) return the tick as a string for logging
   if (!isPublication(event)) return tickData
