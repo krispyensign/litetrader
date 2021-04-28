@@ -10,7 +10,7 @@ import type {
 
 import got from 'got'
 import { AssetTicksResponse } from '../types/kraken'
-import { isError } from './common'
+import { isError } from './common.js'
 
 // setup the global constants
 const krakenTickerPath = '/0/public/Ticker'
