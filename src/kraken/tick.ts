@@ -88,13 +88,10 @@ const isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
   return true
 }
 
-const isError = (err: unknown): err is Error => {
-  return (
-    typeof err === 'object' &&
-    (err as Error).message !== undefined &&
-    (err as Error).stack !== undefined
-  )
-}
+const isError = (err: unknown): err is Error =>
+  typeof err === 'object' &&
+  (err as Error).message !== undefined &&
+  (err as Error).stack !== undefined
 
 export const parseTick = (tickData?: string): string | PairPriceUpdate => {
   // make sure we got something if not failure during ws message
