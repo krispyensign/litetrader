@@ -22,7 +22,7 @@ if (argv.initialAsset === null)
   })()
 
 // fire it up
-if (isMainThread) {
+if (isMainThread)
   app({
     exchangeName: argv.exchangeName as ExchangeName,
     initialAmount: argv.initialAmount,
@@ -33,8 +33,6 @@ if (isMainThread) {
       apiPrivateKey: argv.apiPrivateKey,
     },
   })
-} else {
-  worker()
-}
+else worker()
 
 // wait till shutdown of sockets and readline

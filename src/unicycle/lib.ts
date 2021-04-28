@@ -1,4 +1,4 @@
-export interface LazyIterable<T> {
+export type LazyIterable<T> = {
   [Symbol.iterator](): IterableIterator<T>
 }
 

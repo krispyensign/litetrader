@@ -3,7 +3,7 @@ import { Dictionary, ResponseWrapper } from './types'
 export type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
 export type AssetTicksResponse = ResponseWrapper<Dictionary<TickerResponse>>
 
-export interface TickerResponse {
+export type TickerResponse = {
   /**
    * Ask
    */
@@ -45,7 +45,7 @@ export interface TickerResponse {
 /**
  * Response. Add new order.
  */
-export interface AddOrderStatus {
+export type AddOrderStatus = {
   event: 'addOrderStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message
@@ -70,7 +70,7 @@ export interface AddOrderStatus {
   errorMessage: string
 }
 
-export interface CancelOrderStatus {
+export type CancelOrderStatus = {
   event: 'cancelOrderStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message

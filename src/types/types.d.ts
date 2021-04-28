@@ -17,7 +17,7 @@ export type {
   Token,
 } from 'exchange-models/kraken'
 
-export interface PairPriceUpdate {
+export type PairPriceUpdate = {
   tradeName: string
   ask: number
   bid: number
@@ -40,12 +40,12 @@ export type OrderModule = [
   (eventData: string) => string
 ]
 
-export interface OrderCancelRequest {
+export type OrderCancelRequest = {
   event: 'cancel'
   orderId: string
 }
 
-export interface OrderCreateRequest {
+export type OrderCreateRequest = {
   event: 'create'
   requestId?: string
   orderId?: string
@@ -62,7 +62,7 @@ export interface OrderCreateRequest {
   price?: number
 }
 
-export interface ExchangePair {
+export type ExchangePair = {
   index: number
   name: string
   tradename: string
@@ -77,7 +77,7 @@ export interface ExchangePair {
   bid: number
 }
 
-export interface IndexedPair {
+export type IndexedPair = {
   index: number
   name: string
   tradename: string
@@ -94,7 +94,7 @@ export interface IndexedPair {
   baseIndex: number
 }
 
-export interface Config {
+export type Config = {
   exchangeName: ExchangeName
   initialAmount: number
   initialAsset: string
@@ -102,23 +102,23 @@ export interface Config {
   key: Key
 }
 
-export interface Dictionary<T> {
+export type Dictionary<T> = {
   [key: string]: T
 }
 
 export type AssetPairsResponse = [string, Partial<AssetPair>][]
 
-export interface ResponseWrapper<T = object> {
+export type ResponseWrapper<T = object> = {
   error: string[]
   result: T
 }
 
-export interface Key {
+export type Key = {
   apiKey: string
   apiPrivateKey: string
 }
 
-export interface Recipe {
+export type Recipe = {
   initialAmount: number
   initialAssetIndex: number
   initialAssetName: string

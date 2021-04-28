@@ -12,16 +12,15 @@ import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
 
 export const worker = async (): Promise<void> => {
-  // recover worker data before processing
-  const graphData: Dictionary<number[]> = workerData.graph
-  const initialAssetIndex: number = workerData.initialAssetIndex
-
-  // map from object to map
-  const graph = new Map<number, number[]>()
-  for (const [key, nbrs] of Object.entries(graphData)) graph.set(Number(key), nbrs)
-
   // post each cycle
-  for (const cycle of findCycles([initialAssetIndex], graph)) parentPort?.postMessage(cycle)
+  for (const cycle of findCycles(
+    [workerData.initialAssetIndex as number],
+    Object.entries(workerData.graph as Dictionary<number[]>).reduce(
+      (prev, [key, nbrs]) => prev.set(Number(key), nbrs),
+      new Map<number, number[]>()
+    )
+  ))
+    parentPort?.postMessage(cycle)
 }
 
 export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker]> => {
@@ -47,10 +46,9 @@ export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
 
   // setup sockets and graph worker
-  const dirName = dirname(process.argv[1])
   const tickws = new WebSocket(getWebSocketUrl())
   const orderws = new WebSocket(getAuthWebSocketUrl())
-  const graphWorker = new Worker(dirName + '/index.js', {
+  const graphWorker = new Worker(dirname(process.argv[1]) + '/index.js', {
     workerData: {
       graph: buildGraph(pairs),
       initialAssetIndex: initialAssetIndex,
