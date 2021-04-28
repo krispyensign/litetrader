@@ -1,16 +1,13 @@
 import type { AddOrder, CancelOrder, OrderCancelRequest, OrderCreateRequest } from '../types/types'
 import type { StatusEvent } from '../types/kraken'
 
-export const isStatusEvent = (event: unknown): event is StatusEvent => {
-  if (typeof event !== 'object') return false
-  const typedEvent = event as StatusEvent
-  return typedEvent?.event !== undefined && typedEvent.reqid !== undefined
-}
+export const isStatusEvent = (event: unknown): event is StatusEvent =>
+  typeof event !== 'object'
+    ? false
+    : (event as StatusEvent).event !== undefined && (event as StatusEvent).reqid !== undefined
 
-export const getReqId = (parsedEvent: unknown): string => {
-  if (isStatusEvent(parsedEvent)) return parsedEvent.reqid?.toString() || '0'
-  return '0'
-}
+export const getReqId = (parsedEvent: unknown): string =>
+  isStatusEvent(parsedEvent) ? parsedEvent.reqid?.toString() || '0' : '0'
 
 export const createOrderRequest = (token: string, order: OrderCreateRequest): string =>
   JSON.stringify({
