@@ -64,8 +64,7 @@
           "max-len": ["error", { "code": 100 }],
           "no-loss-of-precision": "off",
           "no-dupe-class-members": "off",
-          "require-atomic-updates": "off",
-          "prefer-const": "off"
+          "require-atomic-updates": "off"
         },
         "parserOptions": {
           "ecmaVersion": 2018,

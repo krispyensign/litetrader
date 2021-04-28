@@ -4,16 +4,16 @@ import type { OptionsOfJSONResponseBody } from 'got'
 import { createHmac, createHash } from 'crypto'
 import qs from 'qs'
 
-let krakenTokenPath = '/0/private/GetWebSocketsToken'
-let krakenApiUrl = 'https://api.kraken.com'
+const krakenTokenPath = '/0/private/GetWebSocketsToken'
+const krakenApiUrl = 'https://api.kraken.com'
 
-let makeAuthCall = async <T = object>(
+const makeAuthCall = async <T = object>(
   url: string,
   request: string,
   nonce: number,
   key: Key
 ): Promise<ResponseWrapper<T>> => {
-  let signature = createHmac('sha512', Buffer.from(key.apiPrivateKey, 'base64'))
+  const signature = createHmac('sha512', Buffer.from(key.apiPrivateKey, 'base64'))
     .update(
       krakenTokenPath +
         createHash('sha256')
@@ -23,7 +23,7 @@ let makeAuthCall = async <T = object>(
     )
     .digest('base64')
 
-  let gotOptions: OptionsOfJSONResponseBody = {
+  const gotOptions: OptionsOfJSONResponseBody = {
     url: url,
     headers: {
       'API-Key': key.apiKey,
@@ -36,7 +36,7 @@ let makeAuthCall = async <T = object>(
     isStream: false,
   }
 
-  let response = await got.post(gotOptions).json<ResponseWrapper<T>>()
+  const response = await got.post(gotOptions).json<ResponseWrapper<T>>()
 
   // if there wasn't a response then bomb
   if (response === undefined) throw new Error('Failed to get response back from exchange api!')
@@ -54,13 +54,13 @@ let makeAuthCall = async <T = object>(
   return response
 }
 
-export let getToken = async (key: Key): Promise<string> => {
-  let n = new Date().getTime() * 1000
-  let requestData = {
+export const getToken = async (key: Key): Promise<string> => {
+  const n = new Date().getTime() * 1000
+  const requestData = {
     nonce: n,
   }
 
-  let response = await makeAuthCall<Token>(
+  const response = await makeAuthCall<Token>(
     krakenApiUrl + krakenTokenPath,
     qs.stringify(requestData),
     requestData.nonce,

@@ -1,12 +1,4 @@
-import {
-  filterl,
-  filterMapl,
-  flatMapl,
-  hasValue,
-  LazyIterable,
-  partitionl,
-  peekl,
-} from './lib.js'
+import { filterl, filterMapl, flatMapl, hasValue, LazyIterable, partitionl, peekl } from './lib.js'
 
 type Label = number | string
 
@@ -19,7 +11,10 @@ type Label = number | string
             F         *                       *                 F  <-- self loop discard remaining
                                                                        checks
 */
-let growPaths = (paths: Iterable<Label[]>, neighbors: Map<Label, Label[]>): LazyIterable<Label[]> =>
+const growPaths = (
+  paths: Iterable<Label[]>,
+  neighbors: Map<Label, Label[]>
+): LazyIterable<Label[]> =>
   flatMapl(
     filterl(
       paths,
@@ -55,10 +50,10 @@ export function* findCycles(
 
   while (true) {
     // partition into cycles and paths
-    let [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
+    const [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
 
     // report back the cycles
-    if (hasValue(peekl(cycles))) for (let cycle of cycles) yield cycle
+    if (hasValue(peekl(cycles))) for (const cycle of cycles) yield cycle
 
     // if nothing at all was found then break
     if (!hasValue(peekl(paths))) break

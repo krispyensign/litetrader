@@ -12,15 +12,15 @@ import got from 'got'
 import { AssetTicksResponse } from '../types/kraken'
 
 // setup the global constants
-let krakenTickerPath = '/0/public/Ticker'
-let krakenPairsPath = '/0/public/AssetPairs'
-let krakenApiUrl = 'https://api.kraken.com'
-let krakenWsUrl = 'wss://ws.kraken.com'
+const krakenTickerPath = '/0/public/Ticker'
+const krakenPairsPath = '/0/public/AssetPairs'
+const krakenApiUrl = 'https://api.kraken.com'
+const krakenWsUrl = 'wss://ws.kraken.com'
 
-let getJson = async <T>(url: string): Promise<T | Error> => {
+const getJson = async <T>(url: string): Promise<T | Error> => {
   let result: T | Error
   try {
-    let innerResult: T | undefined = await got(url).json<T>()
+    const innerResult: T | undefined = await got(url).json<T>()
     if (innerResult !== undefined) result = innerResult
     else result = new Error('Failed to get back response from url: ' + url)
   } catch (e) {
@@ -29,15 +29,15 @@ let getJson = async <T>(url: string): Promise<T | Error> => {
   return result
 }
 
-let isObject = (o: unknown): o is object => {
+const isObject = (o: unknown): o is object => {
   return o !== null && o !== undefined && typeof o === 'object'
 }
 
-let compareTypes = (o: unknown, ...propertyNames: string[]): boolean | string => {
+const compareTypes = (o: unknown, ...propertyNames: string[]): boolean | string => {
   // check if object is undefined
   if (isObject(o)) {
     // loop through supplied propertynames
-    for (let prop of propertyNames) {
+    for (const prop of propertyNames) {
       // if property is not in object then return that property
       if (!(prop in o)) return prop.toString()
     }
@@ -47,11 +47,11 @@ let compareTypes = (o: unknown, ...propertyNames: string[]): boolean | string =>
   return false
 }
 
-let isTickerPayload = (payload: unknown): payload is Ticker => {
+const isTickerPayload = (payload: unknown): payload is Ticker => {
   if (!payload) return false
-  let result = compareTypes(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
+  const result = compareTypes(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o')
   if (!result || typeof result === 'string') return false
-  let tickerPayload = payload as Ticker
+  const tickerPayload = payload as Ticker
   return (
     typeof tickerPayload.a === 'object' &&
     tickerPayload.a.length > 0 &&
@@ -60,27 +60,35 @@ let isTickerPayload = (payload: unknown): payload is Ticker => {
   )
 }
 
-let isPublication = (event: unknown): event is Publication => {
+const isPublication = (event: unknown): event is Publication => {
   return (event as Publication).length !== undefined && (event as Publication).length === 4
 }
 
-let isKrakenPair = (pairName: string, pair?: unknown): pair is AssetPair => {
+const isKrakenPair = (pairName: string, pair?: unknown): pair is AssetPair => {
   if (!pair) return false
-  let result = compareTypes(pair, 'wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals')
+  const result = compareTypes(
+    pair,
+    'wsname',
+    'base',
+    'quote',
+    'fees_maker',
+    'fees',
+    'pair_decimals'
+  )
   if (!result) throw Error(`Failed to correctly populate pair ${pairName}`)
   if (typeof result === 'string') throw Error(`Missing resource ${result} on pair ${pairName}.`)
   return true
 }
 
-let isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
+const isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
   if (!tick) return false
-  let result = compareTypes(tick, 'a', 'b', 't')
+  const result = compareTypes(tick, 'a', 'b', 't')
   if (!result) throw Error(`Failed to correctly populate tick ${pairName}.`)
   if (typeof result === 'string') throw Error(`Missing resource ${result} on pair ${pairName}.`)
   return true
 }
 
-let isError = (err: unknown): err is Error => {
+const isError = (err: unknown): err is Error => {
   return (
     typeof err === 'object' &&
     (err as Error).message !== undefined &&
@@ -88,12 +96,12 @@ let isError = (err: unknown): err is Error => {
   )
 }
 
-export let parseTick = (tickData?: string): string | PairPriceUpdate => {
+export const parseTick = (tickData?: string): string | PairPriceUpdate => {
   // make sure we got something if not failure during ws message
   if (!tickData) throw Error('TickData missing. Cannot parse.')
 
   // parse it
-  let event = JSON.parse(tickData)
+  const event = JSON.parse(tickData)
   if (!event) throw Error(`Failed to parse ${tickData}`)
 
   // check to make sure its not an error.  Something wrong with code itself
@@ -104,8 +112,8 @@ export let parseTick = (tickData?: string): string | PairPriceUpdate => {
   if (!isPublication(event)) return tickData
 
   // split out the publication to the pair and the payload
-  let pair = event[3]
-  let payload = event[1]
+  const pair = event[3]
+  const payload = event[1]
 
   // check if the payload is a ticker if so then return back an update object
   if (isTickerPayload(payload))
@@ -119,24 +127,24 @@ export let parseTick = (tickData?: string): string | PairPriceUpdate => {
   return tickData
 }
 
-export let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
+export const getAvailablePairs = async (threshold?: number): Promise<ExchangePair[]> => {
   // get the tradeable asset pairs
   if (threshold === undefined || threshold === null) threshold = 0
-  let assetPairsResult = await getJson<ResponseWrapper>(krakenApiUrl + krakenPairsPath)
+  const assetPairsResult = await getJson<ResponseWrapper>(krakenApiUrl + krakenPairsPath)
 
   if (isError(assetPairsResult)) throw assetPairsResult
 
   // parse the tradeable assetPairs into tuples of name/assetPair
-  let assetPairs = Object.entries(assetPairsResult.result) as AssetPairsResponse
+  const assetPairs = Object.entries(assetPairsResult.result) as AssetPairsResponse
 
   // get the last tick for each asset pair
-  let assetPairTicksResult = await getJson<AssetTicksResponse>(
+  const assetPairTicksResult = await getJson<AssetTicksResponse>(
     krakenApiUrl + krakenTickerPath + '?pair=' + assetPairs.map(pair => pair[0]).join(',')
   )
   if (isError(assetPairTicksResult)) throw assetPairTicksResult
 
   // rename for easy reading
-  let assetPairTicks = assetPairTicksResult.result
+  const assetPairTicks = assetPairTicksResult.result
 
   return (
     assetPairs
@@ -173,7 +181,7 @@ export let getAvailablePairs = async (threshold?: number): Promise<ExchangePair[
   )
 }
 
-export let createStopRequest = (pairs: string[]): string =>
+export const createStopRequest = (pairs: string[]): string =>
   JSON.stringify({
     event: 'unsubscribe',
     pair: pairs,
@@ -182,7 +190,7 @@ export let createStopRequest = (pairs: string[]): string =>
     },
   })
 
-export let createTickSubRequest = (pairs: string[]): string =>
+export const createTickSubRequest = (pairs: string[]): string =>
   JSON.stringify({
     event: 'subscribe',
     pair: pairs,
@@ -191,4 +199,4 @@ export let createTickSubRequest = (pairs: string[]): string =>
     },
   })
 
-export let getWebSocketUrl = (): string => krakenWsUrl
+export const getWebSocketUrl = (): string => krakenWsUrl

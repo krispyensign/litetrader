@@ -3,20 +3,20 @@ import { Worker } from 'worker_threads'
 import { calcProfit } from './calc.js'
 import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types/types'
 
-export let createTickCallback = (
+export const createTickCallback = (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   parseTick: (arg: string) => PairPriceUpdate | string
 ) => (x: WebSocket.MessageEvent): void => {
-  let pairUpdate = parseTick(x.toLocaleString())
+  const pairUpdate = parseTick(x.toLocaleString())
   if (typeof pairUpdate === 'string') return
-  let pairIndex = pairMap.get(pairUpdate.tradeName)
+  const pairIndex = pairMap.get(pairUpdate.tradeName)
   if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
   pairs[pairIndex].ask = pairUpdate.ask
   pairs[pairIndex].bid = pairUpdate.bid
 }
 
-export let createShutdownCallback = (
+export const createShutdownCallback = (
   tickws: WebSocket,
   orderws: WebSocket,
   worker: Worker,
@@ -39,7 +39,7 @@ export let createShutdownCallback = (
   }
 }
 
-export let createGraphProfitCallback = (
+export const createGraphProfitCallback = (
   initialAssetIndex: number,
   initialAmount: number,
   assets: string[],
@@ -60,7 +60,7 @@ export let createGraphProfitCallback = (
       console.log(`filter failed ${cycle[0]}, ${initialAssetIndex}}`)
 
     // calc profit, hopefully something good is found
-    let result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta)
+    const result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta)
 
     // occassionally print to console if 10000 or so cycles have been processed
     count += 1
@@ -73,8 +73,8 @@ export let createGraphProfitCallback = (
       isSending = true
 
       // send orders
-      let [amount, recipe] = result
-      for (let step of recipe.steps) orderws.send(createOrderRequest(token, step))
+      const [amount, recipe] = result
+      for (const step of recipe.steps) orderws.send(createOrderRequest(token, step))
 
       // log value and die for now
       console.log(`amounts: ${initialAmount} -> ${amount}`)

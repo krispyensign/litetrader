@@ -4,7 +4,7 @@ import * as krakenTick from './kraken/tick.js'
 import * as krakenOrder from './kraken/order.js'
 import type { ExchangeName, OrderModule, TickModule } from './types/types'
 
-export let tickSelector = (exchangeName: ExchangeName): TickModule => {
+export const tickSelector = (exchangeName: ExchangeName): TickModule => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -19,7 +19,7 @@ export let tickSelector = (exchangeName: ExchangeName): TickModule => {
   }
 }
 
-export let orderSelector = (exchangeName: ExchangeName): OrderModule => {
+export const orderSelector = (exchangeName: ExchangeName): OrderModule => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -35,15 +35,15 @@ export let orderSelector = (exchangeName: ExchangeName): OrderModule => {
   }
 }
 
-export let getLogger = (serviceName: string): Logger => {
-  let myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+export const getLogger = (serviceName: string): Logger => {
+  const myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
     let msg = `${timestamp} [${level}] [${serviceName}] : ${message}`
     if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object))
       msg += JSON.stringify(metadata)
     return msg
   })
 
-  let logger = winston.createLogger({
+  const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
     transports: [
