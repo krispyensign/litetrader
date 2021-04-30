@@ -9,7 +9,7 @@ import type {
 } from '../types/types'
 
 import got from 'got'
-import { AssetTicksResponse } from '../types/kraken'
+import { AssetTicksResponse, KrakenErrorMessage } from '../types/kraken'
 import { isError } from './common.js'
 
 // setup the global constants
@@ -86,10 +86,6 @@ const isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
   return true
 }
 
-type KrakenErrorMessage = {
-  errorMessage: string
-}
-
 const isKrakenErrorMessage = (err: unknown): err is KrakenErrorMessage =>
   typeof err === 'object' && (err as KrakenErrorMessage).errorMessage !== undefined
 
@@ -99,7 +95,7 @@ export const parseTick = (tickData?: string): string | PairPriceUpdate => {
 
   // parse it
   const event: unknown = JSON.parse(tickData)
-  if (!event) throw Error(`Failed to parse ${tickData}`)
+  if (event == undefined) throw Error(`Failed to parse ${tickData}`)
 
   // check to make sure its not an error.  Something wrong with code itself
   // so need to hard error on this one
