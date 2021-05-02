@@ -1,3 +1,4 @@
+import { isError } from './helpers.js'
 import type { Recipe, OrderCreateRequest, IndexedPair } from './types/types'
 
 // helper function to safely round a number
@@ -37,6 +38,20 @@ const createRecipe = (
   steps: new Array<OrderCreateRequest>(),
 })
 
+export const validateSequence = (asset: number, pairList: IndexedPair[]): IndexedPair[] | Error => {
+  for (const pair of pairList) {
+    // if there was an issue and the assets were improperly populated
+    if (asset !== pair.baseIndex && asset !== pair.quoteIndex)
+      return Error(
+        'Invalid logic somewhere! Current Tuple State:' +
+          [asset, pair.quoteIndex, pair.baseIndex].join(', ')
+      )
+    else if (asset === pair.baseIndex) asset = pair.quoteIndex
+    else asset = pair.baseIndex
+  }
+  return pairList
+}
+
 export const calcProfit = (
   initialAssetIndex: number,
   initialAmount: number,
@@ -45,7 +60,7 @@ export const calcProfit = (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   eta: number
-): [number, Recipe] | number => {
+): [number, Recipe] | number | Error => {
   // setup a recipe object to return just in case calculation shows profitable
   const recipe = createRecipe(initialAmount, initialAssetIndex, assets)
 
@@ -53,18 +68,11 @@ export const calcProfit = (
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
 
-  const pairList = translateSequence(cycle, assets, pairs, pairMap)
+  const pairList = validateSequence(initialAssetIndex, translateSequence(cycle, assets, pairs, pairMap))
+  if (isError(pairList)) return pairList
   for (const pair of pairList) {
-    // if there was an issue and the assets were improperly populated
-    if (currentAsset !== pair.baseIndex && currentAsset !== pair.quoteIndex)
-      throw Error(
-        'Invalid logic somewhere! Current Tuple State:' +
-          [currentAsset, pair.quoteIndex, pair.baseIndex].join(', ')
-      )
-
     // mark as 0 if processing results in an impossible trade
     currentAmount = currentAmount > pair.ordermin ? currentAmount : 0
-
     if (currentAmount === 0) break
 
     // if current exposure is in base asset then create a sell order

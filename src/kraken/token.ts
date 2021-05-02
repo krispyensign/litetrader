@@ -2,7 +2,7 @@ import type { Key, ResponseWrapper, Token } from '../types/types'
 import got from 'got'
 import { createHmac, createHash } from 'crypto'
 import qs from 'qs'
-import { isError } from './common.js'
+import { isError } from '../helpers.js'
 
 const krakenTokenPath = '/0/private/GetWebSocketsToken'
 const krakenApiUrl = 'https://api.kraken.com'

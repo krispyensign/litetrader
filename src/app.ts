@@ -6,7 +6,7 @@ import {
   createShutdownCallback,
   createGraphProfitCallback,
 } from './callbacks.js'
-import { orderSelector, tickSelector } from './helpers.js'
+import { isError, orderSelector, tickSelector } from './helpers.js'
 import { buildGraph, setupData } from './setup.js'
 import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
@@ -25,16 +25,20 @@ export const worker = async (): Promise<void> => {
 
 export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker]> => {
   // configure everything
+  const tick = tickSelector(config.exchangeName)
+  if (isError(tick)) throw tick
   const [
     createStopRequest,
     createTickSubRequest,
     getAvailablePairs,
     getWebSocketUrl,
     parseTick,
-  ] = tickSelector(config.exchangeName)
-  const [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = orderSelector(
+  ] = tick
+  const order = orderSelector(
     config.exchangeName
   )
+  if (isError(order)) throw order
+  const [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = order
   const exchangeData = await setupData(getAvailablePairs)
   const [assets, pairs, pairMap] = exchangeData
 

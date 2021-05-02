@@ -4,7 +4,12 @@ import * as krakenTick from './kraken/tick.js'
 import * as krakenOrder from './kraken/order.js'
 import type { ExchangeName, OrderModule, TickModule } from './types/types'
 
-export const tickSelector = (exchangeName: ExchangeName): TickModule => {
+export const isError = (err: unknown): err is Error =>
+  typeof err === 'object' &&
+  (err as Error).message !== undefined &&
+  (err as Error).stack !== undefined
+
+export const tickSelector = (exchangeName: ExchangeName): TickModule | Error => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -15,11 +20,11 @@ export const tickSelector = (exchangeName: ExchangeName): TickModule => {
         krakenTick.parseTick,
       ]
     default:
-      throw Error('Invalid exchange selected')
+      return Error('Invalid exchange selected')
   }
 }
 
-export const orderSelector = (exchangeName: ExchangeName): OrderModule => {
+export const orderSelector = (exchangeName: ExchangeName): OrderModule  | Error => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -31,7 +36,7 @@ export const orderSelector = (exchangeName: ExchangeName): OrderModule => {
         krakenOrder.parseEvent,
       ]
     default:
-      throw Error('Invalid exchange selected')
+      return Error('Invalid exchange selected')
   }
 }
 

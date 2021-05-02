@@ -2,6 +2,7 @@ import WebSocket from 'ws'
 import { Worker } from 'worker_threads'
 import { calcProfit } from './calc.js'
 import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types/types'
+import { isError } from './helpers.js'
 
 export const createTickCallback = (
   pairs: IndexedPair[],
@@ -67,7 +68,7 @@ export const createGraphProfitCallback = (
     if (count % 10000 === 0) console.log(`${count / 10000}: ${cycle} : ${result}`)
 
     // if not just an amount and is a cycle then do stuff
-    if (typeof result !== 'number') {
+    if (typeof result !== 'number' && !isError(result)) {
       // don't allow any other processes to send while this one is sending
       if (isSending) return
       isSending = true
@@ -82,5 +83,6 @@ export const createGraphProfitCallback = (
       shutdownCallback()
       // isSending = false
     }
+    else if (isError(result)) throw result
   }
 }
