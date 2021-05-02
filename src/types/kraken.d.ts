@@ -3,6 +3,10 @@ import { Dictionary, ResponseWrapper } from './types'
 export type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
 export type AssetTicksResponse = ResponseWrapper<Dictionary<TickerResponse>>
 
+export type KrakenErrorMessage = {
+  errorMessage: string
+}
+
 export type TickerResponse = {
   /**
    * Ask
