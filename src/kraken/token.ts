@@ -6,7 +6,7 @@ import { createHmac, createHash } from 'crypto'
 import { isError } from '../helpers.js'
 import { krakenApiUrl, krakenTokenPath, validateResponse } from './common.js'
 
-const makeAuthCall = async <T = object>(
+let makeAuthCall = async <T = object>(
   url: string,
   request: string,
   nonce: number,
@@ -37,9 +37,9 @@ const makeAuthCall = async <T = object>(
       .json<ResponseWrapper<T>>()
   )
 
-const resolveCall = (res: Token | Error): string | Error => (isError(res) ? res : res.token)
+let resolveCall = (res: Token | Error): string | Error => (isError(res) ? res : res.token)
 
-export const getToken = async (key: Key, nonce: number): Promise<string | Error> =>
+export let getToken = async (key: Key, nonce: number): Promise<string | Error> =>
   resolveCall(
     await makeAuthCall<Token>(
       krakenApiUrl + krakenTokenPath,

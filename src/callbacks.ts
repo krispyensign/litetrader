@@ -4,24 +4,24 @@ import { calcProfit } from './calc.js'
 import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types/types'
 import { isError } from './helpers.js'
 
-export const createTickCallback = (
+export let createTickCallback = (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   parseTick: (arg: string) => PairPriceUpdate | string | Error
 ) => (x: WebSocket.MessageEvent): void => {
-  const pairUpdate = parseTick(x.toLocaleString())
+  let pairUpdate = parseTick(x.toLocaleString())
   if (typeof pairUpdate === 'string') return
   if (isError(pairUpdate)) {
     console.log(pairUpdate)
     throw pairUpdate
   }
-  const pairIndex = pairMap.get(pairUpdate.tradeName)
+  let pairIndex = pairMap.get(pairUpdate.tradeName)
   if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
   pairs[pairIndex].ask = pairUpdate.ask
   pairs[pairIndex].bid = pairUpdate.bid
 }
 
-export const createShutdownCallback = (
+export let createShutdownCallback = (
   tickws: WebSocket,
   orderws: WebSocket,
   worker: Worker,
@@ -44,7 +44,7 @@ export const createShutdownCallback = (
   }
 }
 
-export const createGraphProfitCallback = (
+export let createGraphProfitCallback = (
   initialAssetIndex: number,
   initialAmount: number,
   assets: string[],
@@ -65,7 +65,7 @@ export const createGraphProfitCallback = (
       console.log(`filter failed ${cycle[0]}, ${initialAssetIndex}}`)
 
     // calc profit, hopefully something good is found
-    const result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta)
+    let result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta)
 
     // occassionally print to console if 10000 or so cycles have been processed
     count += 1
@@ -78,8 +78,8 @@ export const createGraphProfitCallback = (
       isSending = true
 
       // send orders
-      const [amount, recipe] = result
-      for (const step of recipe.steps) orderws.send(createOrderRequest(token, step))
+      let [amount, recipe] = result
+      for (let step of recipe.steps) orderws.send(createOrderRequest(token, step))
 
       // log value and die for now
       console.log(`amounts: ${initialAmount} -> ${amount}`)

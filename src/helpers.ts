@@ -5,12 +5,12 @@ import * as krakenSetup from './kraken/setup.js'
 import * as krakenOrder from './kraken/order.js'
 import type { ExchangeName, OrderModule, TickModule } from './types/types'
 
-export const isError = (err: unknown): err is Error =>
+export let isError = (err: unknown): err is Error =>
   typeof err === 'object' &&
   (err as Error).message !== undefined &&
   (err as Error).stack !== undefined
 
-export const tickSelector = (exchangeName: ExchangeName): TickModule | Error => {
+export let tickSelector = (exchangeName: ExchangeName): TickModule | Error => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -25,7 +25,7 @@ export const tickSelector = (exchangeName: ExchangeName): TickModule | Error => 
   }
 }
 
-export const orderSelector = (exchangeName: ExchangeName): OrderModule | Error => {
+export let orderSelector = (exchangeName: ExchangeName): OrderModule | Error => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -41,15 +41,15 @@ export const orderSelector = (exchangeName: ExchangeName): OrderModule | Error =
   }
 }
 
-export const getLogger = (serviceName: string): Logger => {
-  const myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+export let getLogger = (serviceName: string): Logger => {
+  let myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
     let msg = `${timestamp} [${level}] [${serviceName}] : ${message}`
     if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object))
       msg += JSON.stringify(metadata)
     return msg
   })
 
-  const logger = winston.createLogger({
+  let logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
     transports: [

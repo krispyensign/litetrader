@@ -11,7 +11,7 @@ type Label = number | string
             F         *                       *                 F  <-- self loop discard remaining
                                                                        checks
 */
-const growPaths = (
+let growPaths = (
   paths: Iterable<Label[]>,
   neighbors: Map<Label, Label[]>
 ): LazyIterable<Label[]> =>
@@ -50,10 +50,10 @@ export function* findCycles(
 
   while (true) {
     // partition into cycles and paths
-    const [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
+    let [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
 
     // report back the cycles
-    if (hasValue(peekl(cycles))) for (const cycle of cycles) yield cycle
+    if (hasValue(peekl(cycles))) for (let cycle of cycles) yield cycle
 
     // if nothing at all was found then break
     if (!hasValue(peekl(paths))) break

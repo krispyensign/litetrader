@@ -1,7 +1,7 @@
 import type { PairPriceUpdate, Publication, Ticker } from '../types/types'
 import { compareTypes, isKrakenErrorMessage } from './common.js'
 
-const isTickerPayload = (payload: unknown): payload is Ticker =>
+let isTickerPayload = (payload: unknown): payload is Ticker =>
   compareTypes(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o') !== true
     ? false
     : typeof (payload as Ticker).a === 'object' &&
@@ -9,10 +9,10 @@ const isTickerPayload = (payload: unknown): payload is Ticker =>
       typeof (payload as Ticker).b === 'object' &&
       (payload as Ticker).b.length > 0
 
-const isPublication = (event: unknown): event is Publication =>
+let isPublication = (event: unknown): event is Publication =>
   (event as Publication).length !== undefined && (event as Publication).length === 4
 
-export const parseTick = (tickData?: string): string | PairPriceUpdate | Error =>
+export let parseTick = (tickData?: string): string | PairPriceUpdate | Error =>
   tickData === undefined
     ? Error('TickData missing. Cannot parse.')
     : ((event): string | Error | PairPriceUpdate =>

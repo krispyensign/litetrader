@@ -6,7 +6,7 @@ import type { ExchangeName } from './types/types'
 
 sourceMap.install()
 
-const argv = yargs(process.argv.slice(2)).options({
+let argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },
   initialAmount: { type: 'number', default: 200 },
   initialAsset: { type: 'string', default: 'ADA' },

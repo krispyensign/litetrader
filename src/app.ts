@@ -11,9 +11,9 @@ import { buildGraph, setupData } from './setup.js'
 import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
 
-export const worker = async (): Promise<void> => {
+export let worker = async (): Promise<void> => {
   // post each cycle
-  for (const cycle of findCycles(
+  for (let cycle of findCycles(
     [workerData.initialAssetIndex as number],
     Object.entries(workerData.graph as Dictionary<number[]>).reduce(
       (prev, [key, nbrs]) => prev.set(Number(key), nbrs),
@@ -23,35 +23,35 @@ export const worker = async (): Promise<void> => {
     parentPort?.postMessage(cycle)
 }
 
-export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker]> => {
+export let app = async (config: Config): Promise<[WebSocket, WebSocket, Worker]> => {
   // configure everything
-  const tick = tickSelector(config.exchangeName)
+  let tick = tickSelector(config.exchangeName)
   if (isError(tick)) throw tick
-  const [
+  let [
     createStopRequest,
     createTickSubRequest,
     getAvailablePairs,
     getWebSocketUrl,
     parseTick,
   ] = tick
-  const order = orderSelector(config.exchangeName)
+  let order = orderSelector(config.exchangeName)
   if (isError(order)) throw order
-  const [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = order
-  const exchangeData = await setupData(getAvailablePairs)
+  let [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = order
+  let exchangeData = await setupData(getAvailablePairs)
   if (isError(exchangeData)) throw exchangeData
-  const [assets, pairs, pairMap] = exchangeData
+  let [assets, pairs, pairMap] = exchangeData
 
   // token = await order.getToken(config.key)
-  const token = ''
+  let token = ''
 
   // validate asset before continuing
-  const initialAssetIndex = assets.findIndex(a => a === config.initialAsset)
+  let initialAssetIndex = assets.findIndex(a => a === config.initialAsset)
   if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
 
   // setup sockets and graph worker
-  const tickws = new WebSocket(getWebSocketUrl())
-  const orderws = new WebSocket(getAuthWebSocketUrl())
-  const graphWorker = new Worker(dirname(process.argv[1]) + '/index.js', {
+  let tickws = new WebSocket(getWebSocketUrl())
+  let orderws = new WebSocket(getAuthWebSocketUrl())
+  let graphWorker = new Worker(dirname(process.argv[1]) + '/index.js', {
     workerData: {
       graph: buildGraph(pairs),
       initialAssetIndex: initialAssetIndex,
@@ -59,14 +59,14 @@ export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker
   })
 
   // setup callbacks
-  const tickCallback = createTickCallback(pairs, pairMap, parseTick)
-  const shutdownCallback = createShutdownCallback(
+  let tickCallback = createTickCallback(pairs, pairMap, parseTick)
+  let shutdownCallback = createShutdownCallback(
     tickws,
     orderws,
     graphWorker,
     createStopRequest(pairs.map(p => p.tradename))
   )
-  const graphWorkerCallback = createGraphProfitCallback(
+  let graphWorkerCallback = createGraphProfitCallback(
     initialAssetIndex,
     config.initialAmount,
     assets,
