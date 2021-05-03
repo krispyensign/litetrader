@@ -1,3 +1,4 @@
+import { isError } from './helpers.js'
 import type { Dictionary, ExchangePair, IndexedPair } from './types/types'
 
 export const buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
@@ -15,10 +16,11 @@ export const buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> =>
 }
 
 export const setupData = async (
-  getAvailablePairs: (threshold?: number) => Promise<ExchangePair[]>
-): Promise<[string[], IndexedPair[], Map<string, number>]> => {
+  getAvailablePairs: (threshold?: number) => Promise<ExchangePair[] | Error>
+): Promise<[string[], IndexedPair[], Map<string, number>] | Error> => {
   // get pairs from exchange
   const tradePairs = await getAvailablePairs()
+  if (isError(tradePairs)) return tradePairs
 
   // extract assets from pairs
   const assets = [

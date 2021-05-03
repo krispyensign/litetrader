@@ -1,6 +1,7 @@
 import * as winston from 'winston'
 import type { Logger } from 'winston'
 import * as krakenTick from './kraken/tick.js'
+import * as krakenSetup from './kraken/setup.js'
 import * as krakenOrder from './kraken/order.js'
 import type { ExchangeName, OrderModule, TickModule } from './types/types'
 
@@ -13,10 +14,10 @@ export const tickSelector = (exchangeName: ExchangeName): TickModule | Error => 
   switch (exchangeName) {
     case 'kraken':
       return [
-        krakenTick.createStopRequest,
-        krakenTick.createTickSubRequest,
-        krakenTick.getAvailablePairs,
-        krakenTick.getWebSocketUrl,
+        krakenSetup.createStopRequest,
+        krakenSetup.createTickSubRequest,
+        krakenSetup.getAvailablePairs,
+        krakenSetup.getWebSocketUrl,
         krakenTick.parseTick,
       ]
     default:
@@ -24,7 +25,7 @@ export const tickSelector = (exchangeName: ExchangeName): TickModule | Error => 
   }
 }
 
-export const orderSelector = (exchangeName: ExchangeName): OrderModule  | Error => {
+export const orderSelector = (exchangeName: ExchangeName): OrderModule | Error => {
   switch (exchangeName) {
     case 'kraken':
       return [

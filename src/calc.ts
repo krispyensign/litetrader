@@ -68,7 +68,10 @@ export const calcProfit = (
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
 
-  const pairList = validateSequence(initialAssetIndex, translateSequence(cycle, assets, pairs, pairMap))
+  const pairList = validateSequence(
+    initialAssetIndex,
+    translateSequence(cycle, assets, pairs, pairMap)
+  )
   if (isError(pairList)) return pairList
   for (const pair of pairList) {
     // mark as 0 if processing results in an impossible trade

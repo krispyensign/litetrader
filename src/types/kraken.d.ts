@@ -1,4 +1,12 @@
-import { Dictionary, ResponseWrapper } from './types'
+import type { AssetPair } from 'exchange-models/kraken'
+import type { Dictionary } from './types'
+
+export type AssetPairsResponse = [string, AssetPair][]
+
+export type ResponseWrapper<T = object> = {
+  error: string[]
+  result: T
+}
 
 export type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
 export type AssetTicksResponse = ResponseWrapper<Dictionary<TickerResponse>>
@@ -11,39 +19,39 @@ export type TickerResponse = {
   /**
    * Ask
    */
-  a?: [number, number, number]
+  a: [number, number, number]
   /**
    * Bid
    */
-  b?: [number, number, number]
+  b: [number, number, number]
   /**
    * Close
    */
-  c?: [number, number]
+  c: [number, number]
   /**
    * Volume
    */
-  v?: [number, number]
+  v: [number, number]
   /**
    * Volume weighted average price
    */
-  p?: [number, number]
+  p: [number, number]
   /**
    * Number of trades
    */
-  t?: [number, number]
+  t: [number, number]
   /**
    * Low price
    */
-  l?: [number, number]
+  l: [number, number]
   /**
    * High price
    */
-  h?: [number, number]
+  h: [number, number]
   /**
    * Open price
    */
-  o?: [number, number]
+  o: [number, number]
 }
 
 /**

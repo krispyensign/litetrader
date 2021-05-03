@@ -1,33 +1,20 @@
-import type { Key, ResponseWrapper, Token } from '../types/types'
+import type { Key, Token } from '../types/types'
+import type { ResponseWrapper } from '../types/kraken'
 import got from 'got'
-import { createHmac, createHash } from 'crypto'
 import qs from 'qs'
+import { createHmac, createHash } from 'crypto'
 import { isError } from '../helpers.js'
+import { validateResponse } from './common.js'
 
 const krakenTokenPath = '/0/private/GetWebSocketsToken'
 const krakenApiUrl = 'https://api.kraken.com'
-
-const validateResponse = <T>(
-  response: ResponseWrapper<T> | undefined
-): ResponseWrapper<T> | Error =>
-  // if there wasn't a response then bomb
-  response === undefined
-    ? new Error('Failed to get response back from exchange api!')
-    : response.error?.length > 0
-    ? new Error(
-        response.error
-          .filter(e => e.startsWith('E'))
-          .map(e => e.substr(1))
-          .join(',')
-      )
-    : response
 
 const makeAuthCall = async <T = object>(
   url: string,
   request: string,
   nonce: number,
   key: Key
-): Promise<ResponseWrapper<T> | Error> =>
+): Promise<T | Error> =>
   validateResponse(
     await got
       .post({
@@ -53,8 +40,7 @@ const makeAuthCall = async <T = object>(
       .json<ResponseWrapper<T>>()
   )
 
-const resolveCall = (res: ResponseWrapper<Token> | Error): string | Error =>
-  isError(res) ? res : res.result.token
+const resolveCall = (res: Token | Error): string | Error => (isError(res) ? res : res.token)
 
 export const getToken = async (key: Key, nonce: number): Promise<string | Error> =>
   resolveCall(

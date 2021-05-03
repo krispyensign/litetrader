@@ -34,12 +34,11 @@ export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker
     getWebSocketUrl,
     parseTick,
   ] = tick
-  const order = orderSelector(
-    config.exchangeName
-  )
+  const order = orderSelector(config.exchangeName)
   if (isError(order)) throw order
   const [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = order
   const exchangeData = await setupData(getAvailablePairs)
+  if (isError(exchangeData)) throw exchangeData
   const [assets, pairs, pairMap] = exchangeData
 
   // token = await order.getToken(config.key)

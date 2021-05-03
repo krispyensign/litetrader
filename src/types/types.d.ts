@@ -1,9 +1,5 @@
 import type { ExchangeName } from 'exchange-models/exchange'
-
-import type { AssetPair } from 'exchange-models/kraken'
-
 export type { ExchangeName } from 'exchange-models/exchange'
-
 export type {
   AddOrder,
   CancelOrder,
@@ -26,9 +22,9 @@ export type PairPriceUpdate = {
 export type TickModule = [
   (pairs: string[]) => string,
   (pairs: string[]) => string,
-  (threshold?: number | undefined) => Promise<ExchangePair[]>,
+  (threshold?: number | undefined) => Promise<ExchangePair[] | Error>,
   () => string,
-  (tickData?: string | undefined) => string | PairPriceUpdate
+  (tickData?: string | undefined) => string | PairPriceUpdate | Error
 ]
 
 export type OrderModule = [
@@ -104,13 +100,6 @@ export type Config = {
 
 export type Dictionary<T> = {
   [key: string]: T
-}
-
-export type AssetPairsResponse = [string, Partial<AssetPair>][]
-
-export type ResponseWrapper<T = object> = {
-  error: string[]
-  result: T
 }
 
 export type Key = {

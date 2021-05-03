@@ -7,10 +7,11 @@ import { isError } from './helpers.js'
 export const createTickCallback = (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
-  parseTick: (arg: string) => PairPriceUpdate | string
+  parseTick: (arg: string) => PairPriceUpdate | string | Error
 ) => (x: WebSocket.MessageEvent): void => {
   const pairUpdate = parseTick(x.toLocaleString())
   if (typeof pairUpdate === 'string') return
+  if (isError(pairUpdate)) throw pairUpdate
   const pairIndex = pairMap.get(pairUpdate.tradeName)
   if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
   pairs[pairIndex].ask = pairUpdate.ask
@@ -82,7 +83,6 @@ export const createGraphProfitCallback = (
       console.log(recipe.steps)
       shutdownCallback()
       // isSending = false
-    }
-    else if (isError(result)) throw result
+    } else if (isError(result)) throw result
   }
 }
