@@ -11,7 +11,10 @@ export const createTickCallback = (
 ) => (x: WebSocket.MessageEvent): void => {
   const pairUpdate = parseTick(x.toLocaleString())
   if (typeof pairUpdate === 'string') return
-  if (isError(pairUpdate)) throw pairUpdate
+  if (isError(pairUpdate)) {
+    console.log(pairUpdate)
+    throw pairUpdate
+  }
   const pairIndex = pairMap.get(pairUpdate.tradeName)
   if (pairIndex === undefined) throw Error(`Invalid pair encountered. ${pairUpdate.tradeName}`)
   pairs[pairIndex].ask = pairUpdate.ask

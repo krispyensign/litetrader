@@ -1,13 +1,12 @@
-import type { ResponseWrapper, TickerResponse } from '../types/kraken'
+import type { TickerResponse } from '../types/kraken'
 import type { AssetPair, Dictionary, ExchangePair, Ticker } from '../types/types'
 import {
   compareTypes,
-  getJson,
   krakenApiUrl,
   krakenPairsPath,
   krakenTickerPath,
   krakenWsUrl,
-  validateResponse,
+  unwrapJson,
 } from './common.js'
 import { isError } from '../helpers.js'
 
@@ -32,11 +31,6 @@ const isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
   if (typeof result === 'string') throw Error(`Missing resource ${result} on pair ${pairName}.`)
   return true
 }
-
-const unwrapJson = async <T>(url: string): Promise<T | Error> =>
-  ((outer): T | Error => (isError(outer) ? outer : validateResponse(outer)))(
-    await getJson<ResponseWrapper<T>>(url)
-  )
 
 export const getAvailablePairs = async (threshold = 0): Promise<ExchangePair[] | Error> => {
   // get the tradeable asset pairs

@@ -1,19 +1,12 @@
 import type { KrakenErrorMessage, ResponseWrapper } from '../types/kraken.js'
 import got from 'got'
+import { isError } from '../helpers.js'
 
 // setup the global constants
 export const krakenTickerPath = '/0/public/Ticker'
 export const krakenPairsPath = '/0/public/AssetPairs'
 export const krakenApiUrl = 'https://api.kraken.com'
 export const krakenWsUrl = 'wss://ws.kraken.com'
-
-export const getJson = async <T>(url: string): Promise<T | Error> => {
-  try {
-    return await got(url).json<T>()
-  } catch (e) {
-    return e
-  }
-}
 
 export const validateResponse = <T>(response: ResponseWrapper<T> | undefined): T | Error =>
   // if there wasn't a response then bomb
@@ -27,6 +20,13 @@ export const validateResponse = <T>(response: ResponseWrapper<T> | undefined): T
           .join(',')
       )
     : response.result
+
+export const getJson = async <T>(url: string): Promise<T | Error> => got(url).json<T>()
+
+export const unwrapJson = async <T>(url: string): Promise<T | Error> =>
+  ((outer): T | Error => (isError(outer) ? outer : validateResponse(outer)))(
+    await getJson<ResponseWrapper<T>>(url).catch(v => v)
+  )
 
 export const isKrakenErrorMessage = (err: unknown): err is KrakenErrorMessage =>
   typeof err === 'object' && (err as KrakenErrorMessage).errorMessage !== undefined
