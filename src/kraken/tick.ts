@@ -17,18 +17,15 @@ export const parseTick = (tickData?: string): string | PairPriceUpdate | Error =
     ? Error('TickData missing. Cannot parse.')
     : ((event): string | Error | PairPriceUpdate =>
         // check to make sure its not an error.  Something wrong with code itself
-        // so need to hard error on this one
         isKrakenErrorMessage(event)
           ? Error(event.errorMessage)
-          : // if its not a publication (unlikely) return the tick as a string for logging
-          !isPublication(event)
-          ? tickData
-          : // check if the payload is a ticker if so then return back an update object
-          isTickerPayload(event[1])
-          ? {
+          : // if is a publication and contains a ticker payload
+          isPublication(event) && isTickerPayload(event[1])
+          ? // then create a pairUpdate
+            {
               tradeName: event[3],
               ask: event[1].a[0],
               bid: event[1].b[0],
             }
-          : // for now return all other publications as strings for logging
+          : // else return string as is for logging
             tickData)(JSON.parse(tickData))
