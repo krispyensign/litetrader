@@ -34,16 +34,10 @@ export const isKrakenErrorMessage = (err: unknown): err is KrakenErrorMessage =>
 export const isObject = (o: unknown): o is object =>
   o !== null && o !== undefined && typeof o === 'object'
 
-export const compareTypes = (o: unknown, ...propertyNames: string[]): boolean | string => {
+export const compareTypes = (o: unknown, ...propertyNames: string[]): boolean | string =>
   // check if object is undefined
-  if (isObject(o)) {
-    // loop through supplied propertynames
-    for (const prop of propertyNames) {
-      // if property is not in object then return that property
-      if (!(prop in o)) return prop.toString()
-    }
-    // return true if all properties requested are on object
-    return true
-  }
-  return false
-}
+  !isObject(o)
+    ? false
+    : propertyNames.every(prop => prop in (o as object))
+    ? true
+    : propertyNames.find(prop => !(prop in (o as object)))!

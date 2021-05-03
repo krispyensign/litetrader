@@ -33,11 +33,10 @@ const isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
   return true
 }
 
-const unwrapJson = async <T>(url: string): Promise<T | Error> => {
-  const outer = await getJson<ResponseWrapper<T>>(url)
-  if (isError(outer)) return outer
-  return validateResponse(outer)
-}
+const unwrapJson = async <T>(url: string): Promise<T | Error> =>
+  ((outer): T | Error => (isError(outer) ? outer : validateResponse(outer)))(
+    await getJson<ResponseWrapper<T>>(url)
+  )
 
 export const getAvailablePairs = async (threshold = 0): Promise<ExchangePair[] | Error> => {
   // get the tradeable asset pairs
