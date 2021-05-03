@@ -36,17 +36,16 @@ export const getAvailablePairs = async (threshold = 0): Promise<ExchangePair[] |
   // get the tradeable asset pairs
   const assetPairsRes = await unwrapJson<Dictionary<AssetPair>>(krakenApiUrl + krakenPairsPath)
   if (isError(assetPairsRes)) return assetPairsRes
-  const assetPairs = Object.entries(assetPairsRes)
 
   // get the last tick for each asset pair
   const assetPairTicksRes = await unwrapJson<Dictionary<TickerResponse>>(
-    krakenApiUrl + krakenTickerPath + '?pair=' + assetPairs.map(pair => pair[0]).join(',')
+    krakenApiUrl + krakenTickerPath + '?pair=' +  Object.entries(assetPairsRes).map(pair => pair[0]).join(',')
   )
   if (isError(assetPairTicksRes)) return assetPairTicksRes
   const assetPairTicks = assetPairTicksRes
 
   return (
-    assetPairs
+    Object.entries(assetPairsRes)
 
       // skip those pairs that do not support websocket streaming
       // and skip those pairs whose t value is greater than threshold

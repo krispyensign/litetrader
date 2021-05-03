@@ -4,10 +4,7 @@ import got from 'got'
 import qs from 'qs'
 import { createHmac, createHash } from 'crypto'
 import { isError } from '../helpers.js'
-import { validateResponse } from './common.js'
-
-const krakenTokenPath = '/0/private/GetWebSocketsToken'
-const krakenApiUrl = 'https://api.kraken.com'
+import { krakenApiUrl, krakenTokenPath, validateResponse } from './common.js'
 
 const makeAuthCall = async <T = object>(
   url: string,

@@ -5,8 +5,9 @@ import { isError } from '../helpers.js'
 // setup the global constants
 export const krakenTickerPath = '/0/public/Ticker'
 export const krakenPairsPath = '/0/public/AssetPairs'
-export const krakenApiUrl = 'https://api.kraken.com'
 export const krakenWsUrl = 'wss://ws.kraken.com'
+export const krakenTokenPath = '/0/private/GetWebSocketsToken'
+export const krakenApiUrl = 'https://api.kraken.com'
 
 export const validateResponse = <T>(response: ResponseWrapper<T> | undefined): T | Error =>
   // if there wasn't a response then bomb
