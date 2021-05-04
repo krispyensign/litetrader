@@ -2,13 +2,13 @@ import { isError } from './helpers.js'
 import type { Recipe, OrderCreateRequest, IndexedPair } from './types/types'
 
 // helper function to safely round a number
-let safeRound = (num: number, decimals: number): number =>
+const safeRound = (num: number, decimals: number): number =>
   decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
 
 // helper function to safely divide by 0
-let safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
+const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
-let translateSequence = (
+const translateSequence = (
   cycle: number[],
   assets: string[],
   pairs: IndexedPair[],
@@ -16,9 +16,9 @@ let translateSequence = (
 ): IndexedPair[] =>
   cycle.slice(1).map((value, index) => {
     // try first/second else second/first
-    let tempA = assets[cycle[index]]
-    let tempB = assets[value]
-    let indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
+    const tempA = assets[cycle[index]]
+    const tempB = assets[value]
+    const indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
 
     // if not found then fail
     if (indo === undefined) throw Error(`Invalid pair requested. quote: ${tempA}, ${tempB}`)
@@ -27,7 +27,7 @@ let translateSequence = (
     return pairs[indo]
   })
 
-let createRecipe = (
+const createRecipe = (
   initialAmount: number,
   initialAssetIndex: number,
   assets: string[]
@@ -38,8 +38,8 @@ let createRecipe = (
   steps: new Array<OrderCreateRequest>(),
 })
 
-export let validateSequence = (asset: number, pairList: IndexedPair[]): IndexedPair[] | Error => {
-  for (let pair of pairList) {
+export const validateSequence = (asset: number, pairList: IndexedPair[]): IndexedPair[] | Error => {
+  for (const pair of pairList) {
     // if there was an issue and the assets were improperly populated
     if (asset !== pair.baseIndex && asset !== pair.quoteIndex)
       return Error(
@@ -52,7 +52,7 @@ export let validateSequence = (asset: number, pairList: IndexedPair[]): IndexedP
   return pairList
 }
 
-export let calcProfit = (
+export const calcProfit = (
   initialAssetIndex: number,
   initialAmount: number,
   cycle: number[],
@@ -62,18 +62,18 @@ export let calcProfit = (
   eta: number
 ): [number, Recipe] | number | Error => {
   // setup a recipe object to return just in case calculation shows profitable
-  let recipe = createRecipe(initialAmount, initialAssetIndex, assets)
+  const recipe = createRecipe(initialAmount, initialAssetIndex, assets)
 
   // start with initially provided index and amount
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
 
-  let pairList = validateSequence(
+  const pairList = validateSequence(
     initialAssetIndex,
     translateSequence(cycle, assets, pairs, pairMap)
   )
   if (isError(pairList)) return pairList
-  for (let pair of pairList) {
+  for (const pair of pairList) {
     // mark as 0 if processing results in an impossible trade
     currentAmount = currentAmount > pair.ordermin ? currentAmount : 0
     if (currentAmount === 0) break
@@ -81,7 +81,7 @@ export let calcProfit = (
     // if current exposure is in base asset then create a sell order
     if (currentAsset === pair.baseIndex) {
       // construct a step for the recipe
-      let step: OrderCreateRequest = {
+      const step: OrderCreateRequest = {
         // round to correct units (placing order in base currency units)
         amount: safeRound(currentAmount, pair.decimals),
         // this is a sell
@@ -101,7 +101,7 @@ export let calcProfit = (
     // if current exposure is in quote asset then create a buy order
     else {
       // construct a step for the recipe
-      let step: OrderCreateRequest = {
+      const step: OrderCreateRequest = {
         amount: safeRound(
           safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
           pair.decimals

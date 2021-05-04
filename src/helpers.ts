@@ -5,12 +5,12 @@ import * as krakenSetup from './kraken/setup.js'
 import * as krakenOrder from './kraken/order.js'
 import type { ExchangeName, OrderModule, TickModule } from './types/types'
 
-export let isError = (err: unknown): err is Error =>
+export const isError = (err: unknown): err is Error =>
   typeof err === 'object' &&
   (err as Error).message !== undefined &&
   (err as Error).stack !== undefined
 
-export let tickSelector = (exchangeName: ExchangeName): TickModule | Error => {
+export const tickSelector = (exchangeName: ExchangeName): TickModule | Error => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -25,7 +25,7 @@ export let tickSelector = (exchangeName: ExchangeName): TickModule | Error => {
   }
 }
 
-export let orderSelector = (exchangeName: ExchangeName): OrderModule | Error => {
+export const orderSelector = (exchangeName: ExchangeName): OrderModule | Error => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -41,15 +41,8 @@ export let orderSelector = (exchangeName: ExchangeName): OrderModule | Error => 
   }
 }
 
-export let getLogger = (serviceName: string): Logger => {
-  let myformat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-    let msg = `${timestamp} [${level}] [${serviceName}] : ${message}`
-    if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object))
-      msg += JSON.stringify(metadata)
-    return msg
-  })
-
-  let logger = winston.createLogger({
+export const getLogger = (serviceName: string): Logger => {
+  const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
     transports: [
@@ -69,7 +62,12 @@ export let getLogger = (serviceName: string): Logger => {
         format: winston.format.combine(
           winston.format.colorize(),
           winston.format.timestamp(),
-          myformat
+          winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+            let msg = `${timestamp} [${level}] [${serviceName}] : ${message}`
+            if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object))
+              msg += JSON.stringify(metadata)
+            return msg
+          })
         ),
       })
     )

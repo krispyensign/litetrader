@@ -1,15 +1,15 @@
 import type { AddOrder, CancelOrder, OrderCancelRequest, OrderCreateRequest } from '../types/types'
 import type { StatusEvent } from '../types/kraken'
 
-export let isStatusEvent = (event: unknown): event is StatusEvent =>
+export const isStatusEvent = (event: unknown): event is StatusEvent =>
   typeof event !== 'object'
     ? false
     : (event as StatusEvent).event !== undefined && (event as StatusEvent).reqid !== undefined
 
-export let getReqId = (parsedEvent: unknown): string =>
+export const getReqId = (parsedEvent: unknown): string =>
   isStatusEvent(parsedEvent) ? parsedEvent.reqid?.toString() || '0' : '0'
 
-export let createOrderRequest = (token: string, order: OrderCreateRequest): string =>
+export const createOrderRequest = (token: string, order: OrderCreateRequest): string =>
   JSON.stringify({
     ordertype: order.orderType,
     event: 'addOrder',
@@ -22,12 +22,12 @@ export let createOrderRequest = (token: string, order: OrderCreateRequest): stri
     userref: order.orderId,
   } as AddOrder)
 
-export let cancelOrderRequest = (token: string, cancel: OrderCancelRequest): string =>
+export const cancelOrderRequest = (token: string, cancel: OrderCancelRequest): string =>
   JSON.stringify({
     event: 'cancelOrder',
     token: token,
     txid: [cancel.orderId],
   } as CancelOrder)
 
-export let parseEvent = (eventData: string): string => eventData
-export let getWebSocketUrl = (): string => 'wss://ws-auth.kraken.com'
+export const parseEvent = (eventData: string): string => eventData
+export const getWebSocketUrl = (): string => 'wss://ws-auth.kraken.com'

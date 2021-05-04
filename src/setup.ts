@@ -1,7 +1,7 @@
 import { isError } from './helpers.js'
 import type { Dictionary, ExchangePair, IndexedPair } from './types/types'
 
-export let buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
+export const buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
   return indexedPairs.reduce((graph, pair) => {
     if (graph[pair.baseIndex.toString()] === undefined)
       graph[pair.baseIndex.toString()] = new Array<number>()
@@ -15,15 +15,15 @@ export let buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
   }, {} as Dictionary<number[]>)
 }
 
-export let setupData = async (
+export const setupData = async (
   getAvailablePairs: (threshold?: number) => Promise<ExchangePair[] | Error>
 ): Promise<[string[], IndexedPair[], Map<string, number>] | Error> => {
   // get pairs from exchange
-  let tradePairs = await getAvailablePairs()
+  const tradePairs = await getAvailablePairs()
   if (isError(tradePairs)) return tradePairs
 
   // extract assets from pairs
-  let assets = [
+  const assets = [
     ...tradePairs.reduce(
       (prev, pair) => prev.add(pair.baseName).add(pair.quoteName),
       new Set<string>()
@@ -31,9 +31,9 @@ export let setupData = async (
   ]
 
   // convert pairs to internal index pair format
-  let pairs = tradePairs.map(pair => {
-    let baseIndex = assets.indexOf(pair.baseName)
-    let quoteIndex = assets.indexOf(pair.quoteName)
+  const pairs = tradePairs.map(pair => {
+    const baseIndex = assets.indexOf(pair.baseName)
+    const quoteIndex = assets.indexOf(pair.quoteName)
 
     if (baseIndex === -1 || quoteIndex === -1)
       throw Error(`${pair.baseName}: ${baseIndex} / ${pair.quoteName}: ${quoteIndex} missing`)
@@ -43,7 +43,7 @@ export let setupData = async (
   })
 
   // create a mapping of baseNamequoteName and baseName,quoteName
-  let pairMap = new Map([
+  const pairMap = new Map([
     ...new Map<string, number>(tradePairs.map((pair, index) => [pair.tradename, index])),
     ...new Map<string, number>(
       tradePairs.map(pair => [[pair.baseName, pair.quoteName].join(','), pair.index])

@@ -10,8 +10,8 @@ import {
 } from './common.js'
 import { isError } from '../helpers.js'
 
-let isKrakenPair = (pairName: string, pair?: unknown): pair is AssetPair => {
-  let result = compareTypes(
+const isKrakenPair = (pairName: string, pair?: unknown): pair is AssetPair => {
+  const result = compareTypes(
     pair,
     'wsname',
     'base',
@@ -25,24 +25,29 @@ let isKrakenPair = (pairName: string, pair?: unknown): pair is AssetPair => {
   return true
 }
 
-let isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
-  let result = compareTypes(tick, 'a', 'b', 't')
+const isLastTick = (pairName: string, tick?: unknown): tick is Ticker => {
+  const result = compareTypes(tick, 'a', 'b', 't')
   if (!result) throw Error(`Failed to correctly populate tick ${pairName}.`)
   if (typeof result === 'string') throw Error(`Missing resource ${result} on pair ${pairName}.`)
   return true
 }
 
-export let getAvailablePairs = async (threshold = 0): Promise<ExchangePair[] | Error> => {
+export const getAvailablePairs = async (threshold = 0): Promise<ExchangePair[] | Error> => {
   // get the tradeable asset pairs
-  let assetPairsRes = await unwrapJson<Dictionary<AssetPair>>(krakenApiUrl + krakenPairsPath)
+  const assetPairsRes = await unwrapJson<Dictionary<AssetPair>>(krakenApiUrl + krakenPairsPath)
   if (isError(assetPairsRes)) return assetPairsRes
 
   // get the last tick for each asset pair
-  let assetPairTicksRes = await unwrapJson<Dictionary<TickerResponse>>(
-    krakenApiUrl + krakenTickerPath + '?pair=' +  Object.entries(assetPairsRes).map(pair => pair[0]).join(',')
+  const assetPairTicksRes = await unwrapJson<Dictionary<TickerResponse>>(
+    krakenApiUrl +
+      krakenTickerPath +
+      '?pair=' +
+      Object.entries(assetPairsRes)
+        .map(pair => pair[0])
+        .join(',')
   )
   if (isError(assetPairTicksRes)) return assetPairTicksRes
-  let assetPairTicks = assetPairTicksRes
+  const assetPairTicks = assetPairTicksRes
 
   return (
     Object.entries(assetPairsRes)
@@ -78,7 +83,7 @@ export let getAvailablePairs = async (threshold = 0): Promise<ExchangePair[] | E
   )
 }
 
-export let createStopRequest = (pairs: string[]): string =>
+export const createStopRequest = (pairs: string[]): string =>
   JSON.stringify({
     event: 'unsubscribe',
     pair: pairs,
@@ -87,7 +92,7 @@ export let createStopRequest = (pairs: string[]): string =>
     },
   })
 
-export let createTickSubRequest = (pairs: string[]): string =>
+export const createTickSubRequest = (pairs: string[]): string =>
   JSON.stringify({
     event: 'subscribe',
     pair: pairs,
@@ -96,4 +101,4 @@ export let createTickSubRequest = (pairs: string[]): string =>
     },
   })
 
-export let getWebSocketUrl = (): string => krakenWsUrl
+export const getWebSocketUrl = (): string => krakenWsUrl

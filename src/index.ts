@@ -4,9 +4,11 @@ import { isMainThread } from 'worker_threads'
 import { app, worker } from './app.js'
 import type { ExchangeName } from './types/types'
 
+// install the sourcemap for better troubleshooting
 sourceMap.install()
 
-let argv = yargs(process.argv.slice(2)).options({
+// process the command line args
+const argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },
   initialAmount: { type: 'number', default: 200 },
   initialAsset: { type: 'string', default: 'ADA' },
@@ -16,23 +18,20 @@ let argv = yargs(process.argv.slice(2)).options({
 }).argv
 
 // do some error handling
-if (argv.initialAsset === null)
-  ((): void => {
-    throw Error('Invalid asset provided')
-  })()
+if (argv.initialAsset === null) throw Error('Invalid asset provided')
 
 // fire it up
-if (isMainThread)
-  app({
-    exchangeName: argv.exchangeName as ExchangeName,
-    initialAmount: argv.initialAmount,
-    initialAsset: argv.initialAsset,
-    eta: argv.eta,
-    key: {
-      apiKey: argv.apiKey,
-      apiPrivateKey: argv.apiPrivateKey,
-    },
-  })
-else worker()
+isMainThread
+  ? app({
+      exchangeName: argv.exchangeName as ExchangeName,
+      initialAmount: argv.initialAmount,
+      initialAsset: argv.initialAsset,
+      eta: argv.eta,
+      key: {
+        apiKey: argv.apiKey,
+        apiPrivateKey: argv.apiPrivateKey,
+      },
+    })
+  : worker()
 
 // wait till shutdown of sockets and readline
