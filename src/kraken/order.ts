@@ -1,8 +1,9 @@
 import type { AddOrder, CancelOrder, OrderCancelRequest, OrderCreateRequest } from '../types/types'
 import type { StatusEvent } from '../types/kraken'
+import { isObject } from './common'
 
 export const isStatusEvent = (event: unknown): event is StatusEvent =>
-  typeof event !== 'object'
+  !isObject(event)
     ? false
     : (event as StatusEvent).event !== undefined && (event as StatusEvent).reqid !== undefined
 
