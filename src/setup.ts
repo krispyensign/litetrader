@@ -1,8 +1,7 @@
-import { isError } from './helpers.js'
 import type { Dictionary, ExchangePair, IndexedPair } from './types/types'
 
-export const buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> => {
-  return indexedPairs.reduce((graph, pair) => {
+export const buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> =>
+  indexedPairs.reduce((graph, pair) => {
     if (graph[pair.baseIndex.toString()] === undefined)
       graph[pair.baseIndex.toString()] = new Array<number>()
     graph[pair.baseIndex.toString()].push(pair.quoteIndex)
@@ -13,14 +12,12 @@ export const buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> =>
 
     return graph
   }, {} as Dictionary<number[]>)
-}
 
 export const setupData = async (
-  getAvailablePairs: (threshold?: number) => Promise<ExchangePair[] | Error>
-): Promise<[string[], IndexedPair[], Map<string, number>] | Error> => {
+  getAvailablePairs: (threshold?: number) => Promise<ExchangePair[]>
+): Promise<[string[], IndexedPair[], Map<string, number>]> => {
   // get pairs from exchange
   const tradePairs = await getAvailablePairs()
-  if (isError(tradePairs)) return tradePairs
 
   // extract assets from pairs
   const assets = [
@@ -30,17 +27,26 @@ export const setupData = async (
     ),
   ]
 
+  const missingPair = tradePairs.find(
+    pair => assets.indexOf(pair.baseName) === -1 || assets.indexOf(pair.quoteName) === -1
+  )
+
+  if (missingPair !== undefined)
+    return Promise.reject(
+      new Error(
+        `${missingPair.baseName}: ${assets.indexOf(missingPair.baseName)} / ${
+          missingPair.quoteName
+        }: ${assets.indexOf(missingPair.quoteName)} missing`
+      )
+    )
+
   // convert pairs to internal index pair format
-  const pairs = tradePairs.map(pair => {
-    const baseIndex = assets.indexOf(pair.baseName)
-    const quoteIndex = assets.indexOf(pair.quoteName)
-
-    if (baseIndex === -1 || quoteIndex === -1)
-      throw Error(`${pair.baseName}: ${baseIndex} / ${pair.quoteName}: ${quoteIndex} missing`)
-
-    // update the pair with the new values
-    return { ...pair, baseIndex: baseIndex, quoteIndex: quoteIndex }
-  })
+  // update the pair with the new values
+  const pairs = tradePairs.map(pair => ({
+    ...pair,
+    baseIndex: assets.indexOf(pair.baseName),
+    quoteIndex: assets.indexOf(pair.quoteName),
+  }))
 
   // create a mapping of baseNamequoteName and baseName,quoteName
   const pairMap = new Map([

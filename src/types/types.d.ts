@@ -22,7 +22,7 @@ export type PairPriceUpdate = {
 export type TickModule = [
   (pairs: string[]) => string,
   (pairs: string[]) => string,
-  (threshold?: number | undefined) => Promise<ExchangePair[] | Error>,
+  (threshold?: number | undefined) => Promise<ExchangePair[]>,
   () => string,
   (tickData?: string | undefined) => string | PairPriceUpdate | Error
 ]

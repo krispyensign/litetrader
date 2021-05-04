@@ -3,7 +3,6 @@ import type { ResponseWrapper } from '../types/kraken'
 import got from 'got'
 import qs from 'qs'
 import { createHmac, createHash } from 'crypto'
-import { isError } from '../helpers.js'
 import { krakenApiUrl, krakenTokenPath, validateResponse } from './common.js'
 
 const makeAuthCall = async <T = object>(
@@ -11,7 +10,7 @@ const makeAuthCall = async <T = object>(
   request: string,
   nonce: number,
   key: Key
-): Promise<T | Error> =>
+): Promise<T> =>
   validateResponse(
     await got
       .post({
@@ -37,10 +36,8 @@ const makeAuthCall = async <T = object>(
       .json<ResponseWrapper<T>>()
   )
 
-const resolveCall = (res: Token | Error): string | Error => (isError(res) ? res : res.token)
-
-export const getToken = async (key: Key, nonce: number): Promise<string | Error> =>
-  resolveCall(
+export const getToken = async (key: Key, nonce: number): Promise<string> =>
+  (
     await makeAuthCall<Token>(
       krakenApiUrl + krakenTokenPath,
       qs.stringify({
@@ -49,4 +46,4 @@ export const getToken = async (key: Key, nonce: number): Promise<string | Error>
       nonce,
       key
     )
-  )
+  ).token

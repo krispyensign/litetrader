@@ -1,33 +1,28 @@
 import type { KrakenErrorMessage, ResponseWrapper } from '../types/kraken.js'
 import got from 'got'
-import { isError } from '../helpers.js'
 
 // setup the global constants
-export const krakenTickerPath = '/0/public/Ticker'
-export const krakenPairsPath = '/0/public/AssetPairs'
-export const krakenWsUrl = 'wss://ws.kraken.com'
-export const krakenTokenPath = '/0/private/GetWebSocketsToken'
-export const krakenApiUrl = 'https://api.kraken.com'
+export const krakenTickerPath = '/0/public/Ticker',
+  krakenPairsPath = '/0/public/AssetPairs',
+  krakenWsUrl = 'wss://ws.kraken.com',
+  krakenTokenPath = '/0/private/GetWebSocketsToken',
+  krakenApiUrl = 'https://api.kraken.com'
 
-export const validateResponse = <T>(response: ResponseWrapper<T> | undefined): T | Error =>
+export const validateResponse = async <T>(response: ResponseWrapper<T>): Promise<T> =>
   // if there wasn't a response then bomb
-  response === undefined
-    ? new Error('Failed to get response back from exchange api!')
-    : response.error?.length > 0
-    ? new Error(
-        response.error
-          .filter(e => e.startsWith('E'))
-          .map(e => e.substr(1))
-          .join(',')
+  response.error?.length > 0
+    ? Promise.reject(
+        new Error(
+          response.error
+            .filter(e => e.startsWith('E'))
+            .map(e => e.substr(1))
+            .join(',')
+        )
       )
     : response.result
 
-export const getJson = async <T>(url: string): Promise<T | Error> => got(url).json<T>()
-
-export const unwrapJson = async <T>(url: string): Promise<T | Error> =>
-  ((outer): T | Error => (isError(outer) ? outer : validateResponse(outer)))(
-    await getJson<ResponseWrapper<T>>(url).catch(v => v)
-  )
+export const unwrapJson = async <T>(url: string): Promise<T> =>
+  validateResponse(await got(url).json<ResponseWrapper<T>>())
 
 export const isKrakenErrorMessage = (err: unknown): err is KrakenErrorMessage =>
   typeof err === 'object' && (err as KrakenErrorMessage).errorMessage !== undefined

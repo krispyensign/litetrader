@@ -6,7 +6,7 @@ import {
   createShutdownCallback,
   createGraphProfitCallback,
 } from './callbacks.js'
-import { isError, orderSelector, tickSelector } from './helpers.js'
+import { orderSelector, tickSelector } from './helpers.js'
 import { buildGraph, setupData } from './setup.js'
 import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
@@ -25,20 +25,18 @@ export const worker = async (): Promise<void> => {
 
 export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker]> => {
   // configure everything
-  const tick = tickSelector(config.exchangeName)
-  if (isError(tick)) throw tick
   const [
     createStopRequest,
     createTickSubRequest,
     getAvailablePairs,
     getWebSocketUrl,
     parseTick,
-  ] = tick
-  const order = orderSelector(config.exchangeName)
-  if (isError(order)) throw order
-  const [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = order
+  ] = await tickSelector(config.exchangeName)
+  const [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = await orderSelector(
+    config.exchangeName
+  )
+
   const exchangeData = await setupData(getAvailablePairs)
-  if (isError(exchangeData)) throw exchangeData
   const [assets, pairs, pairMap] = exchangeData
 
   // token = await order.getToken(config.key)
@@ -46,7 +44,8 @@ export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker
 
   // validate asset before continuing
   const initialAssetIndex = assets.findIndex(a => a === config.initialAsset)
-  if (initialAssetIndex === -1) throw Error(`invalid asset ${config.initialAsset}`)
+  if (initialAssetIndex === -1)
+    return Promise.reject(new Error(`invalid asset ${config.initialAsset}`))
 
   // setup sockets and graph worker
   const tickws = new WebSocket(getWebSocketUrl())

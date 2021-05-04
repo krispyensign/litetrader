@@ -10,7 +10,7 @@ export const isError = (err: unknown): err is Error =>
   (err as Error).message !== undefined &&
   (err as Error).stack !== undefined
 
-export const tickSelector = (exchangeName: ExchangeName): TickModule | Error => {
+export const tickSelector = (exchangeName: ExchangeName): TickModule | Promise<never> => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -21,11 +21,11 @@ export const tickSelector = (exchangeName: ExchangeName): TickModule | Error => 
         krakenTick.parseTick,
       ]
     default:
-      return Error('Invalid exchange selected')
+      return Promise.reject(new Error('Invalid exchange selected'))
   }
 }
 
-export const orderSelector = (exchangeName: ExchangeName): OrderModule | Error => {
+export const orderSelector = (exchangeName: ExchangeName): OrderModule | Promise<never> => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -37,7 +37,7 @@ export const orderSelector = (exchangeName: ExchangeName): OrderModule | Error =
         krakenOrder.parseEvent,
       ]
     default:
-      return Error('Invalid exchange selected')
+      return Promise.reject(new Error('Invalid exchange selected'))
   }
 }
 
