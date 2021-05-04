@@ -1,8 +1,8 @@
+import type { ExchangeName } from './types/types'
 import yargs from 'yargs'
 import * as sourceMap from 'source-map-support'
 import { isMainThread } from 'worker_threads'
 import { app, worker } from './app.js'
-import type { ExchangeName } from './types/types'
 
 // install the sourcemap for better troubleshooting
 sourceMap.install()
