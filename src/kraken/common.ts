@@ -9,7 +9,6 @@ export const krakenTickerPath = '/0/public/Ticker',
   krakenApiUrl = 'https://api.kraken.com'
 
 export const validateResponse = async <T>(response: ResponseWrapper<T>): Promise<T> =>
-  // if there wasn't a response then bomb
   response.error?.length > 0
     ? Promise.reject(
         new Error(
