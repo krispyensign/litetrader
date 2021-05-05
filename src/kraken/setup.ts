@@ -9,11 +9,11 @@ import {
   unwrapJson,
 } from './common.js'
 
-const extractReason = (
+const extractReason = async (
   context: 'pair' | 'tick',
   pairName: string,
   result: string | boolean
-): true | Promise<never> =>
+): Promise<true> =>
   result === false
     ? Promise.reject(new Error(`Failed to correctly populate ${context} ${pairName}`))
     : typeof result === 'string'

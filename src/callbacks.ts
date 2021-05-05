@@ -8,7 +8,7 @@ export const createTickCallback = (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   parseTick: (arg: string) => PairPriceUpdate | string | Error
-) => (x: WebSocket.MessageEvent): void | Promise<never> => {
+) => async (x: WebSocket.MessageEvent): Promise<void> => {
   const pairUpdate = parseTick(x.toLocaleString())
   if (typeof pairUpdate === 'string') return
   if (isError(pairUpdate)) {
@@ -20,6 +20,7 @@ export const createTickCallback = (
     return Promise.reject(Error(`Invalid pair encountered. ${pairUpdate.tradeName}`))
   pairs[pairIndex].ask = pairUpdate.ask
   pairs[pairIndex].bid = pairUpdate.bid
+  return
 }
 
 export const createShutdownCallback = (

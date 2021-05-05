@@ -11,7 +11,7 @@ import { buildGraph, setupData } from './setup.js'
 import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
 
-export const worker = async (): Promise<void> => {
+export const worker = (): void => {
   // post each cycle
   for (const cycle of findCycles(
     [workerData.initialAssetIndex as number],

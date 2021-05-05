@@ -10,7 +10,7 @@ export const isError = (err: unknown): err is Error =>
   (err as Error).message !== undefined &&
   (err as Error).stack !== undefined
 
-export const tickSelector = (exchangeName: ExchangeName): TickModule | Promise<never> => {
+export const tickSelector = async (exchangeName: ExchangeName): Promise<TickModule> => {
   switch (exchangeName) {
     case 'kraken':
       return [
@@ -25,7 +25,7 @@ export const tickSelector = (exchangeName: ExchangeName): TickModule | Promise<n
   }
 }
 
-export const orderSelector = (exchangeName: ExchangeName): OrderModule | Promise<never> => {
+export const orderSelector = async (exchangeName: ExchangeName): Promise<OrderModule> => {
   switch (exchangeName) {
     case 'kraken':
       return [
