@@ -9,16 +9,14 @@ const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / 
 
 // try first/second else second/first fail if nothing found
 const lookup = async (
-  cycle: number[],
-  assets: string[],
   pairMap: Map<string, number>,
-  index: number,
-  value: number
+  assetA: string,
+  assetB: string
 ): Promise<number> =>
-  pairMap.get(`${assets[cycle[index]]},${assets[value]}`) ??
-  pairMap.get(`${assets[value]},${assets[cycle[index]]}`) ??
+  pairMap.get(`${assetA},${assetB}`) ??
+  pairMap.get(`${assetB},${assetA}`) ??
   Promise.reject(
-    new Error(`Invalid pair requested. quote: ${assets[cycle[index]]}, ${assets[value]}`)
+    new Error(`Invalid pair requested. quote: ${assetA}, ${assetB}`)
   )
  
 // if there was an issue and the assets were improperly populated
@@ -56,7 +54,7 @@ const translateSequence = async (
     .reduce(
       async (prev, value, index, arr) => (await prev).concat([await validatePair(
             // get the next pair to be validated    
-            pairs[await lookup(cycle, assets, pairMap, index, value)],
+            pairs[await lookup(pairMap, assets[cycle[index]], assets[value])],
             // get the previous asset index as the new current index
             index === 0 ? asset : arr[index - 1]
           )]),
