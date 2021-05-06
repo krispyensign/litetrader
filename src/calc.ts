@@ -57,7 +57,7 @@ const translateSequence = async (
       async (prev, value, index, arr) => (await prev).concat([await validatePair(
             // get the next pair to be validated    
             pairs[await lookup(cycle, assets, pairMap, index, value)],
-            // get the previous asset index
+            // get the previous asset index as the new current index
             index === 0 ? asset : arr[index - 1]
           )]),
       Promise.resolve(new Array<[IndexedPair, number]>())
