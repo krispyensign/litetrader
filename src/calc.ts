@@ -15,10 +15,8 @@ const lookup = async (
 ): Promise<number> =>
   pairMap.get(`${assetA},${assetB}`) ??
   pairMap.get(`${assetB},${assetA}`) ??
-  Promise.reject(
-    new Error(`Invalid pair requested. quote: ${assetA}, ${assetB}`)
-  )
- 
+  Promise.reject(new Error(`Invalid pair requested. quote: ${assetA}, ${assetB}`))
+
 // if there was an issue and the assets were improperly populated
 const validatePair = async (
   pair: IndexedPair,
@@ -32,12 +30,12 @@ const validatePair = async (
             [currentAsset, pair.quoteIndex, pair.baseIndex].join(', ')
         )
       )
-    // else determine which one matches
-    : currentAsset === pair.baseIndex
-    // if base then quote
-    ? [pair, pair.quoteIndex]
-    // if quote then base
-    : [pair, pair.baseIndex]
+    : // else determine which one matches
+    currentAsset === pair.baseIndex
+    ? // if base then quote
+      [pair, pair.quoteIndex]
+    : // if quote then base
+      [pair, pair.baseIndex]
 
 // given a sequence of numbers that form a cycle, recover the sequence of pairs
 const translateSequence = async (
@@ -46,24 +44,29 @@ const translateSequence = async (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   asset: number
-): Promise<IndexedPair[]> => 
-   (await cycle
-    // skip the first element
-    .slice(1)
-    // sequentially resolve the pairs
-    .reduce(
-      async (prev, value, index, arr) => (await prev).concat([await validatePair(
-            // get the next pair to be validated    
-            pairs[await lookup(pairMap, assets[cycle[index]], assets[value])],
-            // get the previous asset index as the new current index
-            index === 0 ? asset : arr[index - 1]
-          )]),
-      Promise.resolve(new Array<[IndexedPair, number]>())
-    ))
+): Promise<IndexedPair[]> =>
+  (
+    await cycle
+      // skip the first element
+      .slice(1)
+      // sequentially resolve the pairs
+      .reduce(
+        async (prev, value, index, arr) =>
+          (await prev).concat([
+            await validatePair(
+              // get the next pair to be validated
+              pairs[await lookup(pairMap, assets[cycle[index]], assets[value])],
+              // get the previous asset index as the new current index
+              index === 0 ? asset : arr[index - 1]
+            ),
+          ]),
+        Promise.resolve(new Array<[IndexedPair, number]>())
+      )
+  )
 
-    // recover just the pairs
+    // recover just the pairs and discard the assets
     .map(q => q[0])
-    
+
 // create an empty recipe
 const createRecipe = (
   initialAmount: number,
@@ -76,6 +79,48 @@ const createRecipe = (
   steps: new Array<OrderCreateRequest>(),
 })
 
+const considerBase = (
+  pair: IndexedPair,
+  stepAmount: number,
+  eta: number
+): [OrderCreateRequest, number, number] => [
+  // construct a step for the recipe
+  {
+    // round to correct units (placing order in base currency units)
+    amount: stepAmount,
+    // this is a sell
+    direction: 'sell',
+    event: 'create',
+    orderType: 'market',
+    pair: pair.tradename,
+    price: pair.bid,
+  },
+  // change the current asset from the base to the quote
+  pair.quoteIndex,
+  // result amount is in quote currency units
+  stepAmount * pair.bid * (1 - pair.takerFee) * (1 - eta),
+]
+
+const considerQuote = (
+  pair: IndexedPair,
+  stepAmount: number
+): [OrderCreateRequest, number, number] => [
+  // construct a step for the recipe
+  {
+    amount: stepAmount,
+    direction: 'buy',
+    event: 'create',
+    orderType: 'market',
+    pair: pair.tradename,
+    price: pair.ask,
+  },
+
+  // set the current asset to the next base code
+  pair.baseIndex,
+  // calculate the next current amount using the derived price
+  stepAmount,
+]
+
 export const calcProfit = async (
   initialAssetIndex: number,
   initialAmount: number,
@@ -84,61 +129,32 @@ export const calcProfit = async (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   eta: number
-): Promise<[number, Recipe] | number | Error> => {
+): Promise<[number, Recipe] | number> => {
   // setup a recipe object to return just in case calculation shows profitable
   const recipe = createRecipe(initialAmount, initialAssetIndex, assets)
 
   // start with initially provided index and amount
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
+  let step: OrderCreateRequest
 
-  const pairList = translateSequence(cycle, assets, pairs, pairMap, initialAssetIndex)
-  for (const pair of await pairList) {
+  for (const pair of await translateSequence(cycle, assets, pairs, pairMap, initialAssetIndex)) {
     // mark as 0 if processing results in an impossible trade
     currentAmount = currentAmount > pair.ordermin ? currentAmount : 0
     if (currentAmount === 0) break
-
-    // if current exposure is in base asset then create a sell order
-    if (currentAsset === pair.baseIndex) {
-      // construct a step for the recipe
-      const step: OrderCreateRequest = {
-        // round to correct units (placing order in base currency units)
-        amount: safeRound(currentAmount, pair.decimals),
-        // this is a sell
-        direction: 'sell',
-        event: 'create',
-        orderType: 'market',
-        pair: pair.tradename,
-        price: pair.bid,
-      }
-      recipe.steps.push(step)
-
-      // change the current asset from the base to the quote
-      currentAsset = pair.quoteIndex
-      // result amount is in quote currency units
-      currentAmount = step.amount * pair.bid * (1 - pair.takerFee) * (1 - eta)
-    }
-    // if current exposure is in quote asset then create a buy order
-    else {
-      // construct a step for the recipe
-      const step: OrderCreateRequest = {
-        amount: safeRound(
-          safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
-          pair.decimals
-        ),
-        direction: 'buy',
-        event: 'create',
-        orderType: 'market',
-        pair: pair.tradename,
-        price: pair.ask,
-      }
-      recipe.steps.push(step)
-
-      // set the current asset to the next base code
-      currentAsset = pair.baseIndex
-      // calculate the next current amount using the derived price
-      currentAmount = step.amount
-    }
+    ;[step, currentAsset, currentAmount] =
+      currentAsset === pair.baseIndex
+        ? // if current exposure is in base asset then create a sell order
+          considerBase(pair, safeRound(currentAmount, pair.decimals), eta)
+        : // if current exposure is in quote asset then create a buy order
+          considerQuote(
+            pair,
+            safeRound(
+              safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
+              pair.decimals
+            )
+          )
+    recipe.steps.push(step)
   }
 
   // if profitable return the amount and recipe else just the amount
