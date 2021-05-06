@@ -7,22 +7,66 @@ const safeRound = (num: number, decimals: number): number =>
 // helper function to safely divide by 0
 const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
-// lookup a pair given two elements in a cycle
+// try first/second else second/first fail if nothing found
 const lookup = async (
-  pairMap: Map<string, number>,
-  assets: string[],
   cycle: number[],
+  assets: string[],
+  pairMap: Map<string, number>,
   index: number,
   value: number
 ): Promise<number> =>
-  // try first/second else second/first
   pairMap.get(`${assets[cycle[index]]},${assets[value]}`) ??
   pairMap.get(`${assets[value]},${assets[cycle[index]]}`) ??
-  // if not found then fail
   Promise.reject(
     new Error(`Invalid pair requested. quote: ${assets[cycle[index]]}, ${assets[value]}`)
   )
+ 
+// if there was an issue and the assets were improperly populated
+const validatePair = async (
+  pair: IndexedPair,
+  currentAsset: number
+): Promise<[IndexedPair, number]> =>
+  // if the current asset does not match either the quote or base of the next pair then error
+  currentAsset !== pair.baseIndex && currentAsset !== pair.quoteIndex
+    ? Promise.reject(
+        new Error(
+          'Invalid logic somewhere! Current Tuple State:' +
+            [currentAsset, pair.quoteIndex, pair.baseIndex].join(', ')
+        )
+      )
+    // else determine which one matches
+    : currentAsset === pair.baseIndex
+    // if base then quote
+    ? [pair, pair.quoteIndex]
+    // if quote then base
+    : [pair, pair.baseIndex]
 
+// given a sequence of numbers that form a cycle, recover the sequence of pairs
+const translateSequence = async (
+  cycle: number[],
+  assets: string[],
+  pairs: IndexedPair[],
+  pairMap: Map<string, number>,
+  asset: number
+): Promise<IndexedPair[]> => 
+   (await cycle
+    // skip the first element
+    .slice(1)
+    // sequentially resolve the pairs
+    .reduce(
+      async (prev, value, index, arr) => (await prev).concat([await validatePair(
+            // get the next pair to be validated    
+            pairs[await lookup(cycle, assets, pairMap, index, value)],
+            // get the previous asset index
+            index === 0 ? asset : arr[index - 1]
+          )]),
+      Promise.resolve(new Array<[IndexedPair, number]>())
+    ))
+
+    // recover just the pairs
+    .map(q => q[0])
+    
+// create an empty recipe
 const createRecipe = (
   initialAmount: number,
   initialAssetIndex: number,
@@ -33,26 +77,6 @@ const createRecipe = (
   initialAssetName: assets[initialAssetIndex],
   steps: new Array<OrderCreateRequest>(),
 })
-
-const isConnected = (asset: number, pair: IndexedPair): number | Promise<never> =>
-  asset !== pair.baseIndex && asset !== pair.quoteIndex
-    ? Promise.reject(
-        new Error(
-          'Invalid logic somewhere! Current Tuple State:' +
-            [asset, pair.quoteIndex, pair.baseIndex].join(', ')
-        )
-      )
-    : asset
-
-const validateSequence = (asset: number, pairList: IndexedPair[]): IndexedPair[] =>
-  pairList.reduce<{ asset: number; pairList: IndexedPair[] }>(
-    (tup, pair) => ({
-      // if there was an issue and the assets were improperly populated
-      asset: isConnected(asset, pair) ? pair.quoteIndex : pair.baseIndex,
-      pairList: tup.pairList,
-    }),
-    { pairList, asset }
-  ).pairList
 
 export const calcProfit = async (
   initialAssetIndex: number,
@@ -70,14 +94,8 @@ export const calcProfit = async (
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
 
-  for (const pair of validateSequence(
-    initialAssetIndex,
-    await Promise.all(
-      cycle
-        .slice(1)
-        .map(async (value, index) => pairs[await lookup(pairMap, assets, cycle, index, value)])
-    )
-  )) {
+  const pairList = translateSequence(cycle, assets, pairs, pairMap, initialAssetIndex)
+  for (const pair of await pairList) {
     // mark as 0 if processing results in an impossible trade
     currentAmount = currentAmount > pair.ordermin ? currentAmount : 0
     if (currentAmount === 0) break
