@@ -1,5 +1,4 @@
 import type { Recipe, OrderCreateRequest, IndexedPair } from './types/types'
-import { isError } from './helpers.js'
 
 // helper function to safely round a number
 const safeRound = (num: number, decimals: number): number =>
@@ -8,24 +7,21 @@ const safeRound = (num: number, decimals: number): number =>
 // helper function to safely divide by 0
 const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
-const translateSequence = (
-  cycle: number[],
+// lookup a pair given two elements in a cycle
+const lookup = async (
+  pairMap: Map<string, number>,
   assets: string[],
-  pairs: IndexedPair[],
-  pairMap: Map<string, number>
-): IndexedPair[] =>
-  cycle.slice(1).map((value, index) => {
-    // try first/second else second/first
-    const tempA = assets[cycle[index]]
-    const tempB = assets[value]
-    const indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
-
-    // if not found then fail
-    if (indo === undefined) throw Error(`Invalid pair requested. quote: ${tempA}, ${tempB}`)
-
-    // return the lookup value on success
-    return pairs[indo]
-  })
+  cycle: number[],
+  index: number,
+  value: number
+): Promise<number> =>
+  // try first/second else second/first
+  pairMap.get(`${assets[cycle[index]]},${assets[value]}`) ??
+  pairMap.get(`${assets[value]},${assets[cycle[index]]}`) ??
+  // if not found then fail
+  Promise.reject(
+    new Error(`Invalid pair requested. quote: ${assets[cycle[index]]}, ${assets[value]}`)
+  )
 
 const createRecipe = (
   initialAmount: number,
@@ -38,21 +34,27 @@ const createRecipe = (
   steps: new Array<OrderCreateRequest>(),
 })
 
-export const validateSequence = (asset: number, pairList: IndexedPair[]): IndexedPair[] | Error => {
-  for (const pair of pairList) {
-    // if there was an issue and the assets were improperly populated
-    if (asset !== pair.baseIndex && asset !== pair.quoteIndex)
-      return Error(
-        'Invalid logic somewhere! Current Tuple State:' +
-          [asset, pair.quoteIndex, pair.baseIndex].join(', ')
+const isConnected = (asset: number, pair: IndexedPair): number | Promise<never> =>
+  asset !== pair.baseIndex && asset !== pair.quoteIndex
+    ? Promise.reject(
+        new Error(
+          'Invalid logic somewhere! Current Tuple State:' +
+            [asset, pair.quoteIndex, pair.baseIndex].join(', ')
+        )
       )
-    else if (asset === pair.baseIndex) asset = pair.quoteIndex
-    else asset = pair.baseIndex
-  }
-  return pairList
-}
+    : asset
 
-export const calcProfit = (
+const validateSequence = (asset: number, pairList: IndexedPair[]): IndexedPair[] =>
+  pairList.reduce<{ asset: number; pairList: IndexedPair[] }>(
+    (tup, pair) => ({
+      // if there was an issue and the assets were improperly populated
+      asset: isConnected(asset, pair) ? pair.quoteIndex : pair.baseIndex,
+      pairList: tup.pairList,
+    }),
+    { pairList, asset }
+  ).pairList
+
+export const calcProfit = async (
   initialAssetIndex: number,
   initialAmount: number,
   cycle: number[],
@@ -60,7 +62,7 @@ export const calcProfit = (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   eta: number
-): [number, Recipe] | number | Error => {
+): Promise<[number, Recipe] | number | Error> => {
   // setup a recipe object to return just in case calculation shows profitable
   const recipe = createRecipe(initialAmount, initialAssetIndex, assets)
 
@@ -68,12 +70,14 @@ export const calcProfit = (
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
 
-  const pairList = validateSequence(
+  for (const pair of validateSequence(
     initialAssetIndex,
-    translateSequence(cycle, assets, pairs, pairMap)
-  )
-  if (isError(pairList)) return pairList
-  for (const pair of pairList) {
+    await Promise.all(
+      cycle
+        .slice(1)
+        .map(async (value, index) => pairs[await lookup(pairMap, assets, cycle, index, value)])
+    )
+  )) {
     // mark as 0 if processing results in an impossible trade
     currentAmount = currentAmount > pair.ordermin ? currentAmount : 0
     if (currentAmount === 0) break

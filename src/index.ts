@@ -18,10 +18,10 @@ const argv = yargs(process.argv.slice(2)).options({
 }).argv
 
 // do some error handling
-if (argv.initialAsset === null) throw Error('Invalid asset provided')
-
-// fire it up
-isMainThread
+argv.initialAsset === null
+  ? console.log('Invalid asset provided')
+  : // fire it up
+  isMainThread
   ? app({
       exchangeName: argv.exchangeName as ExchangeName,
       initialAmount: argv.initialAmount,

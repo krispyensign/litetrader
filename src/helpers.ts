@@ -1,9 +1,11 @@
-import * as winston from 'winston'
+import type { ExchangeName, OrderModule, TickModule } from './types/types'
 import type { Logger } from 'winston'
+
+import * as winston from 'winston'
+
 import * as krakenTick from './kraken/tick.js'
 import * as krakenSetup from './kraken/setup.js'
 import * as krakenOrder from './kraken/order.js'
-import type { ExchangeName, OrderModule, TickModule } from './types/types'
 
 export const isError = (err: unknown): err is Error =>
   typeof err === 'object' &&
@@ -41,8 +43,8 @@ export const orderSelector = async (exchangeName: ExchangeName): Promise<OrderMo
   }
 }
 
-export const getLogger = (serviceName: string): Logger => {
-  const logger = winston.createLogger({
+export const getLogger = (serviceName: string): Logger =>
+  winston.createLogger({
     level: 'info',
     format: winston.format.json(),
     transports: [
@@ -53,11 +55,6 @@ export const getLogger = (serviceName: string): Logger => {
         },
       }),
       new winston.transports.File({ filename: `logs/${serviceName}-combined.log` }),
-    ],
-  })
-
-  if (process.env.NODE_ENV !== 'production')
-    logger.add(
       new winston.transports.Console({
         format: winston.format.combine(
           winston.format.colorize(),
@@ -69,7 +66,6 @@ export const getLogger = (serviceName: string): Logger => {
             return msg
           })
         ),
-      })
-    )
-  return logger
-}
+      }),
+    ],
+  })
