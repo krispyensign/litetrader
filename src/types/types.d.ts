@@ -113,4 +113,6 @@ export type Recipe = {
   initialAssetName: string
   steps: OrderCreateRequest[]
   guardList?: string[]
+  finalAmount: number
+  finalAssetVerify: number
 }

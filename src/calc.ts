@@ -77,6 +77,8 @@ const createRecipe = (
   initialAssetIndex: initialAssetIndex,
   initialAssetName: assets[initialAssetIndex],
   steps: new Array<OrderCreateRequest>(),
+  finalAmount: 0,
+  finalAssetVerify: -1,
 })
 
 const considerBase = (
@@ -137,8 +139,8 @@ export const calcProfit = async (
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
   let step: OrderCreateRequest
-
-  for (const pair of await translateSequence(cycle, assets, pairs, pairMap, initialAssetIndex)) {
+  const pairList = await translateSequence(cycle, assets, pairs, pairMap, initialAssetIndex)
+  for (const pair of pairList) {
     // mark as 0 if processing results in an impossible trade
     currentAmount = currentAmount > pair.ordermin ? currentAmount : 0
     if (currentAmount === 0) break
