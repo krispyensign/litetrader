@@ -14,6 +14,7 @@ import { orderSelector, tickSelector } from './helpers.js'
 import { buildGraph, setupData } from './setup.js'
 import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
+import { Mutex } from 'async-mutex'
 
 export const worker = (): true => {
   // post each cycle
@@ -77,7 +78,8 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
     tickws,
     orderws,
     graphWorker,
-    createStopRequest(pairs.map(p => p.tradename))
+    createStopRequest(pairs.map(p => p.tradename)),
+    new Mutex()
   )
   const graphWorkerCallback = createGraphProfitCallback(
     initialAssetIndex,
@@ -88,6 +90,7 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
     config.eta,
     orderws,
     token,
+    new Mutex(),
     createOrderRequest,
     shutdownCallback
   )
