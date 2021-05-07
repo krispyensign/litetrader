@@ -4,16 +4,21 @@ import type { Dictionary, ExchangePair, IndexedPair } from './types/types'
 export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>
   Object.fromEntries(
     indexedPairs
+
+      // create edge list
       .reduce(
         (prev, ip) =>
           prev.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
         new Array<readonly [number, number]>()
       )
-      .reduce((nbrMap, edge) => {
-        return nbrMap.has(edge[0].toString())
-          ? nbrMap.set(edge[0].toString(), nbrMap.get(edge[0].toString())!.concat(edge[1]))
-          : nbrMap.set(edge[0].toString(), [edge[1]])
-      }, new Map<string, readonly number[]>())
+      // create adjacency map from edge list
+      .reduce(
+        (nbrMap, edge) =>
+          nbrMap.has(edge[0].toString())
+            ? nbrMap.set(edge[0].toString(), nbrMap.get(edge[0].toString())!.concat(edge[1]))
+            : nbrMap.set(edge[0].toString(), [edge[1]]),
+        new Map<string, readonly number[]>()
+      )
   )
 
 const validateTradePairs = async (
