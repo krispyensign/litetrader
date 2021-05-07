@@ -1,42 +1,20 @@
-/* eslint-disable functional/immutable-data */
-/* eslint-disable functional/no-expression-statement */
-/* eslint-disable functional/no-conditional-statement */
 /* eslint-disable functional/prefer-readonly-type */
 import type { Dictionary, ExchangePair, IndexedPair } from './types/types'
 
 export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>
-  indexedPairs.reduce((graph, pair) => {
-    if (graph[pair.baseIndex.toString()] === undefined)
-      graph[pair.baseIndex.toString()] = new Array<number>()
-    graph[pair.baseIndex.toString()].push(pair.quoteIndex)
-
-    if (graph[pair.quoteIndex.toString()] === undefined)
-      graph[pair.quoteIndex.toString()] = new Array<number>()
-    graph[pair.quoteIndex.toString()].push(pair.baseIndex)
-
-    return graph
-  }, {} as Dictionary<number[]>)
-
-// export const buildGraphF = (
-//   indexedPairs: readonly IndexedPair[]
-// ): Dictionary<readonly number[]> => {
-//   indexedPairs.reduce(
-//     (prev, ip) =>
-//       prev.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
-//     new Array<[number, number]>()
-//   )
-//   return indexedPairs.reduce((graph, pair) => {
-//     if (graph[pair.baseIndex.toString()] === undefined)
-//       graph[pair.baseIndex.toString()] = new Array<number>()
-//     graph[pair.baseIndex.toString()].push(pair.quoteIndex)
-
-//     if (graph[pair.quoteIndex.toString()] === undefined)
-//       graph[pair.quoteIndex.toString()] = new Array<number>()
-//     graph[pair.quoteIndex.toString()].push(pair.baseIndex)
-
-//     return graph
-//   }, {} as Dictionary<number[]>)
-// }
+  Object.fromEntries(
+    indexedPairs
+      .reduce(
+        (prev, ip) =>
+          prev.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
+        new Array<readonly [number, number]>()
+      )
+      .reduce((nbrMap, edge) => {
+        return nbrMap.has(edge[0].toString())
+          ? nbrMap.set(edge[0].toString(), nbrMap.get(edge[0].toString())!.concat(edge[1]))
+          : nbrMap.set(edge[0].toString(), [edge[1]])
+      }, new Map<string, readonly number[]>())
+  )
 
 const validateTradePairs = async (
   tradePairs: readonly ExchangePair[],
