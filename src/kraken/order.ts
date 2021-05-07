@@ -31,4 +31,4 @@ export const cancelOrderRequest = (token: string, cancel: OrderCancelRequest): s
   } as CancelOrder)
 
 export const parseEvent = (eventData: string): string => eventData
-export const getWebSocketUrl = (): string => 'wss://ws-auth.kraken.com'
+export const webSocketUrl = 'wss://ws-auth.kraken.com'

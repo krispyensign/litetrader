@@ -1,3 +1,6 @@
+/* eslint-disable functional/no-conditional-statement */
+/* eslint-disable functional/no-let */
+/* eslint-disable functional/no-expression-statement */
 import type { ExchangeName, OrderModule, TickModule } from './types/types'
 import type { Logger } from 'winston'
 
@@ -19,7 +22,7 @@ export const tickSelector = async (exchangeName: ExchangeName): Promise<TickModu
         krakenSetup.createStopRequest,
         krakenSetup.createTickSubRequest,
         krakenSetup.getAvailablePairs,
-        krakenSetup.getWebSocketUrl,
+        krakenSetup.webSocketUrl,
         krakenTick.parseTick,
       ]
     default:
@@ -34,7 +37,7 @@ export const orderSelector = async (exchangeName: ExchangeName): Promise<OrderMo
         krakenOrder.cancelOrderRequest,
         krakenOrder.createOrderRequest,
         krakenOrder.getReqId,
-        krakenOrder.getWebSocketUrl,
+        krakenOrder.webSocketUrl,
         krakenOrder.isStatusEvent,
         krakenOrder.parseEvent,
       ]

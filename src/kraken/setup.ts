@@ -24,11 +24,11 @@ const isKrakenPair = async (pairName: string, pair?: unknown): Promise<boolean> 
   extractReason(
     'pair',
     pairName,
-    compareTypes(pair, 'wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals')
+    compareTypes(pair, ['wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals'])
   )
 
 const isLastTick = async (pairName: string, tick?: unknown): Promise<boolean> =>
-  extractReason('tick', pairName, compareTypes(tick, 'a', 'b', 't'))
+  extractReason('tick', pairName, compareTypes(tick, ['a', 'b', 't']))
 
 const createExchangePair = (
   name: string,
@@ -50,7 +50,7 @@ const createExchangePair = (
   ordermin: Number(pair.ordermin),
 })
 
-export const getAvailablePairs = async (threshold = 0): Promise<ExchangePair[]> =>
+export const getAvailablePairs = async (threshold = 0): Promise<readonly ExchangePair[]> =>
   // get the tradeable asset pairs
   unwrapJson<Dictionary<AssetPair>>(krakenApiUrl + krakenPairsPath)
     .then(assetPairsRes => Object.entries(assetPairsRes))
@@ -76,7 +76,7 @@ export const getAvailablePairs = async (threshold = 0): Promise<ExchangePair[]> 
       )
     )
 
-export const createStopRequest = (pairs: string[]): string =>
+export const createStopRequest = (pairs: readonly string[]): string =>
   JSON.stringify({
     event: 'unsubscribe',
     pair: pairs,
@@ -85,7 +85,7 @@ export const createStopRequest = (pairs: string[]): string =>
     },
   })
 
-export const createTickSubRequest = (pairs: string[]): string =>
+export const createTickSubRequest = (pairs: readonly string[]): string =>
   JSON.stringify({
     event: 'subscribe',
     pair: pairs,
@@ -94,4 +94,4 @@ export const createTickSubRequest = (pairs: string[]): string =>
     },
   })
 
-export const getWebSocketUrl = (): string => krakenWsUrl
+export const webSocketUrl = krakenWsUrl

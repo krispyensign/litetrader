@@ -2,12 +2,18 @@
     "extends": [
       "eslint:recommended",
       "plugin:node/recommended",
-      "prettier"
+      "prettier",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:functional/external-recommended",
+      "plugin:functional/recommended",
+      "plugin:functional/stylitic"
     ],
     "plugins": [
       "node",
-      "prettier"
+      "prettier",
+      "functional"
     ],
+    "parser": "@typescript-eslint/parser",
     "rules": {
       "prettier/prettier": "error",
       "block-scoped-var": "error",

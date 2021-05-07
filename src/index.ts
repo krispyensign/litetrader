@@ -1,3 +1,4 @@
+/* eslint-disable functional/no-expression-statement */
 import type { ExchangeName } from './types/types'
 import yargs from 'yargs'
 import * as sourceMap from 'source-map-support'

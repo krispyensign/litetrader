@@ -1,151 +1,159 @@
 import type { AssetPair } from 'exchange-models/kraken'
 import type { Dictionary } from './types'
 
-export type AssetPairsResponse = [string, AssetPair][]
+export type AssetPairsResponse = readonly (readonly [string, AssetPair])[]
 
 export type ResponseWrapper<T = object> = {
-  error: string[]
-  result: T
+  readonly error: readonly string[]
+  readonly result: T
 }
 
 export type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
 export type AssetTicksResponse = ResponseWrapper<Dictionary<TickerResponse>>
 
 export type KrakenErrorMessage = {
-  errorMessage: string
+  readonly errorMessage: string
 }
 
 export type TickerResponse = {
   /**
    * Ask
    */
-  a: [number, number, number]
+  readonly a: readonly [number, number, number]
   /**
    * Bid
    */
-  b: [number, number, number]
+  readonly b: readonly [number, number, number]
   /**
    * Close
    */
-  c: [number, number]
+  readonly c: readonly [number, number]
   /**
    * Volume
    */
-  v: [number, number]
+  readonly v: readonly [number, number]
   /**
    * Volume weighted average price
    */
-  p: [number, number]
+  readonly p: readonly [number, number]
   /**
    * Number of trades
    */
-  t: [number, number]
+  readonly t: readonly [number, number]
   /**
    * Low price
    */
-  l: [number, number]
+  readonly l: readonly [number, number]
   /**
    * High price
    */
-  h: [number, number]
+  readonly h: readonly [number, number]
   /**
    * Open price
    */
-  o: [number, number]
+  readonly o: readonly [number, number]
 }
 
 /**
  * Response. Add new order.
  */
 export type AddOrderStatus = {
-  event: 'addOrderStatus' | 'error'
+  readonly event: 'addOrderStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message
    */
-  reqid?: number
+  readonly reqid?: number
   /**
    * Status. 'ok' or 'error'
    */
-  status: 'ok' | 'error'
+  readonly status: 'ok' | 'error'
   /**
    * order ID (if successful)
    */
-  txid: string
+  readonly txid: string
   /**
    * order description info (if successful)
    */
-  descr: string
-  pair: string
+  readonly descr: string
+  readonly pair: string
   /**
    * error message (if unsuccessful)
    */
-  errorMessage: string
+  readonly errorMessage: string
 }
 
 export type CancelOrderStatus = {
-  event: 'cancelOrderStatus' | 'error'
+  readonly event: 'cancelOrderStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message
    */
-  reqid?: number
+  readonly reqid?: number
   /**
    * Status. 'ok' or 'error'
    */
-  status: 'ok' | 'error'
+  readonly status: 'ok' | 'error'
   /**
    * error message (if unsuccessful)
    */
-  errorMessage?: string
+  readonly errorMessage?: string
 }
 
-export interface SubscriptionStatus {
-  event: 'subscriptionStatus' | 'error'
+export type SubscriptionStatus = {
+  readonly event: 'subscriptionStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message
    */
-  reqid?: number
-  pair: string
+  readonly reqid?: number
+  readonly pair: string
   /**
    * Status of subscription
    */
-  status: 'subscribed' | 'unsubscribed' | 'error'
-  subscription: {
+  readonly status: 'subscribed' | 'unsubscribed' | 'error'
+  readonly subscription: {
     /**
      * Optional - depth associated with book subscription in float of levels
      * each side, default 10. Valid Options are: 10, 25, 100, 500, 1000
      */
-    depth?: 10 | 25 | 100 | 500 | 1000
+    readonly depth?: 10 | 25 | 100 | 500 | 1000
     /**
      * Optional - Time interval associated with ohlc subscription in minutes.
      * Default 1. Valid Interval values: 1|5|15|30|60|240|1440|10080|21600
      */
-    interval?: 1 | 5 | 15 | 30 | 60 | 240 | 1440 | 10080 | 21600
+    readonly interval?: 1 | 5 | 15 | 30 | 60 | 240 | 1440 | 10080 | 21600
     /**
      * book|ohlc|openOrders|ownTrades|spread|ticker|trade|*, * for all available
      * channels depending on the connected environment
      */
-    name?: 'book' | 'ohlc' | 'openOrders' | 'ownTrades' | 'spread' | 'ticker' | 'trade' | '*'
+    readonly name?:
+      | 'book'
+      | 'ohlc'
+      | 'openOrders'
+      | 'ownTrades'
+      | 'spread'
+      | 'ticker'
+      | 'trade'
+      | '*'
     /**
      * Optional - whether to send historical feed data snapshot upon
      * subscription (supported only for ownTrades subscriptions; default = true)
      */
-    snapshot?: boolean
+    readonly snapshot?: boolean
     /**
      * Optional - base64-encoded authentication token for private-data endpoints
      */
-    token?: string
+    readonly token?: string
   }
   /**
    * Error message
    */
-  errorMessage: string
+  readonly errorMessage: string
   /**
    * ChannelID associated with pair subscription
    */
-  channelID: number
+  readonly channelID: number
   /**
    * Channel Name on successful subscription. For payloads 'ohlc' and 'book',
    * respective interval or depth will be added as suffix.
    */
-  channelName: number
+  readonly channelName: number
 }

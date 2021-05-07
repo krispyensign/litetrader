@@ -1,3 +1,7 @@
+/* eslint-disable functional/no-expression-statement */
+/* eslint-disable functional/functional-parameters */
+/* eslint-disable functional/no-loop-statement */
+/* eslint-disable functional/no-conditional-statement */
 import WebSocket from 'ws'
 import { dirname } from 'path'
 import { Worker, parentPort, workerData } from 'worker_threads'
@@ -11,28 +15,32 @@ import { buildGraph, setupData } from './setup.js'
 import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
 
-export const worker = (): void => {
+export const worker = (): true => {
   // post each cycle
   for (const cycle of findCycles(
-    [workerData.initialAssetIndex as number],
-    Object.entries(workerData.graph as Dictionary<number[]>).reduce(
-      (prev, [key, nbrs]) => prev.set(Number(key), nbrs),
-      new Map<number, number[]>()
+    [workerData.initialAssetIndex],
+    new Map<number, readonly number[]>(
+      Object.entries(workerData.graph as Dictionary<readonly number[]>).map(([k, v]) => [
+        Number(k),
+        v,
+      ])
     )
-  ))
+  )) {
     parentPort?.postMessage(cycle)
+  }
+  return true
 }
 
-export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker]> => {
+export const app = async (config: Config): Promise<readonly [WebSocket, WebSocket, Worker]> => {
   // configure everything
   const [
     createStopRequest,
     createTickSubRequest,
     getAvailablePairs,
-    getWebSocketUrl,
+    webSocketUrl,
     parseTick,
   ] = await tickSelector(config.exchangeName)
-  const [, createOrderRequest, , getAuthWebSocketUrl, , parseEvent] = await orderSelector(
+  const [, createOrderRequest, , authWebSocketUrl, , parseEvent] = await orderSelector(
     config.exchangeName
   )
 
@@ -48,8 +56,8 @@ export const app = async (config: Config): Promise<[WebSocket, WebSocket, Worker
     return Promise.reject(new Error(`invalid asset ${config.initialAsset}`))
 
   // setup sockets and graph worker
-  const tickws = new WebSocket(getWebSocketUrl())
-  const orderws = new WebSocket(getAuthWebSocketUrl())
+  const tickws = new WebSocket(webSocketUrl)
+  const orderws = new WebSocket(authWebSocketUrl)
   const graphWorker = new Worker(dirname(process.argv[1]) + '/index.js', {
     workerData: {
       graph: buildGraph(pairs),

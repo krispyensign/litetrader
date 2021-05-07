@@ -1,3 +1,10 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable functional/no-loop-statement */
+/* eslint-disable functional/no-expression-statement */
+/* eslint-disable functional/no-throw-statement */
+/* eslint-disable functional/prefer-readonly-type */
+/* eslint-disable functional/no-let */
+/* eslint-disable functional/no-conditional-statement */
 import type { Recipe, OrderCreateRequest, IndexedPair } from './types/types'
 import { isError } from './helpers.js'
 
@@ -9,10 +16,10 @@ const safeRound = (num: number, decimals: number): number =>
 const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
 const translateSequence = (
-  cycle: number[],
-  assets: string[],
+  cycle: readonly number[],
+  assets: readonly string[],
   pairs: IndexedPair[],
-  pairMap: Map<string, number>
+  pairMap: ReadonlyMap<string, number>
 ): IndexedPair[] =>
   cycle.slice(1).map((value, index) => {
     // try first/second else second/first
@@ -30,7 +37,7 @@ const translateSequence = (
 const createRecipe = (
   initialAmount: number,
   initialAssetIndex: number,
-  assets: string[]
+  assets: readonly string[]
 ): Recipe => ({
   initialAmount: initialAmount,
   initialAssetIndex: initialAssetIndex,
@@ -55,12 +62,14 @@ export const validateSequence = (asset: number, pairList: IndexedPair[]): Indexe
 export const calcProfit = (
   initialAssetIndex: number,
   initialAmount: number,
-  cycle: number[],
-  assets: string[],
+  cycle: readonly number[],
+  assets: readonly string[],
   pairs: IndexedPair[],
-  pairMap: Map<string, number>,
+  pairMap: ReadonlyMap<string, number>,
   eta: number
-): [number, Recipe] | number | Error => {
+): readonly [number, Recipe] | number | Error => {
+  const e = Math.floor(Math.random() * 1000)
+  console.time('calcProfit-' + e)
   // setup a recipe object to return just in case calculation shows profitable
   const recipe = createRecipe(initialAmount, initialAssetIndex, assets)
 
@@ -124,5 +133,6 @@ export const calcProfit = (
   // if profitable return the amount and recipe else just the amount
   // this will cause the recipe to get garbage collected seperately
   if (currentAmount > initialAmount) return [currentAmount, recipe]
+  console.timeEnd('calcProfit-' + e)
   return currentAmount
 }

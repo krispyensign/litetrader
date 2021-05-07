@@ -1,3 +1,8 @@
+/* eslint-disable functional/no-method-signature */
+/* eslint-disable functional/no-expression-statement */
+/* eslint-disable functional/no-conditional-statement */
+/* eslint-disable functional/no-loop-statement */
+/* eslint-disable functional/functional-parameters */
 export type LazyIterable<T> = {
   [Symbol.iterator](): IterableIterator<T>
 }
@@ -73,7 +78,7 @@ export const flatMapl = <T, U>(
 export const partitionl = <T>(
   it: LazyIterable<T>,
   fn: (value: T) => boolean
-): [LazyIterable<T>, LazyIterable<T>] => [
+): readonly [LazyIterable<T>, LazyIterable<T>] => [
   filterl(it, fn),
   filterl(it, (value: T): boolean => !fn(value)),
 ]
@@ -87,7 +92,7 @@ export const peekl = <T>(it: LazyIterable<T>): LazyIterable<T> => ({
   },
 })
 
-export const getValue = <T>(it: LazyIterable<T>): T[] => [...it]
+export const getValue = <T>(it: LazyIterable<T>): readonly T[] => [...it]
 
 export const hasValue = <T>(it: LazyIterable<T>): boolean => {
   for (const item of it) return item !== null

@@ -14,105 +14,109 @@ export type {
 } from 'exchange-models/kraken'
 
 export type PairPriceUpdate = {
-  tradeName: string
-  ask: number
-  bid: number
+  readonly tradeName: string
+  readonly ask: number
+  readonly bid: number
 }
 
-export type TickModule = [
-  (pairs: string[]) => string,
-  (pairs: string[]) => string,
-  (threshold?: number | undefined) => Promise<ExchangePair[]>,
-  () => string,
+export type TickModule = readonly [
+  (pairs: readonly string[]) => string,
+  (pairs: readonly string[]) => string,
+  (threshold?: number | undefined) => Promise<readonly ExchangePair[]>,
+  string,
   (tickData?: string | undefined) => string | PairPriceUpdate | Error
 ]
 
-export type OrderModule = [
+export type OrderModule = readonly [
   (token: string, cancel: OrderCancelRequest) => string,
   (token: string, order: OrderCreateRequest) => string,
   (parsedEvent: unknown) => string,
-  () => string,
+  string,
   (event: unknown) => boolean,
   (eventData: string) => string
 ]
 
 export type OrderCancelRequest = {
-  event: 'cancel'
-  orderId: string
+  readonly event: 'cancel'
+  readonly orderId: string
 }
 
 export type OrderCreateRequest = {
-  event: 'create'
-  requestId?: string
-  orderId?: string
-  pair: string
+  readonly event: 'create'
+  readonly requestId?: string
+  readonly orderId?: string
+  readonly pair: string
   /**
    * Which way a trade goes
    */
-  direction: 'buy' | 'sell'
+  readonly direction: 'buy' | 'sell'
   /**
    * What kind of order
    */
-  orderType: 'market' | 'limit'
-  amount: number
-  price?: number
+  readonly orderType: 'market' | 'limit'
+  readonly amount: number
+  readonly price?: number
 }
 
 export type ExchangePair = {
-  index: number
-  name: string
-  tradename: string
-  decimals: number
-  baseName: string
-  quoteName: string
-  makerFee: number
-  takerFee: number
-  volume: number
-  ordermin: number
-  ask: number
-  bid: number
+  readonly index: number
+  readonly name: string
+  readonly tradename: string
+  readonly decimals: number
+  readonly baseName: string
+  readonly quoteName: string
+  readonly makerFee: number
+  readonly takerFee: number
+  readonly volume: number
+  readonly ordermin: number
+  readonly ask: number
+  readonly bid: number
 }
 
 export type IndexedPair = {
-  index: number
-  name: string
-  tradename: string
-  decimals: number
-  baseName: string
-  quoteName: string
-  makerFee: number
-  takerFee: number
-  volume: number
-  ordermin: number
+  readonly index: number
+  readonly name: string
+  readonly tradename: string
+  readonly decimals: number
+  readonly baseName: string
+  readonly quoteName: string
+  readonly makerFee: number
+  readonly takerFee: number
+  readonly volume: number
+  readonly ordermin: number
+  // eslint-disable-next-line functional/prefer-readonly-type
   ask: number
+  // eslint-disable-next-line functional/prefer-readonly-type
   bid: number
-  quoteIndex: number
-  baseIndex: number
+  readonly quoteIndex: number
+  readonly baseIndex: number
 }
 
 export type Config = {
-  exchangeName: ExchangeName
-  initialAmount: number
-  initialAsset: string
-  eta: number
-  key: Key
+  readonly exchangeName: ExchangeName
+  readonly initialAmount: number
+  readonly initialAsset: string
+  readonly eta: number
+  readonly key: Key
 }
 
 export type Dictionary<T> = {
+  // eslint-disable-next-line functional/prefer-readonly-type
   [key: string]: T
 }
 
 export type Key = {
-  apiKey: string
-  apiPrivateKey: string
+  readonly apiKey: string
+  readonly apiPrivateKey: string
 }
 
 export type Recipe = {
-  initialAmount: number
-  initialAssetIndex: number
-  initialAssetName: string
+  readonly initialAmount: number
+  readonly initialAssetIndex: number
+  readonly initialAssetName: string
+  // eslint-disable-next-line functional/prefer-readonly-type
   steps: OrderCreateRequest[]
-  guardList?: string[]
-  finalAmount: number
-  finalAssetVerify: number
+  readonly guardList?: readonly string[]
+  // finalAmount: number
+  // finalAssetVerify: number
 }

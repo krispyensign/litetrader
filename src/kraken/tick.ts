@@ -2,7 +2,7 @@ import type { PairPriceUpdate, Publication, Ticker } from '../types/types'
 import { compareTypes, isKrakenErrorMessage } from './common.js'
 
 const isTickerPayload = (payload: unknown): payload is Ticker =>
-  compareTypes(payload, 'a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o') !== true
+  compareTypes(payload, ['a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o']) !== true
     ? false
     : typeof (payload as Ticker).a === 'object' &&
       (payload as Ticker).a.length > 0 &&

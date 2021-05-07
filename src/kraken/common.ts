@@ -29,7 +29,7 @@ export const isKrakenErrorMessage = (err: unknown): err is KrakenErrorMessage =>
 export const isObject = (o: unknown): o is object =>
   o !== null && o !== undefined && typeof o === 'object'
 
-export const compareTypes = (o: unknown, ...propertyNames: string[]): boolean | string =>
+export const compareTypes = (o: unknown, propertyNames: readonly string[]): boolean | string =>
   // check if object is undefined
   !isObject(o)
     ? false

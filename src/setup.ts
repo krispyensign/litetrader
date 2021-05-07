@@ -1,6 +1,10 @@
+/* eslint-disable functional/prefer-readonly-type */
+/* eslint-disable functional/immutable-data */
+/* eslint-disable functional/no-expression-statement */
+/* eslint-disable functional/no-conditional-statement */
 import type { Dictionary, ExchangePair, IndexedPair } from './types/types'
 
-export const buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> =>
+export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>
   indexedPairs.reduce((graph, pair) => {
     if (graph[pair.baseIndex.toString()] === undefined)
       graph[pair.baseIndex.toString()] = new Array<number>()
@@ -14,8 +18,8 @@ export const buildGraph = (indexedPairs: IndexedPair[]): Dictionary<number[]> =>
   }, {} as Dictionary<number[]>)
 
 export const setupData = async (
-  getAvailablePairs: (threshold?: number) => Promise<ExchangePair[]>
-): Promise<[string[], IndexedPair[], Map<string, number>]> => {
+  getAvailablePairs: (threshold?: number) => Promise<readonly ExchangePair[]>
+): Promise<[readonly string[], IndexedPair[], Map<string, number>]> => {
   // get pairs from exchange
   const tradePairs = await getAvailablePairs()
 

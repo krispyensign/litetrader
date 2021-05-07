@@ -1,3 +1,10 @@
+/* eslint-disable functional/prefer-readonly-type */
+/* eslint-disable functional/functional-parameters */
+/* eslint-disable functional/no-return-void */
+/* eslint-disable functional/no-let */
+/* eslint-disable functional/immutable-data */
+/* eslint-disable functional/no-expression-statement */
+/* eslint-disable functional/no-conditional-statement */
 import WebSocket from 'ws'
 import { Worker } from 'worker_threads'
 import { calcProfit } from './calc.js'
@@ -6,7 +13,7 @@ import { isError } from './helpers.js'
 
 export const createTickCallback = (
   pairs: IndexedPair[],
-  pairMap: Map<string, number>,
+  pairMap: ReadonlyMap<string, number>,
   parseTick: (arg: string) => PairPriceUpdate | string | Error
 ) => async (x: WebSocket.MessageEvent): Promise<void> => {
   const pairUpdate = parseTick(x.toLocaleString())
@@ -49,33 +56,25 @@ export const createShutdownCallback = (
 export const createGraphProfitCallback = (
   initialAssetIndex: number,
   initialAmount: number,
-  assets: string[],
+  assets: readonly string[],
   pairs: IndexedPair[],
-  pairMap: Map<string, number>,
+  pairMap: ReadonlyMap<string, number>,
   eta: number,
   orderws: WebSocket,
   token: string,
   createOrderRequest: (token: string, step: OrderCreateRequest) => string,
   shutdownCallback: () => void
-): ((arg: number[]) => Promise<void>) => {
+): ((arg: readonly number[]) => Promise<void>) => {
   let count = 0
   let isSending = false
 
-  return async (cycle: number[]): Promise<void> => {
+  return async (cycle: readonly number[]): Promise<void> => {
     // filter paths that don't start with initial index
     if (cycle[0] !== initialAssetIndex)
       console.log(`filter failed ${cycle[0]}, ${initialAssetIndex}}`)
 
     // calc profit, hopefully something good is found
-    const result = await calcProfit(
-      initialAssetIndex,
-      initialAmount,
-      cycle,
-      assets,
-      pairs,
-      pairMap,
-      eta
-    )
+    const result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta)
 
     // occassionally print to console if 10000 or so cycles have been processed
     count += 1
@@ -89,7 +88,7 @@ export const createGraphProfitCallback = (
 
       // send orders
       const [amount, recipe] = result
-      for (const step of recipe.steps) orderws.send(createOrderRequest(token, step))
+      recipe.steps.forEach(step => orderws.send(createOrderRequest(token, step)))
 
       // log value and die for now
       console.log(`amounts: ${initialAmount} -> ${amount}`)
