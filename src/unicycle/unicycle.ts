@@ -1,3 +1,6 @@
+/* eslint-disable functional/no-conditional-statement */
+/* eslint-disable functional/no-loop-statement */
+/* eslint-disable functional/no-let */
 /* eslint-disable functional/no-expression-statement */
 import { filterl, filterMapl, flatMapl, hasValue, LazyIterable, partitionl, peekl } from './lib.js'
 
@@ -44,27 +47,22 @@ export function* findCycles(
   startAssets: readonly Label[],
   neighbors: ReadonlyMap<Label, readonly Label[]>
 ): Generator<readonly Label[], void, unknown> {
-  // eslint-disable-next-line functional/no-let
   let candidatePaths = growPaths(
     startAssets.map(val => [val]),
     neighbors
   )
 
-  // eslint-disable-next-line functional/no-loop-statement
   while (true) {
     // partition into cycles and paths
     const [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
 
     // report back the cycles
-    // eslint-disable-next-line functional/no-conditional-statement, functional/no-loop-statement
     if (hasValue(peekl(cycles))) for (const cycle of cycles) yield cycle
 
     // if nothing at all was found then break
-    // eslint-disable-next-line functional/no-conditional-statement
     if (!hasValue(peekl(paths))) break
 
     // start to find the next size up paths
-    // eslint-disable-next-line functional/no-expression-statement
     candidatePaths = growPaths(paths, neighbors)
   }
 }

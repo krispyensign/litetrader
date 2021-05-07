@@ -1,6 +1,3 @@
-/* eslint-disable functional/no-conditional-statement */
-/* eslint-disable functional/no-let */
-/* eslint-disable functional/no-expression-statement */
 import type { ExchangeName, OrderModule, TickModule } from './types/types'
 import type { Logger } from 'winston'
 
@@ -15,25 +12,20 @@ export const isError = (err: unknown): err is Error =>
   (err as Error).message !== undefined &&
   (err as Error).stack !== undefined
 
-export const tickSelector = async (exchangeName: ExchangeName): Promise<TickModule> => {
-  switch (exchangeName) {
-    case 'kraken':
-      return [
+export const tickSelector = async (exchangeName: ExchangeName): Promise<TickModule> =>
+  exchangeName === 'kraken'
+    ? [
         krakenSetup.createStopRequest,
         krakenSetup.createTickSubRequest,
         krakenSetup.getAvailablePairs,
         krakenSetup.webSocketUrl,
         krakenTick.parseTick,
       ]
-    default:
-      return Promise.reject(new Error('Invalid exchange selected'))
-  }
-}
+    : Promise.reject(new Error('Invalid exchange selected'))
 
-export const orderSelector = async (exchangeName: ExchangeName): Promise<OrderModule> => {
-  switch (exchangeName) {
-    case 'kraken':
-      return [
+export const orderSelector = async (exchangeName: ExchangeName): Promise<OrderModule> =>
+  exchangeName === 'kraken'
+    ? [
         krakenOrder.cancelOrderRequest,
         krakenOrder.createOrderRequest,
         krakenOrder.getReqId,
@@ -41,10 +33,7 @@ export const orderSelector = async (exchangeName: ExchangeName): Promise<OrderMo
         krakenOrder.isStatusEvent,
         krakenOrder.parseEvent,
       ]
-    default:
-      return Promise.reject(new Error('Invalid exchange selected'))
-  }
-}
+    : Promise.reject(new Error('Invalid exchange selected'))
 
 export const getLogger = (serviceName: string): Logger =>
   winston.createLogger({
@@ -62,12 +51,11 @@ export const getLogger = (serviceName: string): Logger =>
         format: winston.format.combine(
           winston.format.colorize(),
           winston.format.timestamp(),
-          winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-            let msg = `${timestamp} [${level}] [${serviceName}] : ${message}`
-            if (metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object))
-              msg += JSON.stringify(metadata)
-            return msg
-          })
+          winston.format.printf(({ level, message, timestamp, ...metadata }) =>
+            metadata && !(Object.keys(metadata)?.length < 1 && metadata.constructor === Object)
+              ? `${timestamp} [${level}] [${serviceName}] : ${message}` + JSON.stringify(metadata)
+              : `${timestamp} [${level}] [${serviceName}] : ${message}`
+          )
         ),
       }),
     ],

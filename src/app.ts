@@ -31,6 +31,11 @@ export const worker = (): true => {
   return true
 }
 
+const getIndex = async (initialAssetIndexF: number, initialAsset: string): Promise<number> =>
+  initialAssetIndexF === -1
+    ? Promise.reject(new Error(`invalid asset ${initialAsset}`))
+    : Promise.resolve(initialAssetIndexF)
+
 export const app = async (config: Config): Promise<readonly [WebSocket, WebSocket, Worker]> => {
   // configure everything
   const [
@@ -51,9 +56,10 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
   const token = ''
 
   // validate asset before continuing
-  const initialAssetIndex = assets.findIndex(a => a === config.initialAsset)
-  if (initialAssetIndex === -1)
-    return Promise.reject(new Error(`invalid asset ${config.initialAsset}`))
+  const initialAssetIndex = await getIndex(
+    assets.findIndex(a => a === config.initialAsset),
+    config.initialAsset
+  )
 
   // setup sockets and graph worker
   const tickws = new WebSocket(webSocketUrl)
