@@ -1,4 +1,5 @@
 import type { Recipe, OrderCreateRequest, IndexedPair } from './types/types'
+import { isError } from './helpers.js'
 
 // helper function to safely round a number
 const safeRound = (num: number, decimals: number): number =>
@@ -7,67 +8,25 @@ const safeRound = (num: number, decimals: number): number =>
 // helper function to safely divide by 0
 const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
-// try first/second else second/first fail if nothing found
-const lookup = async (
-  pairMap: Map<string, number>,
-  assetA: string,
-  assetB: string
-): Promise<number> =>
-  pairMap.get(`${assetA},${assetB}`) ??
-  pairMap.get(`${assetB},${assetA}`) ??
-  Promise.reject(new Error(`Invalid pair requested. quote: ${assetA}, ${assetB}`))
-
-// if there was an issue and the assets were improperly populated
-const validatePair = async (
-  pair: IndexedPair,
-  currentAsset: number
-): Promise<[IndexedPair, number]> =>
-  // if the current asset does not match either the quote or base of the next pair then error
-  currentAsset !== pair.baseIndex && currentAsset !== pair.quoteIndex
-    ? Promise.reject(
-        new Error(
-          'Invalid logic somewhere! Current Tuple State:' +
-            [currentAsset, pair.quoteIndex, pair.baseIndex].join(', ')
-        )
-      )
-    : // else determine which one matches
-    currentAsset === pair.baseIndex
-    ? // if base then quote
-      [pair, pair.quoteIndex]
-    : // if quote then base
-      [pair, pair.baseIndex]
-
-// given a sequence of numbers that form a cycle, recover the sequence of pairs
-const translateSequence = async (
+const translateSequence = (
   cycle: number[],
   assets: string[],
   pairs: IndexedPair[],
-  pairMap: Map<string, number>,
-  asset: number
-): Promise<IndexedPair[]> =>
-  (
-    await cycle
-      // skip the first element
-      .slice(1)
-      // sequentially resolve the pairs
-      .reduce(
-        async (prev, value, index, arr) =>
-          (await prev).concat([
-            await validatePair(
-              // get the next pair to be validated
-              pairs[await lookup(pairMap, assets[cycle[index]], assets[value])],
-              // get the previous asset index as the new current index
-              index === 0 ? asset : arr[index - 1]
-            ),
-          ]),
-        Promise.resolve(new Array<[IndexedPair, number]>())
-      )
-  )
+  pairMap: Map<string, number>
+): IndexedPair[] =>
+  cycle.slice(1).map((value, index) => {
+    // try first/second else second/first
+    const tempA = assets[cycle[index]]
+    const tempB = assets[value]
+    const indo = pairMap.get(`${tempA},${tempB}`) ?? pairMap.get(`${tempB},${tempA}`)
 
-    // recover just the pairs and discard the assets
-    .map(q => q[0])
+    // if not found then fail
+    if (indo === undefined) throw Error(`Invalid pair requested. quote: ${tempA}, ${tempB}`)
 
-// create an empty recipe
+    // return the lookup value on success
+    return pairs[indo]
+  })
+
 const createRecipe = (
   initialAmount: number,
   initialAssetIndex: number,
@@ -77,53 +36,23 @@ const createRecipe = (
   initialAssetIndex: initialAssetIndex,
   initialAssetName: assets[initialAssetIndex],
   steps: new Array<OrderCreateRequest>(),
-  finalAmount: 0,
-  finalAssetVerify: -1,
 })
 
-const considerBase = (
-  pair: IndexedPair,
-  stepAmount: number,
-  eta: number
-): [OrderCreateRequest, number, number] => [
-  // construct a step for the recipe
-  {
-    // round to correct units (placing order in base currency units)
-    amount: stepAmount,
-    // this is a sell
-    direction: 'sell',
-    event: 'create',
-    orderType: 'market',
-    pair: pair.tradename,
-    price: pair.bid,
-  },
-  // change the current asset from the base to the quote
-  pair.quoteIndex,
-  // result amount is in quote currency units
-  stepAmount * pair.bid * (1 - pair.takerFee) * (1 - eta),
-]
+export const validateSequence = (asset: number, pairList: IndexedPair[]): IndexedPair[] | Error => {
+  for (const pair of pairList) {
+    // if there was an issue and the assets were improperly populated
+    if (asset !== pair.baseIndex && asset !== pair.quoteIndex)
+      return Error(
+        'Invalid logic somewhere! Current Tuple State:' +
+          [asset, pair.quoteIndex, pair.baseIndex].join(', ')
+      )
+    else if (asset === pair.baseIndex) asset = pair.quoteIndex
+    else asset = pair.baseIndex
+  }
+  return pairList
+}
 
-const considerQuote = (
-  pair: IndexedPair,
-  stepAmount: number
-): [OrderCreateRequest, number, number] => [
-  // construct a step for the recipe
-  {
-    amount: stepAmount,
-    direction: 'buy',
-    event: 'create',
-    orderType: 'market',
-    pair: pair.tradename,
-    price: pair.ask,
-  },
-
-  // set the current asset to the next base code
-  pair.baseIndex,
-  // calculate the next current amount using the derived price
-  stepAmount,
-]
-
-export const calcProfit = async (
+export const calcProfit = (
   initialAssetIndex: number,
   initialAmount: number,
   cycle: number[],
@@ -131,32 +60,65 @@ export const calcProfit = async (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   eta: number
-): Promise<[number, Recipe] | number> => {
+): [number, Recipe] | number | Error => {
   // setup a recipe object to return just in case calculation shows profitable
   const recipe = createRecipe(initialAmount, initialAssetIndex, assets)
 
   // start with initially provided index and amount
   let currentAsset = initialAssetIndex
   let currentAmount = initialAmount
-  let step: OrderCreateRequest
-  const pairList = await translateSequence(cycle, assets, pairs, pairMap, initialAssetIndex)
+
+  const pairList = validateSequence(
+    initialAssetIndex,
+    translateSequence(cycle, assets, pairs, pairMap)
+  )
+  if (isError(pairList)) return pairList
   for (const pair of pairList) {
     // mark as 0 if processing results in an impossible trade
     currentAmount = currentAmount > pair.ordermin ? currentAmount : 0
     if (currentAmount === 0) break
-    ;[step, currentAsset, currentAmount] =
-      currentAsset === pair.baseIndex
-        ? // if current exposure is in base asset then create a sell order
-          considerBase(pair, safeRound(currentAmount, pair.decimals), eta)
-        : // if current exposure is in quote asset then create a buy order
-          considerQuote(
-            pair,
-            safeRound(
-              safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
-              pair.decimals
-            )
-          )
-    recipe.steps.push(step)
+
+    // if current exposure is in base asset then create a sell order
+    if (currentAsset === pair.baseIndex) {
+      // construct a step for the recipe
+      const step: OrderCreateRequest = {
+        // round to correct units (placing order in base currency units)
+        amount: safeRound(currentAmount, pair.decimals),
+        // this is a sell
+        direction: 'sell',
+        event: 'create',
+        orderType: 'market',
+        pair: pair.tradename,
+        price: pair.bid,
+      }
+      recipe.steps.push(step)
+
+      // change the current asset from the base to the quote
+      currentAsset = pair.quoteIndex
+      // result amount is in quote currency units
+      currentAmount = step.amount * pair.bid * (1 - pair.takerFee) * (1 - eta)
+    }
+    // if current exposure is in quote asset then create a buy order
+    else {
+      // construct a step for the recipe
+      const step: OrderCreateRequest = {
+        amount: safeRound(
+          safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
+          pair.decimals
+        ),
+        direction: 'buy',
+        event: 'create',
+        orderType: 'market',
+        pair: pair.tradename,
+        price: pair.ask,
+      }
+      recipe.steps.push(step)
+
+      // set the current asset to the next base code
+      currentAsset = pair.baseIndex
+      // calculate the next current amount using the derived price
+      currentAmount = step.amount
+    }
   }
 
   // if profitable return the amount and recipe else just the amount
