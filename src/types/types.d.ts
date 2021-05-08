@@ -84,9 +84,7 @@ export type IndexedPair = {
   readonly takerFee: number
   readonly volume: number
   readonly ordermin: number
-  // eslint-disable-next-line functional/prefer-readonly-type
   ask: number
-  // eslint-disable-next-line functional/prefer-readonly-type
   bid: number
   readonly quoteIndex: number
   readonly baseIndex: number
@@ -101,7 +99,6 @@ export type Config = {
 }
 
 export type Dictionary<T> = {
-  // eslint-disable-next-line functional/prefer-readonly-type
   [key: string]: T
 }
 
@@ -114,7 +111,6 @@ export type Recipe = {
   readonly initialAmount: number
   readonly initialAssetIndex: number
   readonly initialAssetName: string
-  // eslint-disable-next-line functional/prefer-readonly-type
   steps: OrderCreateRequest[]
   readonly guardList?: readonly string[]
   // finalAmount: number

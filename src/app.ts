@@ -1,7 +1,3 @@
-/* eslint-disable functional/no-expression-statement */
-/* eslint-disable functional/functional-parameters */
-/* eslint-disable functional/no-loop-statement */
-/* eslint-disable functional/no-conditional-statement */
 import WebSocket from 'ws'
 import { dirname } from 'path'
 import { Worker, parentPort, workerData } from 'worker_threads'
@@ -73,13 +69,14 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
   })
 
   // setup callbacks
+  const sendMutex = new Mutex()
   const tickCallback = createTickCallback(pairs, pairMap, parseTick)
   const shutdownCallback = createShutdownCallback(
     tickws,
     orderws,
     graphWorker,
     createStopRequest(pairs.map(p => p.tradename)),
-    new Mutex()
+    sendMutex
   )
   const graphWorkerCallback = createGraphProfitCallback(
     initialAssetIndex,
@@ -90,7 +87,7 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
     config.eta,
     orderws,
     token,
-    new Mutex(),
+    sendMutex,
     createOrderRequest,
     shutdownCallback
   )

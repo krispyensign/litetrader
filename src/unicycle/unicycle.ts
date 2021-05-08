@@ -1,7 +1,3 @@
-/* eslint-disable functional/no-conditional-statement */
-/* eslint-disable functional/no-loop-statement */
-/* eslint-disable functional/no-let */
-/* eslint-disable functional/no-expression-statement */
 import { filterl, filterMapl, flatMapl, hasValue, LazyIterable, partitionl, peekl } from './lib.js'
 
 type Label = number | string

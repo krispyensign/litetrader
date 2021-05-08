@@ -3,15 +3,11 @@
       "eslint:recommended",
       "plugin:node/recommended",
       "prettier",
-      "plugin:@typescript-eslint/recommended",
-      "plugin:functional/external-recommended",
-      "plugin:functional/recommended",
-      "plugin:functional/stylitic"
+      "plugin:@typescript-eslint/recommended"
     ],
     "plugins": [
       "node",
-      "prettier",
-      "functional"
+      "prettier"
     ],
     "parser": "@typescript-eslint/parser",
     "rules": {

@@ -1,10 +1,4 @@
 /* eslint-disable no-param-reassign */
-/* eslint-disable functional/no-loop-statement */
-/* eslint-disable functional/no-expression-statement */
-/* eslint-disable functional/no-throw-statement */
-/* eslint-disable functional/prefer-readonly-type */
-/* eslint-disable functional/no-let */
-/* eslint-disable functional/no-conditional-statement */
 import type { Recipe, OrderCreateRequest, IndexedPair } from './types/types'
 import { isError } from './helpers.js'
 

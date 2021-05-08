@@ -1,8 +1,3 @@
-/* eslint-disable functional/no-method-signature */
-/* eslint-disable functional/no-expression-statement */
-/* eslint-disable functional/no-conditional-statement */
-/* eslint-disable functional/no-loop-statement */
-/* eslint-disable functional/functional-parameters */
 export type LazyIterable<T> = {
   [Symbol.iterator](): IterableIterator<T>
 }

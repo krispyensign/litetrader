@@ -1,4 +1,3 @@
-/* eslint-disable functional/prefer-readonly-type */
 import type { Dictionary, ExchangePair, IndexedPair } from './types/types'
 
 export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>

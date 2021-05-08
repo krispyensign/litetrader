@@ -1,9 +1,3 @@
-/* eslint-disable functional/no-expression-statement */
-/* eslint-disable functional/prefer-readonly-type */
-/* eslint-disable functional/functional-parameters */
-/* eslint-disable functional/no-return-void */
-/* eslint-disable functional/immutable-data */
-/* eslint-disable functional/no-conditional-statement */
 import WebSocket from 'ws'
 import { Worker } from 'worker_threads'
 import { calcProfit } from './calc.js'
@@ -36,8 +30,8 @@ export const createShutdownCallback = (
   worker: Worker,
   unSubRequest: string,
   mutex: Mutex
-): (() => void) => (): Promise<void> =>
-  mutex.runExclusive(() => {
+): (() => void) => async (): Promise<void> => {
+  mutex.acquire().then(() => {
     // unsubsribe from everything
     tickws.send(unSubRequest)
 
@@ -47,6 +41,7 @@ export const createShutdownCallback = (
     worker.terminate()
     console.log('shutdown complete')
   })
+}
 
 export const createGraphProfitCallback = (
   initialAssetIndex: number,
