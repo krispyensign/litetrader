@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import type { Recipe, OrderCreateRequest, IndexedPair } from './types/types'
 import { isError } from './helpers.js'
 
