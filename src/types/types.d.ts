@@ -106,13 +106,3 @@ export type Key = {
   readonly apiKey: string
   readonly apiPrivateKey: string
 }
-
-export type Recipe = {
-  readonly initialAmount: number
-  readonly initialAssetIndex: number
-  readonly initialAssetName: string
-  steps: OrderCreateRequest[]
-  readonly guardList?: readonly string[]
-  // finalAmount: number
-  // finalAssetVerify: number
-}

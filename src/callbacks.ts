@@ -30,7 +30,7 @@ export const createShutdownCallback = (
   worker: Worker,
   unSubRequest: string,
   mutex: Mutex
-): (() => void) => async (): Promise<void> => {
+): (() => void) => async (): Promise<void> =>
   mutex.acquire().then(() => {
     // unsubsribe from everything
     tickws.send(unSubRequest)
@@ -41,7 +41,6 @@ export const createShutdownCallback = (
     worker.terminate()
     console.log('shutdown complete')
   })
-}
 
 export const createGraphProfitCallback = (
   initialAssetIndex: number,
@@ -55,27 +54,32 @@ export const createGraphProfitCallback = (
   mutex: Mutex,
   createOrderRequest: (token: string, step: OrderCreateRequest) => string,
   shutdownCallback: () => void
-): ((arg: readonly number[]) => Promise<void>) => {
-  return async (cycle: readonly number[]): Promise<void> => {
-    // calc profit, hopefully something good is found
-    const result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta)
+): ((arg: readonly number[]) => Promise<void>) => async (
+  cycle: readonly number[]
+): Promise<void> => {
+  // calc profit, hopefully something good is found
+  const t1 = Date.now()
+  const result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta)
 
-    // if not just an amount and is a cycle then do stuff
-    return isError(result)
-      ? Promise.reject(result)
-      : typeof result !== 'number' && !isError(result)
-      ? // don't allow any other processes to send while this one is sending
-        mutex.runExclusive(() => {
-          // send orders
-          const [amount, recipe] = result
-          recipe.steps.forEach(step => orderws.send(createOrderRequest(token, step)))
+  // if not just an amount and is a cycle then do stuff
+  return isError(result)
+    ? Promise.reject(result)
+    : // check if the result is worthless
+    result === 'worthless'
+    ? Promise.resolve()
+    : // check if the last state object amount > initialAmount
+    result[result.length - 1][2] > initialAmount
+    ? mutex.runExclusive(() => {
+        // send orders
+        result.forEach(([step, ,]) => orderws.send(createOrderRequest(token, step)))
+        const t2 = Date.now()
 
-          // log value and die for now
-          console.log(`amounts: ${initialAmount} -> ${amount}`)
-          console.log(recipe.steps)
-          shutdownCallback()
-          // isSending = false
-        })
-      : Promise.resolve()
-  }
+        // log value and die for now
+        console.log(`amounts: ${initialAmount} -> ${result[result.length - 1][2]}`)
+        console.log(`time: ${t2 - t1}`)
+        console.log(result)
+        shutdownCallback()
+        // isSending = false
+      })
+    : Promise.resolve()
 }

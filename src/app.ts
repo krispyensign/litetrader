@@ -52,7 +52,7 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
   // token = await order.getToken(config.key)
   const token = ''
 
-  // validate asset before continuing
+  // validate initialasset before continuing
   const initialAssetIndex = await getIndex(
     assets.findIndex(a => a === config.initialAsset),
     config.initialAsset
