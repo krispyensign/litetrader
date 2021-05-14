@@ -2,15 +2,16 @@ import type { OrderCreateRequest, IndexedPair } from './types'
 import type { GraphWorkerData } from './callbacks'
 import { isError } from './helpers.js'
 
-type CalcSnapshotState = [OrderCreateRequest, number, number][] | Error | 'worthless'
-type CleanSnapshotState = [OrderCreateRequest, number, number][]
-type CalcState = readonly [CleanSnapshotState, IndexedPair, number, number] | Error | 'worthless'
+type Steps = Step[] | Error | 'worthless'
+type CleanSteps = Step[]
+type StepSnapshot = readonly [CleanSteps, IndexedPair, number, number] | Error | 'worthless'
+type Step = [OrderCreateRequest, number, number]
 
 const validatePair = (
-  prev: CleanSnapshotState,
+  prev: CleanSteps,
   state: [number, number],
   pair: IndexedPair | Error
-): CalcState =>
+): StepSnapshot =>
   isError(pair)
     ? pair
     : state[0] !== pair.quoteIndex && state[0] !== pair.baseIndex
@@ -24,11 +25,11 @@ const validatePair = (
     : [prev, pair, ...state]
 
 const extractState = (
-  prev: CalcSnapshotState,
+  prev: Steps,
   initialAssetIndex: number,
   initialAmount: number,
   pair: IndexedPair | Error
-): CalcState =>
+): StepSnapshot =>
   // skip elements if an error was encountered or is worthless
   isError(prev)
     ? prev
@@ -81,7 +82,7 @@ const createStep = (
   pair: IndexedPair,
   stepAmount: number,
   eta: number
-): [OrderCreateRequest, number, number] =>
+): Step =>
   // if current exposure is in base asset then create a sell order
   currentAsset === pair.baseIndex
     ? // construct a step for the recipe
@@ -117,9 +118,9 @@ const createStep = (
         stepAmount,
       ]
 
-export const calcProfit = (d: GraphWorkerData, cycle: readonly number[]): CalcSnapshotState =>
+export const calcProfit = (d: GraphWorkerData, cycle: readonly number[]): Steps =>
   // start with initially provided index and amount
-  cycle.slice(1).reduce<CalcSnapshotState>((prev, element, index) => {
+  cycle.slice(1).reduce<Steps>((prev, element, index) => {
     const state = extractState(
       prev,
       d.initialAssetIndex,
