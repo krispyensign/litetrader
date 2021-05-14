@@ -69,18 +69,18 @@ export const createGraphProfitCallback = (
   return isError(result)
     ? Promise.reject(result)
     : // check if the result is worthless
-    result === 'worthless'
+    result === 0
     ? Promise.resolve()
     : // check if the last state object amount > initialAmount
-    result[result.length - 1][2] > d.initialAmount
+    result[result.length - 1].amount > d.initialAmount
     ? mutex.runExclusive(() => {
         // send orders
-        result.forEach(([step, ,]) => orderws.send(createOrderRequest(d.token, step)))
+        result.forEach(step => orderws.send(createOrderRequest(d.token, step.req)))
         const t2 = Date.now()
 
         // log value and die for now
         console.log(result)
-        console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1][2]}`)
+        console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
         console.log(`time: ${t2 - t1}`)
         shutdownCallback()
         // isSending = false

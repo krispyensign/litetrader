@@ -2,13 +2,25 @@ import type { OrderCreateRequest, IndexedPair } from './types'
 import type { GraphWorkerData } from './callbacks'
 import { isError } from './helpers.js'
 
-type Steps = Step[] | Error | 'worthless'
+type Steps = Step[] | Error | 0
 type CleanSteps = Step[]
-type StepSnapshot = readonly [CleanSteps, IndexedPair, number, number] | Error | 'worthless'
-type Step = [OrderCreateRequest, number, number]
+type StepSnapshot =
+  | {
+      steps: CleanSteps
+      pair: IndexedPair
+      index: number
+      amount: number
+    }
+  | Error
+  | 0
+type Step = {
+  req: OrderCreateRequest
+  index: number
+  amount: number
+}
 
 const validatePair = (
-  prev: CleanSteps,
+  steps: CleanSteps,
   state: [number, number],
   pair: IndexedPair | Error
 ): StepSnapshot =>
@@ -21,26 +33,32 @@ const validatePair = (
       )
     : state[1] < pair.ordermin
     ? // mark as worthless if processing results in an impossible trade
-      'worthless'
-    : [prev, pair, ...state]
+      0
+    : { steps: steps, pair: pair, index: state[0], amount: state[1] }
 
 const extractState = (
+  d: GraphWorkerData,
   prev: Steps,
   initialAssetIndex: number,
   initialAmount: number,
-  pair: IndexedPair | Error
+  pairIndex: number | undefined,
+  cycle: readonly number[],
+  index: number,
+  value: number
 ): StepSnapshot =>
   // skip elements if an error was encountered or is worthless
   isError(prev)
     ? prev
-    : prev === 'worthless'
+    : prev === 0
     ? prev
+    : pairIndex === undefined
+    ? Error(`Invalid pair requested. quote: ${d.assets[cycle[index]]}, ${d.assets[value]}`)
     : validatePair(
         prev,
         prev.length === 0
           ? [initialAssetIndex, initialAmount]
-          : [prev[prev.length - 1][1], prev[prev.length - 1][2]],
-        pair
+          : [prev[prev.length - 1].index, prev[prev.length - 1].amount],
+        d.pairs[pairIndex]
       )
 
 const lookup = (
@@ -48,14 +66,9 @@ const lookup = (
   cycle: readonly number[],
   index: number,
   value: number
-): IndexedPair | Error => {
-  const indo =
-    d.pairMap.get(`${d.assets[cycle[index]]},${d.assets[value]}`) ??
-    d.pairMap.get(`${d.assets[value]},${d.assets[cycle[index]]}`)
-  return indo === undefined
-    ? Error(`Invalid pair requested. quote: ${d.assets[cycle[index]]}, ${d.assets[value]}`)
-    : d.pairs[indo]
-}
+): number | undefined =>
+  d.pairMap.get(`${d.assets[cycle[index]]},${d.assets[value]}`) ??
+  d.pairMap.get(`${d.assets[value]},${d.assets[cycle[index]]}`)
 
 // helper function to safely round a number
 const safeRound = (num: number, decimals: number): number =>
@@ -86,8 +99,8 @@ const createStep = (
   // if current exposure is in base asset then create a sell order
   currentAsset === pair.baseIndex
     ? // construct a step for the recipe
-      [
-        {
+      {
+        req: {
           amount: stepAmount,
           direction: 'sell',
           event: 'create',
@@ -97,13 +110,13 @@ const createStep = (
         },
 
         // change the current asset from the base to the quote
-        pair.quoteIndex,
+        index: pair.quoteIndex,
         // result amount is in quote currency units
-        stepAmount * pair.bid * (1 - pair.takerFee) * (1 - eta),
-      ]
+        amount: stepAmount * pair.bid * (1 - pair.takerFee) * (1 - eta),
+      }
     : // if current exposure is in quote asset then create a buy order
-      [
-        {
+      {
+        req: {
           amount: stepAmount,
           direction: 'buy',
           event: 'create',
@@ -113,30 +126,49 @@ const createStep = (
         },
 
         // set the current asset to the next base code
-        pair.baseIndex,
+        index: pair.baseIndex,
         // calculate the next current amount using the derived price
-        stepAmount,
-      ]
+        amount: stepAmount,
+      }
+
+const mutateArray = <T>(t: T[], v: T): T[] => {
+  t.push(v)
+  return t
+}
+
+const constructNextStepInPlace = (state: StepSnapshot, eta: number): Steps =>
+  isError(state)
+    ? state
+    : state === 0
+    ? state
+    : mutateArray(
+        state.steps,
+        createStep(
+          state.index,
+          state.pair,
+          calcStepAmount(state.index, state.pair, state.amount, eta),
+          eta
+        )
+      )
 
 export const calcProfit = (d: GraphWorkerData, cycle: readonly number[]): Steps =>
   // start with initially provided index and amount
-  cycle.slice(1).reduce<Steps>((steps, element, index) => {
-    const state = extractState(
-      steps,
-      d.initialAssetIndex,
-      d.initialAmount,
-      lookup(d, cycle, index, element)
+  cycle
+    .slice(1)
+    .reduce<Steps>(
+      (steps, element, index) =>
+        constructNextStepInPlace(
+          extractState(
+            d,
+            steps,
+            d.initialAssetIndex,
+            d.initialAmount,
+            lookup(d, cycle, index, element),
+            cycle,
+            index,
+            element
+          ),
+          d.eta
+        ),
+      []
     )
-    if (isError(state) || state === 'worthless') return state
-    const [validatedSteps, validatedPair, currentAsset, currentAmount] = state
-
-    validatedSteps.push(
-      createStep(
-        currentAsset,
-        validatedPair,
-        calcStepAmount(currentAsset, validatedPair, currentAmount, d.eta),
-        d.eta
-      )
-    )
-    return steps
-  }, [])
