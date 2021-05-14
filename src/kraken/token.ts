@@ -1,5 +1,5 @@
 import type { Key } from '../types'
-import type { Token } from 'exchange-models/kraken'
+import type { Token } from './types'
 import got from 'got'
 import qs from 'qs'
 import { createHmac, createHash } from 'crypto'
