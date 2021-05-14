@@ -37,7 +37,7 @@ const extractState = (
         gwd.pairs[pairIndex]
       )
 
-const lookup = (gwd: GraphWorkerData, left: number, right: number): number | undefined =>
+const lookupPair = (gwd: GraphWorkerData, left: number, right: number): number | undefined =>
   gwd.pairMap.get(`${gwd.assets[left]},${gwd.assets[right]}`) ??
   gwd.pairMap.get(`${gwd.assets[right]},${gwd.assets[left]}`)
 
@@ -114,7 +114,7 @@ export const calcProfit = (gwd: GraphWorkerData, cycle: readonly number[]): Step
     .reduce<Steps>(
       (steps, value, index) =>
         buildNextStepInPlace(
-          extractState(gwd, steps, lookup(gwd, cycle[index], value), cycle[index], value),
+          extractState(gwd, steps, lookupPair(gwd, cycle[index], value), cycle[index], value),
           gwd.eta
         ),
       []
