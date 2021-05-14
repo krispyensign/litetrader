@@ -1,5 +1,32 @@
 export type { ExchangeName } from 'exchange-models/exchange'
 
+export type Steps = Step[] | Error | 0
+
+export type ValidatedSteps = Step[]
+
+export type StepSnapshot =
+  | {
+      steps: ValidatedSteps
+      pair: IndexedPair
+      index: number
+      amount: number
+    }
+  | Error
+  | 0
+
+export type Step = {
+  orderCreateRequest: OrderCreateRequest
+  index: number
+  amount: number
+}
+
+export type StepMaterial = {
+  index: number
+  pair: IndexedPair
+  amount: number
+  eta: number
+}
+
 export type PairPriceUpdate = {
   readonly tradeName: string
   readonly ask: number
