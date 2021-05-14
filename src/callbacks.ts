@@ -75,7 +75,7 @@ export const createGraphProfitCallback = (
     result[result.length - 1].amount > d.initialAmount
     ? mutex.runExclusive(() => {
         // send orders
-        result.forEach(step => orderws.send(createOrderRequest(d.token, step.req)))
+        result.forEach(step => orderws.send(createOrderRequest(d.token, step.orderCreateRequest)))
         const t2 = Date.now()
 
         // log value and die for now

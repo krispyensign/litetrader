@@ -14,7 +14,7 @@ type StepSnapshot =
   | Error
   | 0
 type Step = {
-  req: OrderCreateRequest
+  orderCreateRequest: OrderCreateRequest
   index: number
   amount: number
 }
@@ -22,6 +22,17 @@ type PreviousState = {
   steps: Steps
   initialAssetIndex: number
   initialAmount: number
+}
+type CyclePointer = {
+  cycle: readonly number[]
+  index: number
+  value: number
+}
+type StepMaterial = {
+  index: number
+  pair: IndexedPair
+  amount: number
+  eta: number
 }
 
 const validatePair = (
@@ -45,9 +56,7 @@ const extractState = (
   gwd: GraphWorkerData,
   ps: PreviousState,
   pairIndex: number | undefined,
-  cycle: readonly number[],
-  index: number,
-  value: number
+  cp: CyclePointer
 ): StepSnapshot =>
   // skip elements if an error was encountered or is worthless
   isError(ps.steps)
@@ -55,7 +64,9 @@ const extractState = (
     : ps.steps === 0
     ? ps.steps
     : pairIndex === undefined
-    ? Error(`Invalid pair requested. quote: ${gwd.assets[cycle[index]]}, ${gwd.assets[value]}`)
+    ? Error(
+        `Invalid pair requested. quote: ${gwd.assets[cp.cycle[cp.index]]}, ${gwd.assets[cp.value]}`
+      )
     : validatePair(
         ps.steps,
         ps.steps.length === 0
@@ -64,14 +75,9 @@ const extractState = (
         gwd.pairs[pairIndex]
       )
 
-const lookup = (
-  d: GraphWorkerData,
-  cycle: readonly number[],
-  index: number,
-  value: number
-): number | undefined =>
-  d.pairMap.get(`${d.assets[cycle[index]]},${d.assets[value]}`) ??
-  d.pairMap.get(`${d.assets[value]},${d.assets[cycle[index]]}`)
+const lookup = (d: GraphWorkerData, cp: CyclePointer): number | undefined =>
+  d.pairMap.get(`${d.assets[cp.cycle[cp.index]]},${d.assets[cp.value]}`) ??
+  d.pairMap.get(`${d.assets[cp.value]},${d.assets[cp.cycle[cp.index]]}`)
 
 // helper function to safely round a number
 const safeRound = (num: number, decimals: number): number =>
@@ -80,58 +86,48 @@ const safeRound = (num: number, decimals: number): number =>
 // helper function to safely divide by 0
 const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
-const calcStepAmount = (
-  currentAsset: number,
-  pair: IndexedPair,
-  currentAmount: number,
-  eta: number
-): number =>
-  currentAsset === pair.baseIndex
-    ? safeRound(currentAmount, pair.decimals)
+const calcStepAmount = (sm: StepMaterial): number =>
+  sm.index === sm.pair.baseIndex
+    ? safeRound(sm.amount, sm.pair.decimals)
     : safeRound(
-        safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
-        pair.decimals
+        safeDivide(sm.amount, sm.pair.ask) * (1 + sm.pair.takerFee) * (1 + sm.eta),
+        sm.pair.decimals
       )
 
-const createStep = (
-  currentAsset: number,
-  pair: IndexedPair,
-  stepAmount: number,
-  eta: number
-): Step =>
+const createStep = (sm: StepMaterial): Step =>
   // if current exposure is in base asset then create a sell order
-  currentAsset === pair.baseIndex
+  sm.index === sm.pair.baseIndex
     ? // construct a step for the recipe
       {
-        req: {
-          amount: stepAmount,
+        orderCreateRequest: {
+          amount: sm.amount,
           direction: 'sell',
           event: 'create',
           orderType: 'market',
-          pair: pair.tradename,
-          price: pair.bid,
+          pair: sm.pair.tradename,
+          price: sm.pair.bid,
         },
 
         // change the current asset from the base to the quote
-        index: pair.quoteIndex,
+        index: sm.pair.quoteIndex,
         // result amount is in quote currency units
-        amount: stepAmount * pair.bid * (1 - pair.takerFee) * (1 - eta),
+        amount: sm.amount * sm.pair.bid * (1 - sm.pair.takerFee) * (1 - sm.eta),
       }
     : // if current exposure is in quote asset then create a buy order
       {
-        req: {
-          amount: stepAmount,
+        orderCreateRequest: {
+          amount: sm.amount,
           direction: 'buy',
           event: 'create',
           orderType: 'market',
-          pair: pair.tradename,
-          price: pair.ask,
+          pair: sm.pair.tradename,
+          price: sm.pair.ask,
         },
 
         // set the current asset to the next base code
-        index: pair.baseIndex,
+        index: sm.pair.baseIndex,
         // calculate the next current amount using the derived price
-        amount: stepAmount,
+        amount: sm.amount,
       }
 
 const mutateArray = <T>(t: T[], v: T): T[] => {
@@ -146,32 +142,39 @@ const constructNextStepInPlace = (state: StepSnapshot, eta: number): Steps =>
     ? state
     : mutateArray(
         state.steps,
-        createStep(
-          state.index,
-          state.pair,
-          calcStepAmount(state.index, state.pair, state.amount, eta),
-          eta
-        )
+        createStep({
+          index: state.index,
+          pair: state.pair,
+          amount: calcStepAmount({
+            index: state.index,
+            pair: state.pair,
+            amount: state.amount,
+            eta: eta,
+          }),
+          eta: eta,
+        })
       )
 
-export const calcProfit = (d: GraphWorkerData, cycle: readonly number[]): Steps =>
+export const calcProfit = (gwd: GraphWorkerData, cycle: readonly number[]): Steps =>
   // start with initially provided index and amount
   cycle.slice(1).reduce<Steps>(
-    (steps, element, index) =>
+    (steps, value, index) =>
       constructNextStepInPlace(
         extractState(
-          d,
+          gwd,
           {
             steps: steps,
-            initialAssetIndex: d.initialAssetIndex,
-            initialAmount: d.initialAmount,
+            initialAssetIndex: gwd.initialAssetIndex,
+            initialAmount: gwd.initialAmount,
           },
-          lookup(d, cycle, index, element),
-          cycle,
-          index,
-          element
+          lookup(gwd, { cycle, index, value }),
+          {
+            cycle,
+            index,
+            value,
+          }
         ),
-        d.eta
+        gwd.eta
       ),
     []
   )
