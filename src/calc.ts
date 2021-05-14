@@ -120,23 +120,23 @@ const createStep = (
 
 export const calcProfit = (d: GraphWorkerData, cycle: readonly number[]): Steps =>
   // start with initially provided index and amount
-  cycle.slice(1).reduce<Steps>((prev, element, index) => {
+  cycle.slice(1).reduce<Steps>((steps, element, index) => {
     const state = extractState(
-      prev,
+      steps,
       d.initialAssetIndex,
       d.initialAmount,
       lookup(d, cycle, index, element)
     )
     if (isError(state) || state === 'worthless') return state
-    const [prev2, pair, currentAsset, currentAmount] = state
+    const [validatedSteps, validatedPair, currentAsset, currentAmount] = state
 
-    prev2.push(
+    validatedSteps.push(
       createStep(
         currentAsset,
-        pair,
-        calcStepAmount(currentAsset, pair, currentAmount, d.eta),
+        validatedPair,
+        calcStepAmount(currentAsset, validatedPair, currentAmount, d.eta),
         d.eta
       )
     )
-    return prev
+    return steps
   }, [])
