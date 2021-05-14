@@ -2,11 +2,7 @@ node_modules
 logs/
 build/
 dist/
-graph.json
+node_modules/
 .vscode/
-key.json
-__pycache__/
-graph_data
+.key
 *.swp
-*.pyc
-.tscc_temp/

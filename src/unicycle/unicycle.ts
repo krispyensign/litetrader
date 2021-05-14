@@ -27,7 +27,7 @@ const growPaths = (
         // loop through each neighbor of the last element of the current path
         neighbors.get(currentPath[currentPath.length - 1])!.values(),
 
-        // letruct new paths with remaining neighbors
+        // build new paths with remaining neighbors
         neighbor => currentPath.concat(neighbor),
 
         // discard nbrs that don't meet the criteria for a cycle or path

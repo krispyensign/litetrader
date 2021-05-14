@@ -1,13 +1,6 @@
 import type { KrakenErrorMessage, ResponseWrapper } from '../types/kraken.js'
 import got from 'got'
 
-// setup the global constants
-export const krakenTickerPath = '/0/public/Ticker',
-  krakenPairsPath = '/0/public/AssetPairs',
-  krakenWsUrl = 'wss://ws.kraken.com',
-  krakenTokenPath = '/0/private/GetWebSocketsToken',
-  krakenApiUrl = 'https://api.kraken.com'
-
 export const validateResponse = async <T>(response: ResponseWrapper<T>): Promise<T> =>
   response.error?.length > 0
     ? Promise.reject(

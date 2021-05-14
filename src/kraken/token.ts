@@ -3,7 +3,10 @@ import type { ResponseWrapper } from '../types/kraken'
 import got from 'got'
 import qs from 'qs'
 import { createHmac, createHash } from 'crypto'
-import { krakenApiUrl, krakenTokenPath, validateResponse } from './common.js'
+import { validateResponse } from './common.js'
+
+const krakenTokenPath = '/0/private/GetWebSocketsToken'
+const krakenApiUrl = 'https://api.kraken.com'
 
 const makeAuthCall = async <T = object>(
   url: string,

@@ -1,15 +1,9 @@
-import type { AssetPair } from 'exchange-models/kraken'
-import type { Dictionary } from './types'
-
-export type AssetPairsResponse = readonly (readonly [string, AssetPair])[]
-
 export type ResponseWrapper<T = object> = {
   readonly error: readonly string[]
   readonly result: T
 }
 
 export type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
-export type AssetTicksResponse = ResponseWrapper<Dictionary<TickerResponse>>
 
 export type KrakenErrorMessage = {
   readonly errorMessage: string

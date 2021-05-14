@@ -1,13 +1,11 @@
 import type { TickerResponse } from '../types/kraken'
 import type { AssetPair, Dictionary, ExchangePair } from '../types/types'
-import {
-  compareTypes,
-  krakenApiUrl,
-  krakenPairsPath,
-  krakenTickerPath,
-  krakenWsUrl,
-  unwrapJson,
-} from './common.js'
+import { compareTypes, unwrapJson } from './common.js'
+
+const krakenTickerPath = '/0/public/Ticker'
+const krakenPairsPath = '/0/public/AssetPairs'
+const krakenWsUrl = 'wss://ws.kraken.com'
+const krakenApiUrl = 'https://api.kraken.com'
 
 const extractReason = async (
   context: 'pair' | 'tick',
