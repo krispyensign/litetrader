@@ -8,9 +8,6 @@ const safeRound = (num: number, decimals: number): number =>
 // helper function to safely divide by 0
 const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
-const hasValue = (currentAmount: number, ordermin: number): number =>
-  (currentAmount = currentAmount > ordermin ? currentAmount : 0)
-
 const lookup = (
   assets: readonly string[],
   cycle: readonly number[],
@@ -73,17 +70,12 @@ const calcStepAmount = (
   pair: IndexedPair,
   currentAmount: number,
   eta: number
-): number | Error =>
+): number =>
   currentAsset === pair.baseIndex
     ? safeRound(currentAmount, pair.decimals)
-    : currentAsset === pair.quoteIndex
-    ? safeRound(
+    : safeRound(
         safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
         pair.decimals
-      )
-    : Error(
-        'Invalid logic somewhere! Current Tuple State:' +
-          [currentAsset, pair.quoteIndex, pair.baseIndex].join(', ')
       )
 
 const extractState = (
@@ -116,15 +108,23 @@ export const calcProfit = (
         if (isError(pair)) return pair
 
         const [currentAsset, currentAmount] = extractState(prev, initialAssetIndex, initialAmount)
+        if (currentAsset !== pair.quoteIndex && currentAsset !== pair.baseIndex)
+          return Error(
+            'Invalid logic somewhere! Current Tuple State:' +
+              [currentAsset, pair.quoteIndex, pair.baseIndex].join(', ')
+          )
 
         // mark as 0 if processing results in an impossible trade
-        if (hasValue(currentAmount, pair.ordermin) === 0) return 'worthless'
+        if (currentAmount < pair.ordermin) return 'worthless'
 
-        const stepAmount = calcStepAmount(currentAsset, pair, currentAmount, eta)
-        if (isError(stepAmount)) return stepAmount
-
-        // const prestep =  createStep(currentAsset, pair, )
-        prev.push(createStep(currentAsset, pair, stepAmount, eta))
+        prev.push(
+          createStep(
+            currentAsset,
+            pair,
+            calcStepAmount(currentAsset, pair, currentAmount, eta),
+            eta
+          )
+        )
         return prev
       },
       new Array<[OrderCreateRequest, number, number]>()

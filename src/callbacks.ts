@@ -75,9 +75,9 @@ export const createGraphProfitCallback = (
         const t2 = Date.now()
 
         // log value and die for now
+        console.log(result)
         console.log(`amounts: ${initialAmount} -> ${result[result.length - 1][2]}`)
         console.log(`time: ${t2 - t1}`)
-        console.log(result)
         shutdownCallback()
         // isSending = false
       })
