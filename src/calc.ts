@@ -87,7 +87,7 @@ const calcStepAmount = (
       )
 
 const extractState = (
-  prev: [OrderCreateRequest, number, number][],
+  prev: readonly [OrderCreateRequest, number, number][],
   initialAssetIndex: number,
   initialAmount: number
 ): [number, number] =>
@@ -100,7 +100,7 @@ export const calcProfit = (
   initialAmount: number,
   cycle: readonly number[],
   assets: readonly string[],
-  pairs: IndexedPair[],
+  pairs: readonly IndexedPair[],
   pairMap: ReadonlyMap<string, number>,
   eta: number
 ): readonly [OrderCreateRequest, number, number][] | Error | 'worthless' =>
