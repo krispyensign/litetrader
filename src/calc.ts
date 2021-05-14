@@ -2,12 +2,45 @@ import type { OrderCreateRequest, IndexedPair } from './types'
 import type { GraphWorkerData } from './callbacks'
 import { isError } from './helpers.js'
 
-// helper function to safely round a number
-const safeRound = (num: number, decimals: number): number =>
-  decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
+type CalcSnapshotState = [OrderCreateRequest, number, number][] | Error | 'worthless'
+type CleanSnapshotState = [OrderCreateRequest, number, number][]
+type CalcState = readonly [CleanSnapshotState, IndexedPair, number, number] | Error | 'worthless'
 
-// helper function to safely divide by 0
-const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
+const validatePair = (
+  prev: CleanSnapshotState,
+  state: [number, number],
+  pair: IndexedPair | Error
+): CalcState =>
+  isError(pair)
+    ? pair
+    : state[0] !== pair.quoteIndex && state[0] !== pair.baseIndex
+    ? Error(
+        'Invalid logic somewhere! Current Tuple State:' +
+          [state[0], pair.quoteIndex, pair.baseIndex].join(', ')
+      )
+    : state[1] < pair.ordermin
+    ? // mark as worthless if processing results in an impossible trade
+      'worthless'
+    : [prev, pair, ...state]
+
+const extractState = (
+  prev: CalcSnapshotState,
+  initialAssetIndex: number,
+  initialAmount: number,
+  pair: IndexedPair | Error
+): CalcState =>
+  // skip elements if an error was encountered or is worthless
+  isError(prev)
+    ? prev
+    : prev === 'worthless'
+    ? prev
+    : validatePair(
+        prev,
+        prev.length === 0
+          ? [initialAssetIndex, initialAmount]
+          : [prev[prev.length - 1][1], prev[prev.length - 1][2]],
+        pair
+      )
 
 const lookup = (
   d: GraphWorkerData,
@@ -22,6 +55,26 @@ const lookup = (
     ? Error(`Invalid pair requested. quote: ${d.assets[cycle[index]]}, ${d.assets[value]}`)
     : d.pairs[indo]
 }
+
+// helper function to safely round a number
+const safeRound = (num: number, decimals: number): number =>
+  decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
+
+// helper function to safely divide by 0
+const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
+
+const calcStepAmount = (
+  currentAsset: number,
+  pair: IndexedPair,
+  currentAmount: number,
+  eta: number
+): number =>
+  currentAsset === pair.baseIndex
+    ? safeRound(currentAmount, pair.decimals)
+    : safeRound(
+        safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
+        pair.decimals
+      )
 
 const createStep = (
   currentAsset: number,
@@ -64,68 +117,25 @@ const createStep = (
         stepAmount,
       ]
 
-const calcStepAmount = (
-  currentAsset: number,
-  pair: IndexedPair,
-  currentAmount: number,
-  eta: number
-): number =>
-  currentAsset === pair.baseIndex
-    ? safeRound(currentAmount, pair.decimals)
-    : safeRound(
-        safeDivide(currentAmount, pair.ask) * (1 + pair.takerFee) * (1 + eta),
-        pair.decimals
-      )
-
-const extractState = (
-  prev: readonly [OrderCreateRequest, number, number][],
-  initialAssetIndex: number,
-  initialAmount: number
-): [number, number] =>
-  prev.length === 0
-    ? [initialAssetIndex, initialAmount]
-    : [prev[prev.length - 1][1], prev[prev.length - 1][2]]
-
-export const calcProfit = (
-  d: GraphWorkerData,
-  cycle: readonly number[]
-): readonly [OrderCreateRequest, number, number][] | Error | 'worthless' =>
+export const calcProfit = (d: GraphWorkerData, cycle: readonly number[]): CalcSnapshotState =>
   // start with initially provided index and amount
-  cycle
-    .slice(1)
-    .reduce<[OrderCreateRequest, number, number][] | Error | 'worthless'>(
-      (prev, element, index) => {
-        // skip elements if an error was encountered or is worthless
-        if (isError(prev) || prev === 'worthless') return prev
-
-        const pair = lookup(d, cycle, index, element)
-        if (isError(pair)) return pair
-
-        const [currentAsset, currentAmount] = extractState(
-          prev,
-          d.initialAssetIndex,
-          d.initialAmount
-        )
-
-        // make sure all previous logic is sound
-        if (currentAsset !== pair.quoteIndex && currentAsset !== pair.baseIndex)
-          return Error(
-            'Invalid logic somewhere! Current Tuple State:' +
-              [currentAsset, pair.quoteIndex, pair.baseIndex].join(', ')
-          )
-
-        // mark as 0 if processing results in an impossible trade
-        if (currentAmount < pair.ordermin) return 'worthless'
-
-        prev.push(
-          createStep(
-            currentAsset,
-            pair,
-            calcStepAmount(currentAsset, pair, currentAmount, d.eta),
-            d.eta
-          )
-        )
-        return prev
-      },
-      new Array<[OrderCreateRequest, number, number]>()
+  cycle.slice(1).reduce<CalcSnapshotState>((prev, element, index) => {
+    const state = extractState(
+      prev,
+      d.initialAssetIndex,
+      d.initialAmount,
+      lookup(d, cycle, index, element)
     )
+    if (isError(state) || state === 'worthless') return state
+    const [prev2, pair, currentAsset, currentAmount] = state
+
+    prev2.push(
+      createStep(
+        currentAsset,
+        pair,
+        calcStepAmount(currentAsset, pair, currentAmount, d.eta),
+        d.eta
+      )
+    )
+    return prev
+  }, [])
