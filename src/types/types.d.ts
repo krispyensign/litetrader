@@ -33,7 +33,8 @@ export type OrderModule = readonly [
   (parsedEvent: unknown) => string,
   string,
   (event: unknown) => boolean,
-  (eventData: string) => string
+  (eventData: string) => string,
+  (key: Key, nonce: number) => Promise<string>
 ]
 
 export type OrderCancelRequest = {

@@ -6,6 +6,7 @@ import * as winston from 'winston'
 import * as krakenTick from './kraken/tick.js'
 import * as krakenSetup from './kraken/setup.js'
 import * as krakenOrder from './kraken/order.js'
+import * as krakenToken from './kraken/token.js'
 
 export const isError = (err: unknown): err is Error =>
   typeof err === 'object' &&
@@ -32,6 +33,7 @@ export const orderSelector = async (exchangeName: ExchangeName): Promise<OrderMo
         krakenOrder.webSocketUrl,
         krakenOrder.isStatusEvent,
         krakenOrder.parseEvent,
+        krakenToken.getToken,
       ]
     : Promise.reject(new Error('Invalid exchange selected'))
 

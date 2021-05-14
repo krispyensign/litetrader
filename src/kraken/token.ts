@@ -39,8 +39,9 @@ const makeAuthCall = async <T = object>(
       .json<ResponseWrapper<T>>()
   )
 
-export const getToken = async (key: Key, nonce: number): Promise<string> =>
-  (
+export const getToken = async (key: Key, nonce: number): Promise<string> => {
+  console.log(key)
+  return (
     await makeAuthCall<Token>(
       krakenApiUrl + krakenTokenPath,
       qs.stringify({
@@ -50,3 +51,4 @@ export const getToken = async (key: Key, nonce: number): Promise<string> =>
       key
     )
   ).token
+}

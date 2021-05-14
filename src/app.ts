@@ -42,15 +42,14 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
     webSocketUrl,
     parseTick,
   ] = await tickSelector(config.exchangeName)
-  const [, createOrderRequest, , authWebSocketUrl, , parseEvent] = await orderSelector(
+  const [, createOrderRequest, , authWebSocketUrl, , parseEvent, getToken] = await orderSelector(
     config.exchangeName
   )
 
   const exchangeData = await setupData(getAvailablePairs)
   const [assets, pairs, pairMap] = exchangeData
 
-  // token = await order.getToken(config.key)
-  const token = ''
+  const token = await getToken(config.key, new Date().getTime() * 1000)
 
   // validate initialasset before continuing
   const initialAssetIndex = await getIndex(
