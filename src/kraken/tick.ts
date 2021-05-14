@@ -1,6 +1,6 @@
 import type { PairPriceUpdate } from '../types'
 import { compareTypes, isKrakenErrorMessage } from './common.js'
-import { Publication, Ticker } from './kraken'
+import { Publication, Ticker } from 'exchange-models/kraken'
 
 const isTickerPayload = (payload: unknown): payload is Ticker =>
   compareTypes(payload, ['a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o']) !== true

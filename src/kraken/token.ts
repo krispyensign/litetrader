@@ -1,5 +1,5 @@
 import type { Key } from '../types'
-import type { ResponseWrapper, Token } from './kraken'
+import type { Token } from 'exchange-models/kraken'
 import got from 'got'
 import qs from 'qs'
 import { createHmac, createHash } from 'crypto'
@@ -36,7 +36,7 @@ const makeAuthCall = async <T = object>(
         body: request,
         isStream: false,
       })
-      .json<ResponseWrapper<T>>()
+      .json()
   )
 
 export const getToken = async (key: Key, nonce: number): Promise<string> => {

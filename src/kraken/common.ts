@@ -1,5 +1,13 @@
-import type { KrakenErrorMessage, ResponseWrapper } from './kraken.js'
 import got from 'got'
+
+type ResponseWrapper<T = object> = {
+  readonly error: readonly string[]
+  readonly result: T
+}
+
+type KrakenErrorMessage = {
+  readonly errorMessage: string
+}
 
 export const validateResponse = async <T>(response: ResponseWrapper<T>): Promise<T> =>
   response.error?.length > 0
