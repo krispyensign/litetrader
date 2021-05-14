@@ -1,41 +1,10 @@
-import type { ExchangeName } from 'exchange-models/exchange'
 export type { ExchangeName } from 'exchange-models/exchange'
-export type {
-  AddOrder,
-  CancelOrder,
-  CancelOrderStatus,
-  SubscriptionStatus,
-  Subscribe,
-  Unsubscribe,
-  AssetPair,
-  Ticker,
-  Publication,
-  Token,
-} from 'exchange-models/kraken'
 
 export type PairPriceUpdate = {
   readonly tradeName: string
   readonly ask: number
   readonly bid: number
 }
-
-export type TickModule = readonly [
-  (pairs: readonly string[]) => string,
-  (pairs: readonly string[]) => string,
-  (threshold?: number | undefined) => Promise<readonly ExchangePair[]>,
-  string,
-  (tickData?: string | undefined) => string | PairPriceUpdate | Error
-]
-
-export type OrderModule = readonly [
-  (token: string, cancel: OrderCancelRequest) => string,
-  (token: string, order: OrderCreateRequest) => string,
-  (parsedEvent: unknown) => string,
-  string,
-  (event: unknown) => boolean,
-  (eventData: string) => string,
-  (key: Key, nonce: number) => Promise<string>
-]
 
 export type OrderCancelRequest = {
   readonly event: 'cancel'
@@ -89,14 +58,6 @@ export type IndexedPair = {
   bid: number
   readonly quoteIndex: number
   readonly baseIndex: number
-}
-
-export type Config = {
-  readonly exchangeName: ExchangeName
-  readonly initialAmount: number
-  readonly initialAsset: string
-  readonly eta: number
-  readonly key: Key
 }
 
 export type Dictionary<T> = {

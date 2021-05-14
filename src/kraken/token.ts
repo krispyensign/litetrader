@@ -1,5 +1,5 @@
-import type { Key, Token } from '../types/types'
-import type { ResponseWrapper } from '../types/kraken'
+import type { Key } from '../types'
+import type { ResponseWrapper, Token } from './kraken'
 import got from 'got'
 import qs from 'qs'
 import { createHmac, createHash } from 'crypto'

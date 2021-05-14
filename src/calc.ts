@@ -1,4 +1,5 @@
-import type { OrderCreateRequest, IndexedPair } from './types/types'
+import type { OrderCreateRequest, IndexedPair } from './types'
+import type { GraphWorkerData } from './callbacks'
 import { isError } from './helpers.js'
 
 // helper function to safely round a number
@@ -9,19 +10,17 @@ const safeRound = (num: number, decimals: number): number =>
 const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
 const lookup = (
-  assets: readonly string[],
+  d: GraphWorkerData,
   cycle: readonly number[],
-  pairMap: ReadonlyMap<string, number>,
-  pairs: readonly IndexedPair[],
   index: number,
   value: number
 ): IndexedPair | Error => {
   const indo =
-    pairMap.get(`${assets[cycle[index]]},${assets[value]}`) ??
-    pairMap.get(`${assets[value]},${assets[cycle[index]]}`)
+    d.pairMap.get(`${d.assets[cycle[index]]},${d.assets[value]}`) ??
+    d.pairMap.get(`${d.assets[value]},${d.assets[cycle[index]]}`)
   return indo === undefined
-    ? Error(`Invalid pair requested. quote: ${assets[cycle[index]]}, ${assets[value]}`)
-    : pairs[indo]
+    ? Error(`Invalid pair requested. quote: ${d.assets[cycle[index]]}, ${d.assets[value]}`)
+    : d.pairs[indo]
 }
 
 const createStep = (
@@ -88,26 +87,27 @@ const extractState = (
     : [prev[prev.length - 1][1], prev[prev.length - 1][2]]
 
 export const calcProfit = (
-  initialAssetIndex: number,
-  initialAmount: number,
-  cycle: readonly number[],
-  assets: readonly string[],
-  pairs: readonly IndexedPair[],
-  pairMap: ReadonlyMap<string, number>,
-  eta: number
+  d: GraphWorkerData,
+  cycle: readonly number[]
 ): readonly [OrderCreateRequest, number, number][] | Error | 'worthless' =>
   // start with initially provided index and amount
   cycle
     .slice(1)
     .reduce<[OrderCreateRequest, number, number][] | Error | 'worthless'>(
       (prev, element, index) => {
-        if (isError(prev)) return prev
-        if (prev === 'worthless') return prev
+        // skip elements if an error was encountered or is worthless
+        if (isError(prev) || prev === 'worthless') return prev
 
-        const pair = lookup(assets, cycle, pairMap, pairs, index, element)
+        const pair = lookup(d, cycle, index, element)
         if (isError(pair)) return pair
 
-        const [currentAsset, currentAmount] = extractState(prev, initialAssetIndex, initialAmount)
+        const [currentAsset, currentAmount] = extractState(
+          prev,
+          d.initialAssetIndex,
+          d.initialAmount
+        )
+
+        // make sure all previous logic is sound
         if (currentAsset !== pair.quoteIndex && currentAsset !== pair.baseIndex)
           return Error(
             'Invalid logic somewhere! Current Tuple State:' +
@@ -121,8 +121,8 @@ export const calcProfit = (
           createStep(
             currentAsset,
             pair,
-            calcStepAmount(currentAsset, pair, currentAmount, eta),
-            eta
+            calcStepAmount(currentAsset, pair, currentAmount, d.eta),
+            d.eta
           )
         )
         return prev

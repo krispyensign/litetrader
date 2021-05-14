@@ -1,4 +1,4 @@
-import type { KrakenErrorMessage, ResponseWrapper } from '../types/kraken.js'
+import type { KrakenErrorMessage, ResponseWrapper } from './kraken.js'
 import got from 'got'
 
 export const validateResponse = async <T>(response: ResponseWrapper<T>): Promise<T> =>

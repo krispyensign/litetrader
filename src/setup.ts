@@ -1,4 +1,4 @@
-import type { Dictionary, ExchangePair, IndexedPair } from './types/types'
+import type { Dictionary, ExchangePair, IndexedPair } from './types'
 
 export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>
   Object.fromEntries(

@@ -1,3 +1,14 @@
+export type {
+  AddOrder,
+  CancelOrder,
+  Subscribe,
+  Unsubscribe,
+  AssetPair,
+  Ticker,
+  Publication,
+  Token,
+} from 'exchange-models/kraken'
+
 export type ResponseWrapper<T = object> = {
   readonly error: readonly string[]
   readonly result: T

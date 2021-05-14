@@ -1,3 +1,4 @@
+import type { Dictionary, ExchangeName, Key } from './types'
 import WebSocket from 'ws'
 import { dirname } from 'path'
 import { Worker, parentPort, workerData } from 'worker_threads'
@@ -8,9 +9,16 @@ import {
 } from './callbacks.js'
 import { orderSelector, tickSelector } from './helpers.js'
 import { buildGraph, setupData } from './setup.js'
-import type { Config, Dictionary } from './types/types'
 import { findCycles } from './unicycle/unicycle.js'
 import { Mutex } from 'async-mutex'
+
+type Config = {
+  readonly exchangeName: ExchangeName
+  readonly initialAmount: number
+  readonly initialAsset: string
+  readonly eta: number
+  readonly key: Key
+}
 
 export const worker = (): true => {
   // post each cycle
@@ -42,14 +50,15 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
     webSocketUrl,
     parseTick,
   ] = await tickSelector(config.exchangeName)
-  const [, createOrderRequest, , authWebSocketUrl, , parseEvent, getToken] = await orderSelector(
+  const [, createOrderRequest, , authWebSocketUrl, , parseEvent] = await orderSelector(
     config.exchangeName
   )
 
   const exchangeData = await setupData(getAvailablePairs)
   const [assets, pairs, pairMap] = exchangeData
 
-  const token = await getToken(config.key, new Date().getTime() * 1000)
+  // const token = await getToken(config.key, new Date().getTime() * 1000)
+  const token = ''
 
   // validate initialasset before continuing
   const initialAssetIndex = await getIndex(
@@ -78,14 +87,16 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
     sendMutex
   )
   const graphWorkerCallback = createGraphProfitCallback(
-    initialAssetIndex,
-    config.initialAmount,
-    assets,
-    pairs,
-    pairMap,
-    config.eta,
+    {
+      assets: assets,
+      eta: config.eta,
+      initialAmount: config.initialAmount,
+      initialAssetIndex: initialAssetIndex,
+      pairMap: pairMap,
+      pairs: pairs,
+      token: token,
+    },
     orderws,
-    token,
     sendMutex,
     createOrderRequest,
     shutdownCallback

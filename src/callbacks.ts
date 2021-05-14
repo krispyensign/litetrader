@@ -1,9 +1,19 @@
+import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types'
 import WebSocket from 'ws'
 import { Worker } from 'worker_threads'
 import { calcProfit } from './calc.js'
-import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types/types'
 import { isError } from './helpers.js'
 import { Mutex } from 'async-mutex'
+
+export type GraphWorkerData = {
+  initialAssetIndex: number
+  initialAmount: number
+  assets: readonly string[]
+  pairs: IndexedPair[]
+  pairMap: ReadonlyMap<string, number>
+  eta: number
+  token: string
+}
 
 export const createTickCallback = (
   pairs: IndexedPair[],
@@ -43,14 +53,8 @@ export const createShutdownCallback = (
   })
 
 export const createGraphProfitCallback = (
-  initialAssetIndex: number,
-  initialAmount: number,
-  assets: readonly string[],
-  pairs: IndexedPair[],
-  pairMap: ReadonlyMap<string, number>,
-  eta: number,
+  d: GraphWorkerData,
   orderws: WebSocket,
-  token: string,
   mutex: Mutex,
   createOrderRequest: (token: string, step: OrderCreateRequest) => string,
   shutdownCallback: () => void
@@ -59,7 +63,7 @@ export const createGraphProfitCallback = (
 ): Promise<void> => {
   // calc profit, hopefully something good is found
   const t1 = Date.now()
-  const result = calcProfit(initialAssetIndex, initialAmount, cycle, assets, pairs, pairMap, eta)
+  const result = calcProfit(d, cycle)
 
   // if not just an amount and is a cycle then do stuff
   return isError(result)
@@ -68,15 +72,15 @@ export const createGraphProfitCallback = (
     result === 'worthless'
     ? Promise.resolve()
     : // check if the last state object amount > initialAmount
-    result[result.length - 1][2] > initialAmount
+    result[result.length - 1][2] > d.initialAmount
     ? mutex.runExclusive(() => {
         // send orders
-        result.forEach(([step, ,]) => orderws.send(createOrderRequest(token, step)))
+        result.forEach(([step, ,]) => orderws.send(createOrderRequest(d.token, step)))
         const t2 = Date.now()
 
         // log value and die for now
         console.log(result)
-        console.log(`amounts: ${initialAmount} -> ${result[result.length - 1][2]}`)
+        console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1][2]}`)
         console.log(`time: ${t2 - t1}`)
         shutdownCallback()
         // isSending = false

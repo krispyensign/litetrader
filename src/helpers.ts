@@ -1,4 +1,11 @@
-import type { ExchangeName, OrderModule, TickModule } from './types/types'
+import type {
+  ExchangeName,
+  ExchangePair,
+  Key,
+  OrderCancelRequest,
+  OrderCreateRequest,
+  PairPriceUpdate,
+} from './types'
 import type { Logger } from 'winston'
 
 import * as winston from 'winston'
@@ -7,6 +14,24 @@ import * as krakenTick from './kraken/tick.js'
 import * as krakenSetup from './kraken/setup.js'
 import * as krakenOrder from './kraken/order.js'
 import * as krakenToken from './kraken/token.js'
+
+type TickModule = readonly [
+  (pairs: readonly string[]) => string,
+  (pairs: readonly string[]) => string,
+  (threshold?: number | undefined) => Promise<readonly ExchangePair[]>,
+  string,
+  (tickData?: string | undefined) => string | PairPriceUpdate | Error
+]
+
+type OrderModule = readonly [
+  (token: string, cancel: OrderCancelRequest) => string,
+  (token: string, order: OrderCreateRequest) => string,
+  (parsedEvent: unknown) => string,
+  string,
+  (event: unknown) => boolean,
+  (eventData: string) => string,
+  (key: Key, nonce: number) => Promise<string>
+]
 
 export const isError = (err: unknown): err is Error =>
   typeof err === 'object' &&

@@ -1,5 +1,5 @@
-import type { TickerResponse } from '../types/kraken'
-import type { AssetPair, Dictionary, ExchangePair } from '../types/types'
+import type { AssetPair, TickerResponse } from './kraken'
+import type { Dictionary, ExchangePair } from '../types'
 import { compareTypes, unwrapJson } from './common.js'
 
 const krakenTickerPath = '/0/public/Ticker'

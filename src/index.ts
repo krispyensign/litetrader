@@ -1,4 +1,4 @@
-import type { ExchangeName } from './types/types'
+import type { ExchangeName } from './types'
 import yargs from 'yargs'
 import * as sourceMap from 'source-map-support'
 import { isMainThread } from 'worker_threads'
