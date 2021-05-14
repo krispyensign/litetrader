@@ -18,6 +18,11 @@ type Step = {
   index: number
   amount: number
 }
+type PreviousState = {
+  steps: Steps
+  initialAssetIndex: number
+  initialAmount: number
+}
 
 const validatePair = (
   steps: CleanSteps,
@@ -37,28 +42,26 @@ const validatePair = (
     : { steps: steps, pair: pair, index: state[0], amount: state[1] }
 
 const extractState = (
-  d: GraphWorkerData,
-  prev: Steps,
-  initialAssetIndex: number,
-  initialAmount: number,
+  gwd: GraphWorkerData,
+  ps: PreviousState,
   pairIndex: number | undefined,
   cycle: readonly number[],
   index: number,
   value: number
 ): StepSnapshot =>
   // skip elements if an error was encountered or is worthless
-  isError(prev)
-    ? prev
-    : prev === 0
-    ? prev
+  isError(ps.steps)
+    ? ps.steps
+    : ps.steps === 0
+    ? ps.steps
     : pairIndex === undefined
-    ? Error(`Invalid pair requested. quote: ${d.assets[cycle[index]]}, ${d.assets[value]}`)
+    ? Error(`Invalid pair requested. quote: ${gwd.assets[cycle[index]]}, ${gwd.assets[value]}`)
     : validatePair(
-        prev,
-        prev.length === 0
-          ? [initialAssetIndex, initialAmount]
-          : [prev[prev.length - 1].index, prev[prev.length - 1].amount],
-        d.pairs[pairIndex]
+        ps.steps,
+        ps.steps.length === 0
+          ? [ps.initialAssetIndex, ps.initialAmount]
+          : [ps.steps[ps.steps.length - 1].index, ps.steps[ps.steps.length - 1].amount],
+        gwd.pairs[pairIndex]
       )
 
 const lookup = (
@@ -153,22 +156,22 @@ const constructNextStepInPlace = (state: StepSnapshot, eta: number): Steps =>
 
 export const calcProfit = (d: GraphWorkerData, cycle: readonly number[]): Steps =>
   // start with initially provided index and amount
-  cycle
-    .slice(1)
-    .reduce<Steps>(
-      (steps, element, index) =>
-        constructNextStepInPlace(
-          extractState(
-            d,
-            steps,
-            d.initialAssetIndex,
-            d.initialAmount,
-            lookup(d, cycle, index, element),
-            cycle,
-            index,
-            element
-          ),
-          d.eta
+  cycle.slice(1).reduce<Steps>(
+    (steps, element, index) =>
+      constructNextStepInPlace(
+        extractState(
+          d,
+          {
+            steps: steps,
+            initialAssetIndex: d.initialAssetIndex,
+            initialAmount: d.initialAmount,
+          },
+          lookup(d, cycle, index, element),
+          cycle,
+          index,
+          element
         ),
-      []
-    )
+        d.eta
+      ),
+    []
+  )
