@@ -1,4 +1,4 @@
-export type { ExchangeName } from 'exchange-models/exchange'
+export type ExchangeName = 'kraken' | 'binance' | 'cexio' | 'coinbase'
 
 export type Steps = Step[] | Error | 0
 
