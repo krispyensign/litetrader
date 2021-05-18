@@ -1,4 +1,4 @@
-import type { Dictionary, ExchangeName, Key } from './types'
+import type { Config, Dictionary } from './types'
 import WebSocket from 'ws'
 import { dirname } from 'path'
 import { Worker, parentPort, workerData } from 'worker_threads'
@@ -11,14 +11,6 @@ import { orderSelector, tickSelector } from './helpers.js'
 import { buildGraph, setupData } from './setup.js'
 import { findCycles } from './unicycle/unicycle.js'
 import { Mutex } from 'async-mutex'
-
-type Config = {
-  readonly exchangeName: ExchangeName
-  readonly initialAmount: number
-  readonly initialAsset: string
-  readonly eta: number
-  readonly key: Key
-}
 
 export const worker = (): true => {
   // post each cycle
@@ -50,15 +42,14 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
     webSocketUrl,
     parseTick,
   ] = await tickSelector(config.exchangeName)
-  const [, createOrderRequest, , authWebSocketUrl, , parseEvent] = await orderSelector(
+  const [, createOrderRequest, , authWebSocketUrl, , parseEvent, getToken] = await orderSelector(
     config.exchangeName
   )
 
   const exchangeData = await setupData(getAvailablePairs)
   const [assets, pairs, pairMap] = exchangeData
 
-  // const token = await getToken(config.key, new Date().getTime() * 1000)
-  const token = ''
+  const token = await getToken(config.key, new Date().getTime() * 1000)
 
   // validate initialasset before continuing
   const initialAssetIndex = await getIndex(

@@ -2,7 +2,7 @@ import type { Key } from '../types'
 import type { Token } from './types'
 import got from 'got'
 import qs from 'qs'
-import { createHmac, createHash } from 'crypto'
+import crypto from 'crypto'
 import { validateResponse } from './common.js'
 
 const krakenTokenPath = '/0/private/GetWebSocketsToken'
@@ -20,12 +20,14 @@ const makeAuthCall = async <T = object>(
         url: url,
         headers: {
           'API-Key': key.apiKey,
-          'API-Sign': createHmac('sha512', Buffer.from(key.apiPrivateKey, 'base64'))
+          'API-Sign': crypto
+            .createHmac('sha512', Buffer.from(key.apiPrivateKey, 'base64'))
             .update(
               '/0/private/GetWebSocketsToken' +
-                createHash('sha256')
+                crypto
+                  .createHash('sha256')
                   .update(nonce + request)
-                  .digest('base64'),
+                  .digest('binary' as crypto.BinaryToTextEncoding),
               'latin1'
             )
             .digest('base64'),
@@ -40,7 +42,6 @@ const makeAuthCall = async <T = object>(
   )
 
 export const getToken = async (key: Key, nonce: number): Promise<string> => {
-  console.log(key)
   return (
     await makeAuthCall<Token>(
       krakenApiUrl + krakenTokenPath,

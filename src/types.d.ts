@@ -1,3 +1,11 @@
+type Config = {
+  readonly exchangeName: ExchangeName
+  readonly initialAmount: number
+  readonly initialAsset: string
+  readonly eta: number
+  readonly key: Key
+}
+
 export type ExchangeName = 'kraken' | 'binance' | 'cexio' | 'coinbase'
 
 export type Steps = Step[] | Error | 0

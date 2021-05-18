@@ -1,8 +1,7 @@
-node_modules
 logs/
-build/
 dist/
 node_modules/
 .vscode/
-.key
+private/
+
 *.swp

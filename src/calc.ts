@@ -41,6 +41,11 @@ const lookupPair = (gwd: GraphWorkerData, left: number, right: number): number |
   gwd.pairMap.get(`${gwd.assets[left]},${gwd.assets[right]}`) ??
   gwd.pairMap.get(`${gwd.assets[right]},${gwd.assets[left]}`)
 
+const mutateArray = <T>(t: T[], v: T): T[] => {
+  t.push(v)
+  return t
+}
+
 // helper function to safely round a number
 const safeRound = (num: number, decimals: number): number =>
   decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
@@ -69,9 +74,7 @@ const buildStep = (sm: StepMaterial): Step =>
           price: sm.pair.bid,
         },
 
-        // change the current asset from the base to the quote
         index: sm.pair.quoteIndex,
-        // change the current asset from the base to the quote
         amount: sm.amount * sm.pair.bid * (1 - sm.pair.takerFee) * (1 - sm.eta),
       }
     : {
@@ -84,16 +87,9 @@ const buildStep = (sm: StepMaterial): Step =>
           price: sm.pair.ask,
         },
 
-        // set the current asset to the next base code
         index: sm.pair.baseIndex,
-        // calculate the next current amount using the derived price
         amount: sm.amount,
       }
-
-const mutateArray = <T>(t: T[], v: T): T[] => {
-  t.push(v)
-  return t
-}
 
 const buildNextStepInPlace = (ss: StepSnapshot, eta: number): Steps =>
   isError(ss) || ss === 0
