@@ -32,7 +32,7 @@ export const isObject = (o: unknown): o is object =>
 
 export const compareTypes = (o: unknown, propertyNames: readonly string[]): boolean | string =>
   // check if object is undefined
-  !isObject(o)
+  !isObject(o) || o === undefined
     ? false
     : propertyNames.every(prop => prop in (o as object))
     ? true

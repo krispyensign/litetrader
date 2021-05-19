@@ -18,9 +18,9 @@ import * as krakenToken from './kraken/token.js'
 type TickModule = readonly [
   (pairs: readonly string[]) => string,
   (pairs: readonly string[]) => string,
-  (threshold?: number | undefined) => Promise<readonly ExchangePair[]>,
+  (threshold?: number) => Promise<readonly ExchangePair[]>,
   string,
-  (tickData?: string | undefined) => string | PairPriceUpdate | Error
+  (tickData: string) => string | PairPriceUpdate | Error
 ]
 
 type OrderModule = readonly [

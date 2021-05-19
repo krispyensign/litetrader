@@ -57,14 +57,14 @@ const extractReason = async (
     ? Promise.reject(new Error(`Missing resource ${result} on ${context} ${pairName}.`))
     : true
 
-const isKrakenPair = async (pairName: string, pair?: unknown): Promise<boolean> =>
+const isKrakenPair = async (pairName: string, pair: unknown): Promise<boolean> =>
   extractReason(
     'pair',
     pairName,
     compareTypes(pair, ['wsname', 'base', 'quote', 'fees_maker', 'fees', 'pair_decimals'])
   )
 
-const isLastTick = async (pairName: string, tick?: unknown): Promise<boolean> =>
+const isLastTick = async (pairName: string, tick: unknown): Promise<boolean> =>
   extractReason('tick', pairName, compareTypes(tick, ['a', 'b', 't']))
 
 const createExchangePair = (

@@ -4,19 +4,19 @@ import { isError } from './helpers.js'
 
 const validatePair = (
   steps: ValidatedSteps,
-  state: [number, number],
+  [index, amount]: [number, number],
   pair: IndexedPair | Error
 ): StepSnapshot =>
   isError(pair)
     ? pair
-    : state[0] !== pair.quoteIndex && state[0] !== pair.baseIndex
+    : index !== pair.quoteIndex && index !== pair.baseIndex
     ? Error(
         'Invalid logic somewhere! Current Tuple State:' +
-          [state[0], pair.quoteIndex, pair.baseIndex].join(', ')
+          [index, pair.quoteIndex, pair.baseIndex].join(', ')
       )
-    : state[1] < pair.ordermin
+    : amount < pair.ordermin
     ? 0 // mark as worthless if processing results in an impossible trade
-    : { steps: steps, pair: pair, index: state[0], amount: state[1] }
+    : { steps, pair, index, amount }
 
 const extractState = (
   gwd: GraphWorkerData,
@@ -41,10 +41,8 @@ const lookupPair = (gwd: GraphWorkerData, left: number, right: number): number |
   gwd.pairMap.get(`${gwd.assets[left]},${gwd.assets[right]}`) ??
   gwd.pairMap.get(`${gwd.assets[right]},${gwd.assets[left]}`)
 
-const mutateArray = <T>(t: T[], v: T): T[] => {
-  t.push(v)
-  return t
-}
+const mutateArray = <T>(t: T[], v: T): T[] | Error =>
+  t.push(v) > 0 ? t : Error('Failed to expand array.')
 
 // helper function to safely round a number
 const safeRound = (num: number, decimals: number): number =>
