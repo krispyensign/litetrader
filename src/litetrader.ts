@@ -7,8 +7,6 @@ import { app, worker } from './app.js'
 // install the sourcemap for better troubleshooting
 sourceMap.install()
 
-console.log('TODO:\nFix rounding issues.  Move to ccxt.  Move to ccxws.')
-
 // process the command line args
 const argv = yargs(process.argv.slice(2)).options({
   exchangeName: { type: 'string', default: 'kraken' },

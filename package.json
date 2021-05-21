@@ -38,7 +38,7 @@
     "compile": "npx tsc",
     "build": "./build.sh",
     "fix": "npx prettier -w src/ && npx eslint --fix src/",
-    "clean": "rimraf dist/ node_modules/ logs/"
+    "clean": "rimraf bin/ dist/ node_modules/ logs/"
   },
   "repository": {
     "type": "git",
