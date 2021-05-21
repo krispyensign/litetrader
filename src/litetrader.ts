@@ -1,7 +1,9 @@
+import { isMainThread } from 'worker_threads'
+if (isMainThread) console.time('startup completed')
+
 import type { ExchangeName } from './types'
 import yargs from 'yargs'
 import * as sourceMap from 'source-map-support'
-import { isMainThread } from 'worker_threads'
 import { app, worker } from './app.js'
 
 // install the sourcemap for better troubleshooting
@@ -33,5 +35,6 @@ argv.initialAsset === null
       },
     })
   : worker()
+if (isMainThread) console.timeEnd('startup completed')
 
 // wait till shutdown of sockets and readline
