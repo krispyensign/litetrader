@@ -54,7 +54,7 @@ const calcStepAmount = (sm: StepMaterial): number =>
   sm.index === sm.pair.baseIndex
     ? safeRound(sm.amount, sm.pair.decimals)
     : safeRound(
-        safeDivide(sm.amount, sm.pair.ask) * (1 + sm.pair.takerFee) * (1 + sm.eta),
+        safeDivide(sm.amount, sm.pair.ask * (1 + sm.pair.takerFee) * (1 + sm.eta)),
         sm.pair.decimals
       )
 
