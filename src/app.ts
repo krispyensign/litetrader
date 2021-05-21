@@ -34,7 +34,7 @@ const getIndex = async (initialAssetIndexF: number, initialAsset: string): Promi
     : Promise.resolve(initialAssetIndexF)
 
 export const app = async (config: Config): Promise<readonly [WebSocket, WebSocket, Worker]> => {
-  console.log('TODO:\nFix rounding issues.  Move to ccxt.  Move to ccxws.')
+  console.log('TODO: Fix rounding issues.  Move to ccxt.  Move to ccxws.')
   // configure everything
   const [
     createStopRequest,
