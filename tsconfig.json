@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "es5",
+    "module": "commonjs",
     "outDir": "dist/",                          
     "removeComments": false,
     "rootDir": "src/",
     "sourceMap": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "downlevelIteration": true,
 
     "strict": true,         
     "alwaysStrict": true,

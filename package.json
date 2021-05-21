@@ -10,7 +10,6 @@
     "async-mutex": "^0.3.1",
     "ccxt": "^1.50.8",
     "ccxws": "^0.43.1",
-    "crypto": "^1.0.1",
     "got": "^11.8.1",
     "qs": "^6.10.1",
     "source-map-support": "^0.5.19",
@@ -35,8 +34,9 @@
     "typescript": "^4.3.0-beta"
   },
   "scripts": {
-    "start": "node --no-lazy ./dist/index.js",
-    "build": "npx tsc",
+    "start": "node --no-lazy ./dist/litetrader.js",
+    "compile": "npx tsc",
+    "build": "./build.sh",
     "fix": "npx prettier -w src/ && npx eslint --fix src/",
     "clean": "rimraf dist/ node_modules/ logs/"
   },

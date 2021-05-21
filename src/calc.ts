@@ -21,14 +21,12 @@ const validatePair = (
 const extractState = (
   gwd: GraphWorkerData,
   steps: Steps,
-  pairIndex: number | undefined,
-  left: number,
-  right: number
+  pairIndex: number | Error
 ): StepSnapshot =>
   isError(steps) || steps === 0 // skip elements if an error was encountered or is worthless
     ? steps
-    : pairIndex === undefined // error if pair lookup failed earlier
-    ? Error(`Invalid pair requested. quote: ${gwd.assets[left]}, ${gwd.assets[right]}`)
+    : isError(pairIndex) // error if pair lookup failed earlier
+    ? pairIndex
     : validatePair(
         steps,
         steps.length === 0
@@ -37,9 +35,10 @@ const extractState = (
         gwd.pairs[pairIndex]
       )
 
-const lookupPair = (gwd: GraphWorkerData, left: number, right: number): number | undefined =>
+const lookupPair = (gwd: GraphWorkerData, left: number, right: number): number | Error =>
   gwd.pairMap.get(`${gwd.assets[left]},${gwd.assets[right]}`) ??
-  gwd.pairMap.get(`${gwd.assets[right]},${gwd.assets[left]}`)
+  gwd.pairMap.get(`${gwd.assets[right]},${gwd.assets[left]}`) ??
+  Error(`Invalid pair requested. quote: ${gwd.assets[left]}, ${gwd.assets[right]}`)
 
 const mutateArray = <T>(t: T[], v: T): T[] | Error =>
   t.push(v) > 0 ? t : Error('Failed to expand array.')
@@ -108,7 +107,7 @@ export const calcProfit = (gwd: GraphWorkerData, cycle: readonly number[]): Step
     .reduce<Steps>(
       (steps, value, index) =>
         buildNextStepInPlace(
-          extractState(gwd, steps, lookupPair(gwd, cycle[index], value), cycle[index], value),
+          extractState(gwd, steps, lookupPair(gwd, cycle[index], value)),
           gwd.eta
         ),
       []

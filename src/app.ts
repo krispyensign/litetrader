@@ -60,7 +60,7 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
   // setup sockets and graph worker
   const tickws = new WebSocket(webSocketUrl)
   const orderws = new WebSocket(authWebSocketUrl)
-  const graphWorker = new Worker(dirname(process.argv[1]) + '/index.js', {
+  const graphWorker = new Worker(dirname(process.argv[1]) + '/litetrader.js', {
     workerData: {
       graph: buildGraph(pairs),
       initialAssetIndex: initialAssetIndex,

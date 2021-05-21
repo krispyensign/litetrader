@@ -1,24 +1,25 @@
 import type { Dictionary, ExchangePair, IndexedPair } from './types'
 
-export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>
-  Object.fromEntries(
+export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> => {
+  return (
     indexedPairs
 
       // create edge list
       .reduce(
-        (prev, ip) =>
-          prev.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
+        (edgeList, ip) =>
+          edgeList.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
         new Array<readonly [number, number]>()
       )
       // create adjacency map from edge list
       .reduce(
-        (nbrMap, edge) =>
-          nbrMap.has(edge[0].toString())
-            ? nbrMap.set(edge[0].toString(), nbrMap.get(edge[0].toString())!.concat(edge[1]))
-            : nbrMap.set(edge[0].toString(), [edge[1]]),
-        new Map<string, readonly number[]>()
+        (adjMap, edge) =>
+          adjMap[edge[0].toString()] !== undefined
+            ? ((adjMap[edge[0].toString()] = adjMap[edge[0].toString()]!.concat(edge[1])), adjMap)
+            : ((adjMap[edge[0].toString()] = [edge[1]]), adjMap),
+        {} as Dictionary<readonly number[]>
       )
   )
+}
 
 const validateTradePairs = async (
   tradePairs: readonly ExchangePair[],
@@ -55,7 +56,7 @@ export const setupData = async (
 
   // validate then convert pairs to internal index pair format
   // update the pair with the new values
-  const pairs = (await validateTradePairs(tradePairs, assets)).map(pair => ({
+  const pairs: IndexedPair[] = (await validateTradePairs(tradePairs, assets)).map(pair => ({
     ...pair,
     baseIndex: assets.indexOf(pair.baseName),
     quoteIndex: assets.indexOf(pair.quoteName),
