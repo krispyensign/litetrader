@@ -76,7 +76,7 @@ const createExchangePair = (
   index: index,
   tradename: pair.wsname,
   name: name,
-  decimals: pair.pair_decimals,
+  decimals: pair.lot_decimals,
   baseName: pair.base,
   quoteName: pair.quote!,
   makerFee: Number(pair.fees_maker[0][1]) / 100,

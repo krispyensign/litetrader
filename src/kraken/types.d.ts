@@ -167,7 +167,7 @@ export type AssetPair = {
   /**
    * scaling decimal places for volume
    */
-  lot_decimals?: number
+  lot_decimals: number
   /**
    * amount to multiply lot volume by to get currency volume
    */
