@@ -2,8 +2,6 @@ import * as ccxt from 'ccxt'
 import { ExchangePair } from '../types'
 
 const exchange = new ccxt.kraken({
-  apiKey: 'YOUR_KRAKEN_API_KEY',
-  secret: 'YOUR_KRAKEN_SECRET_KEY',
   substituteCommonCurrencyCodes: false,
 })
 
