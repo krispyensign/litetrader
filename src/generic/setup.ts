@@ -1,14 +1,20 @@
 import type { Dictionary, Ticker, Market } from 'ccxt'
-import type { ExchangePair } from '../types'
-import { kraken } from 'ccxt'
+import type { ExchangePair, IndexedPair } from '../types'
+import * as ccxt from 'ccxt'
+import * as ccxws from 'ccxws'
 
-const exchange = new kraken({
+const apiExchange = new ccxt.kraken({
   substituteCommonCurrencyCodes: false,
 })
 
+const wsExchange = new ccxws.Kraken({
+  apiKey: 'apiKey',
+  apiSecret: 'apiSecret',
+})
+
 export const getAvailablePairs = async (): Promise<readonly ExchangePair[]> =>
-  exchange.fetchTickers().then((tickers: Dictionary<Ticker>) =>
-    exchange.loadMarkets().then((markets: Dictionary<Market>) =>
+  apiExchange.fetchTickers().then((tickers: Dictionary<Ticker>) =>
+    apiExchange.loadMarkets().then((markets: Dictionary<Market>) =>
       Object.entries<Market>(markets)
         .filter(([marketName]) => tickers[marketName] !== undefined)
         .map(
@@ -22,11 +28,21 @@ export const getAvailablePairs = async (): Promise<readonly ExchangePair[]> =>
             makerFee: market.maker,
             takerFee: market.taker,
             precision: market.precision.amount,
-            precisionMode: exchange.precisionMode,
+            precisionMode: apiExchange.precisionMode,
             volume: (tickers[marketName].baseVolume ?? 0) + (tickers[marketName].quoteVolume ?? 0),
             ask: tickers[marketName].ask,
             bid: tickers[marketName].bid,
           })
         )
     )
+  )
+
+export const startSubscription = (pairs: IndexedPair[]): void =>
+  pairs.forEach(pair =>
+    wsExchange.subscribeTicker({
+      base: pair.baseName,
+      id: pair.name,
+      quote: pair.quoteName,
+      type: 'spot',
+    })
   )

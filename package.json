@@ -9,6 +9,7 @@
   "dependencies": {
     "async-mutex": "^0.3.1",
     "ccxt": "^1.50.30",
+    "ccxws": "^0.43.1",
     "got": "^11.8.1",
     "qs": "^6.10.1",
     "source-map-support": "^0.5.19",
