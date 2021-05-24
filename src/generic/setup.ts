@@ -1,17 +1,18 @@
-import * as ccxt from 'ccxt'
-import { ExchangePair } from '../types'
+import type { Dictionary, Ticker, Market } from 'ccxt'
+import type { ExchangePair } from '../types'
+import { kraken } from 'ccxt'
 
-const exchange = new ccxt.kraken({
+const exchange = new kraken({
   substituteCommonCurrencyCodes: false,
 })
 
 export const getAvailablePairs = async (): Promise<readonly ExchangePair[]> =>
-  exchange.fetchTickers().then((tickers: ccxt.Dictionary<ccxt.Ticker>) =>
-    exchange.loadMarkets().then((markets: ccxt.Dictionary<ccxt.Market>) =>
+  exchange.fetchTickers().then((tickers: Dictionary<Ticker>) =>
+    exchange.loadMarkets().then((markets: Dictionary<Market>) =>
       Object.entries(markets)
-        .filter(([marketName]: [string, ccxt.Market]) => tickers[marketName] !== undefined)
+        .filter(([marketName]: [string, Market]) => tickers[marketName] !== undefined)
         .map(
-          ([marketName, market]: [string, ccxt.Market], index: number): ExchangePair => ({
+          ([marketName, market]: [string, Market], index: number): ExchangePair => ({
             baseName: market.baseId,
             quoteName: market.quoteId,
             index: index,
