@@ -11,7 +11,6 @@ import type { Logger } from 'winston'
 import * as winston from 'winston'
 
 import * as krakenTick from './kraken/tick.js'
-import * as krakenSetup from './kraken/setup.js'
 import * as krakenOrder from './kraken/order.js'
 import * as krakenToken from './kraken/token.js'
 import * as generic from './generic/setup.js'
@@ -42,10 +41,10 @@ export const isError = (err: unknown): err is Error =>
 export const tickSelector = async (exchangeName: ExchangeName): Promise<TickModule> =>
   exchangeName === 'kraken'
     ? [
-        krakenSetup.createStopRequest,
-        krakenSetup.createTickSubRequest,
+        krakenTick.createStopRequest,
+        krakenTick.createTickSubRequest,
         generic.getAvailablePairs,
-        krakenSetup.webSocketUrl,
+        krakenTick.webSocketUrl,
         krakenTick.parseTick,
       ]
     : Promise.reject(new Error('Invalid exchange selected'))

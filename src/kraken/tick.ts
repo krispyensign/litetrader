@@ -2,6 +2,28 @@ import type { PairPriceUpdate } from '../types'
 import type { Publication, Ticker } from './types'
 import { compareTypes, isKrakenErrorMessage } from './common.js'
 
+const krakenWsUrl = 'wss://ws.kraken.com'
+
+export const createStopRequest = (pairs: readonly string[]): string =>
+  JSON.stringify({
+    event: 'unsubscribe',
+    pair: pairs,
+    subscription: {
+      name: 'ticker',
+    },
+  })
+
+export const createTickSubRequest = (pairs: readonly string[]): string =>
+  JSON.stringify({
+    event: 'subscribe',
+    pair: pairs,
+    subscription: {
+      name: 'ticker',
+    },
+  })
+
+export const webSocketUrl = krakenWsUrl
+
 const isTickerPayload = (payload: unknown): payload is Ticker =>
   compareTypes(payload, ['a', 'b', 'c', 'v', 'p', 't', 'l', 'h', 'o']) !== true
     ? false
