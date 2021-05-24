@@ -1,5 +1,3 @@
-import got from 'got'
-
 type ResponseWrapper<T = object> = {
   readonly error: readonly string[]
   readonly result: T
@@ -20,9 +18,6 @@ export const validateResponse = async <T>(response: ResponseWrapper<T>): Promise
         )
       )
     : response.result
-
-export const unwrapJson = async <T>(url: string): Promise<T> =>
-  validateResponse(await got(url).json<ResponseWrapper<T>>())
 
 export const isKrakenErrorMessage = (err: unknown): err is KrakenErrorMessage =>
   typeof err === 'object' && (err as KrakenErrorMessage).errorMessage !== undefined

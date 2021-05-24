@@ -14,6 +14,7 @@ import * as krakenTick from './kraken/tick.js'
 import * as krakenSetup from './kraken/setup.js'
 import * as krakenOrder from './kraken/order.js'
 import * as krakenToken from './kraken/token.js'
+import * as generic from './generic/setup.js'
 
 type TickModule = readonly [
   (pairs: readonly string[]) => string,
@@ -43,7 +44,7 @@ export const tickSelector = async (exchangeName: ExchangeName): Promise<TickModu
     ? [
         krakenSetup.createStopRequest,
         krakenSetup.createTickSubRequest,
-        krakenSetup.getAvailablePairs,
+        generic.getAvailablePairs,
         krakenSetup.webSocketUrl,
         krakenTick.parseTick,
       ]
