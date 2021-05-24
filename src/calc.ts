@@ -45,17 +45,17 @@ const mutateArray = <T>(t: T[], v: T): T[] | Error =>
 
 // helper function to safely round a number
 const safeRound = (num: number, decimals: number): number =>
-  decimals === 0 ? Math.round(num) : Number(num.toPrecision(decimals))
+  decimals === 0 ? Math.floor(num) : Number(num.toFixed(decimals))
 
 // helper function to safely divide by 0
 const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
 const calcStepAmount = (sm: StepMaterial): number =>
   sm.index === sm.pair.baseIndex
-    ? safeRound(sm.amount, sm.pair.decimals)
+    ? safeRound(sm.amount, sm.pair.precision)
     : safeRound(
         safeDivide(sm.amount, sm.pair.ask * (1 + sm.pair.takerFee) * (1 + sm.eta)),
-        sm.pair.decimals
+        sm.pair.precision
       )
 
 const buildStep = (sm: StepMaterial): Step =>
