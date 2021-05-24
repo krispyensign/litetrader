@@ -9,10 +9,10 @@ const exchange = new kraken({
 export const getAvailablePairs = async (): Promise<readonly ExchangePair[]> =>
   exchange.fetchTickers().then((tickers: Dictionary<Ticker>) =>
     exchange.loadMarkets().then((markets: Dictionary<Market>) =>
-      Object.entries(markets)
-        .filter(([marketName]: [string, Market]) => tickers[marketName] !== undefined)
+      Object.entries<Market>(markets)
+        .filter(([marketName]) => tickers[marketName] !== undefined)
         .map(
-          ([marketName, market]: [string, Market], index: number): ExchangePair => ({
+          ([marketName, market], index): ExchangePair => ({
             baseName: market.baseId,
             quoteName: market.quoteId,
             index: index,
