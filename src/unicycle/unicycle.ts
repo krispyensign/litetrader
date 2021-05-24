@@ -4,13 +4,14 @@ type Label = number | string
 
 /*
   path[-1] !== nbr  | path.includes(nbr)  |  path[0] === nbr  | result
-            T         T                       T                 T  <-- a cycle
-            T         T                       F                 F  <-- already in path discard
-            T         F                       *                 F  <-- Not possible
-            T         F                       F                 T  <-- new item
-            F         *                       *                 F  <-- self loop discard remaining
-                                                                       checks
+            T         T                       T                 T  <--  a cycle
+            T         T                       F                 F  <--  already in path discard
+            T         F                       *                 F  <--  Not possible
+            T         F                       F                 T  <--  new item
+            F         *                       *                 F  <--  self loop discard remaining
+                                                                        checks
 */
+
 const growPaths = (
   paths: Iterable<readonly Label[]>,
   neighbors: ReadonlyMap<Label, readonly Label[]>

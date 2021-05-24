@@ -67,7 +67,8 @@ export type ExchangePair = {
   readonly index: number
   readonly name: string
   readonly tradename: string
-  readonly decimals: number
+  readonly precision: number
+  readonly precisionMode?: number
   readonly baseName: string
   readonly quoteName: string
   readonly makerFee: number
@@ -82,7 +83,8 @@ export type IndexedPair = {
   readonly index: number
   readonly name: string
   readonly tradename: string
-  readonly decimals: number
+  readonly precision: number
+  readonly precisionMode?: number
   readonly baseName: string
   readonly quoteName: string
   readonly makerFee: number

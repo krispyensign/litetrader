@@ -3,6 +3,45 @@ export type Token = {
   expires: number
 }
 
+type TickerResponse = {
+  /**
+   * Ask
+   */
+  readonly a: readonly [number, number, number]
+  /**
+   * Bid
+   */
+  readonly b: readonly [number, number, number]
+  /**
+   * Close
+   */
+  readonly c: readonly [number, number]
+  /**
+   * Volume
+   */
+  readonly v: readonly [number, number]
+  /**
+   * Volume weighted average price
+   */
+  readonly p: readonly [number, number]
+  /**
+   * Number of trades
+   */
+  readonly t: readonly [number, number]
+  /**
+   * Low price
+   */
+  readonly l: readonly [number, number]
+  /**
+   * High price
+   */
+  readonly h: readonly [number, number]
+  /**
+   * Open price
+   */
+  readonly o: readonly [number, number]
+}
+
 /**
  * Publication: Ticker information on currency pair.
  */

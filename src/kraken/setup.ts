@@ -1,50 +1,11 @@
 import type { Dictionary, ExchangePair } from '../types'
-import type { AssetPair } from './types'
+import type { AssetPair, TickerResponse } from './types'
 import { compareTypes, unwrapJson } from './common.js'
 
 const krakenTickerPath = '/0/public/Ticker'
 const krakenPairsPath = '/0/public/AssetPairs'
 const krakenWsUrl = 'wss://ws.kraken.com'
 const krakenApiUrl = 'https://api.kraken.com'
-
-type TickerResponse = {
-  /**
-   * Ask
-   */
-  readonly a: readonly [number, number, number]
-  /**
-   * Bid
-   */
-  readonly b: readonly [number, number, number]
-  /**
-   * Close
-   */
-  readonly c: readonly [number, number]
-  /**
-   * Volume
-   */
-  readonly v: readonly [number, number]
-  /**
-   * Volume weighted average price
-   */
-  readonly p: readonly [number, number]
-  /**
-   * Number of trades
-   */
-  readonly t: readonly [number, number]
-  /**
-   * Low price
-   */
-  readonly l: readonly [number, number]
-  /**
-   * High price
-   */
-  readonly h: readonly [number, number]
-  /**
-   * Open price
-   */
-  readonly o: readonly [number, number]
-}
 
 const extractReason = async (
   context: 'pair' | 'tick',
@@ -76,7 +37,7 @@ const createExchangePair = (
   index: index,
   tradename: pair.wsname,
   name: name,
-  decimals: pair.lot_decimals,
+  precision: pair.lot_decimals,
   baseName: pair.base,
   quoteName: pair.quote!,
   makerFee: Number(pair.fees_maker[0][1]) / 100,

@@ -5,6 +5,9 @@ import { calcProfit } from './calc.js'
 import { isError } from './helpers.js'
 import { Mutex } from 'async-mutex'
 
+let graphCount = 0
+const startTime = Date.now()
+
 export type GraphWorkerData = {
   initialAssetIndex: number
   initialAmount: number
@@ -64,6 +67,7 @@ export const createGraphProfitCallback = (
   // calc profit, hopefully something good is found
   const t1 = Date.now()
   const result = calcProfit(d, cycle)
+  graphCount++
 
   // if not just an amount and is a cycle then do stuff
   return isError(result)
@@ -75,6 +79,7 @@ export const createGraphProfitCallback = (
     result[result.length - 1].amount > d.initialAmount
     ? mutex.runExclusive(() => {
         // send orders
+        const t3 = Date.now()
         result.forEach(step => orderws.send(createOrderRequest(d.token, step.orderCreateRequest)))
         const t2 = Date.now()
 
@@ -82,6 +87,8 @@ export const createGraphProfitCallback = (
         console.log(result)
         console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
         console.log(`time: ${t2 - t1}ms`)
+        console.log(`calcTime: ${t3 - startTime}ms`)
+        console.log(`count: ${graphCount}`)
         shutdownCallback()
         // isSending = false
       })

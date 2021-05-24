@@ -1,5 +1,5 @@
+console.time('startup completed')
 import { isMainThread } from 'worker_threads'
-if (isMainThread) console.time('startup completed')
 
 import type { ExchangeName } from './types'
 import yargs from 'yargs'
@@ -35,6 +35,6 @@ argv.initialAsset === null
       },
     })
   : worker()
-if (isMainThread) console.timeEnd('startup completed')
 
+console.timeEnd('startup completed')
 // wait till shutdown of sockets and readline
