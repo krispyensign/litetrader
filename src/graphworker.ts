@@ -1,7 +1,7 @@
 import { Mutex } from 'async-mutex'
 import * as util from 'node:util'
 import { parentPort, workerData } from 'worker_threads'
-import { calcProfit } from './profitcalc'
+import { calcProfit } from './profitcalc.js'
 import WebSocket from 'ws'
 
 let graphCount = 0
@@ -65,15 +65,6 @@ const partitionl = <T>(
   filterl(it, (value: T): boolean => !fn(value)),
 ]
 
-const peekl = <T>(it: LazyIterable<T>): LazyIterable<T> => ({
-  *[Symbol.iterator](): IterableIterator<T> {
-    for (const item of it) {
-      yield item
-      break
-    }
-  },
-})
-
 const hasValue = <T>(it: LazyIterable<T>): boolean => {
   for (const item of it) return item !== null
   return false
@@ -133,10 +124,10 @@ export function* findCycles(
     const [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
 
     // report back the cycles
-    if (hasValue(peekl(cycles))) for (const cycle of cycles) yield cycle
+    if (hasValue(cycles)) for (const cycle of cycles) yield cycle
 
     // if nothing at all was found then break
-    if (!hasValue(peekl(paths))) break
+    if (!hasValue(paths)) break
 
     // start to find the next size up paths
     candidatePaths = growPaths(paths, neighbors)
