@@ -3,7 +3,8 @@ import { isMainThread } from 'worker_threads'
 
 import yargs from 'yargs'
 import * as sourceMap from 'source-map-support'
-import { app, worker } from './app.js'
+import { app } from './app.js'
+import { worker } from './graphworker.js'
 
 // install the sourcemap for better troubleshooting
 sourceMap.install()

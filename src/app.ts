@@ -1,33 +1,39 @@
 import WebSocket from 'ws'
 import { dirname } from 'path'
-import { Worker, parentPort, workerData } from 'worker_threads'
-import { createShutdownCallback, createGraphProfitCallback } from './callbacks.js'
-import { buildGraph, setupData } from './setup.js'
-import { findCycles } from './cycles.js'
+import { Worker } from 'worker_threads'
 import { Mutex } from 'async-mutex'
-import { getAvailablePairs, getExchangeApi, getExchangeWs, startSubscription } from './tick.js'
+import {
+  getAvailablePairs,
+  getExchangeApi,
+  getExchangeWs,
+  setupData,
+  startSubscription,
+  stopSubscription,
+} from './dataservices.js'
 import { orderSelector } from './exchange/orders.js'
-
-export const worker = (): true => {
-  // post each cycle
-  for (const cycle of findCycles(
-    [workerData.initialAssetIndex],
-    new Map<number, readonly number[]>(
-      Object.entries(workerData.graph as Dictionary<readonly number[]>).map(([k, v]) => [
-        Number(k),
-        v,
-      ])
-    )
-  )) {
-    parentPort?.postMessage(cycle)
-  }
-  return true
-}
+import { buildGraph, createGraphProfitCallback } from './graphworker.js'
 
 const getIndex = async (initialAssetIndexF: number, initialAsset: string): Promise<number> =>
   initialAssetIndexF === -1
     ? Promise.reject(new Error(`invalid asset ${initialAsset}`))
     : Promise.resolve(initialAssetIndexF)
+
+const createShutdownCallback = (
+  orderws: WebSocket,
+  worker: Worker,
+  mutex: Mutex,
+  pairs: IndexedPair[],
+  wsExchange: unknown
+): (() => void) => async (): Promise<void> =>
+  mutex.acquire().then(() => {
+    // unsubsribe from everything
+    stopSubscription(pairs, wsExchange)
+
+    // kill the connections ( will also kill detached threads and thus the app )
+    orderws.close()
+    worker.terminate()
+    console.log('shutdown complete')
+  })
 
 export const app = async (config: Config): Promise<readonly [WebSocket, Worker]> => {
   console.log('TODO: Replace lib. Implement coinbase sandbox')

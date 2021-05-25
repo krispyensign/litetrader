@@ -1,5 +1,36 @@
+import { Mutex } from 'async-mutex'
+import * as util from 'node:util'
+import { parentPort, workerData } from 'worker_threads'
+import { calcProfit } from './profitcalc'
+import WebSocket from 'ws'
+
+let graphCount = 0
+const startTime = Date.now()
+const isError = util.types.isNativeError
+
 type LazyIterable<T> = {
   [Symbol.iterator](): IterableIterator<T>
+}
+
+export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> => {
+  return (
+    indexedPairs
+
+      // create edge list
+      .reduce(
+        (edgeList, ip) =>
+          edgeList.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
+        new Array<readonly [number, number]>()
+      )
+      // create adjacency map from edge list
+      .reduce(
+        (adjMap, edge) =>
+          adjMap[edge[0].toString()] !== undefined
+            ? ((adjMap[edge[0].toString()] = adjMap[edge[0].toString()]!.concat(edge[1])), adjMap)
+            : ((adjMap[edge[0].toString()] = [edge[1]]), adjMap),
+        {} as Dictionary<readonly number[]>
+      )
+  )
 }
 
 const filterMapl = <T, U>(
@@ -8,30 +39,21 @@ const filterMapl = <T, U>(
   fnFilter: (value: T) => boolean
 ): LazyIterable<U> => ({
   *[Symbol.iterator](): IterableIterator<U> {
-    for (const item of it) {
+    for (const item of it)
       if (!fnFilter(item)) continue
       else yield fn!(item)
-    }
   },
 })
 
 const filterl = <T>(it: Iterable<T>, fn: (value: T) => boolean): LazyIterable<T> => ({
   *[Symbol.iterator](): IterableIterator<T> {
-    for (const item of it) {
-      if (fn!(item)) {
-        yield item
-      }
-    }
+    for (const item of it) if (fn!(item)) yield item
   },
 })
 
 const flatMapl = <T, U>(it: Iterable<T>, fn: (value: T) => Iterable<U>): LazyIterable<U> => ({
   *[Symbol.iterator](): IterableIterator<U> {
-    for (const item of it) {
-      for (const subItem of fn!(item)) {
-        yield subItem
-      }
-    }
+    for (const item of it) for (const subItem of fn!(item)) yield subItem
   },
 })
 
@@ -60,7 +82,7 @@ const hasValue = <T>(it: LazyIterable<T>): boolean => {
 type Label = number | string
 
 /*
-  path[-1] !== nbr  | path.includes(nbr)  |  path[0] === nbr  | result
+path[-1] !== nbr  | path.includes(nbr)  |  path[0] === nbr  | result
             T         T                       T                 T  <--  a cycle
             T         T                       F                 F  <--  already in path discard
             T         F                       *                 F  <--  Not possible
@@ -119,4 +141,60 @@ export function* findCycles(
     // start to find the next size up paths
     candidatePaths = growPaths(paths, neighbors)
   }
+}
+
+export const createGraphProfitCallback = (
+  d: GraphWorkerData,
+  orderws: WebSocket,
+  mutex: Mutex,
+  createOrderRequest: (token: string, step: OrderCreateRequest) => string,
+  shutdownCallback: () => void
+): ((arg: readonly number[]) => Promise<void>) => async (
+  cycle: readonly number[]
+): Promise<void> => {
+  // calc profit, hopefully something good is found
+  const t1 = Date.now()
+  const result = calcProfit(d, cycle)
+  graphCount++
+
+  // if not just an amount and is a cycle then do stuff
+  return isError(result)
+    ? Promise.reject(result)
+    : // check if the result is worthless
+    result === 0
+    ? Promise.resolve()
+    : // check if the last state object amount > initialAmount
+    result[result.length - 1].amount > d.initialAmount
+    ? mutex.runExclusive(() => {
+        // send orders
+        const t3 = Date.now()
+        result.forEach(step => orderws.send(createOrderRequest(d.token, step.orderCreateRequest)))
+        const t2 = Date.now()
+
+        // log value and die for now
+        console.log(result)
+        console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
+        console.log(`time: ${t2 - t1}ms`)
+        console.log(`calcTime: ${t3 - startTime}ms`)
+        console.log(`count: ${graphCount}`)
+        shutdownCallback()
+        // isSending = false
+      })
+    : Promise.resolve()
+}
+
+export const worker = (): true => {
+  // post each cycle
+  for (const cycle of findCycles(
+    [workerData.initialAssetIndex],
+    new Map<number, readonly number[]>(
+      Object.entries(workerData.graph as Dictionary<readonly number[]>).map(([k, v]) => [
+        Number(k),
+        v,
+      ])
+    )
+  )) {
+    parentPort?.postMessage(cycle)
+  }
+  return true
 }
