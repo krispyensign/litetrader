@@ -128,7 +128,7 @@ argv.initialAsset === null
         apiKey: argv.apiKey,
         apiPrivateKey: argv.apiPrivateKey,
       },
-    }).then(() => console.timeEnd('startup'))
+    }).then((): void => console.timeEnd('startup'))
   : worker()
 
 // wait till shutdown of sockets and readline

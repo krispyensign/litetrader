@@ -12,27 +12,6 @@ type LazyIterable<T> = {
   [Symbol.iterator](): IterableIterator<T>
 }
 
-export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> => {
-  return (
-    indexedPairs
-
-      // create edge list
-      .reduce(
-        (edgeList, ip) =>
-          edgeList.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
-        new Array<readonly [number, number]>()
-      )
-      // create adjacency map from edge list
-      .reduce(
-        (adjMap, edge) =>
-          adjMap[edge[0].toString()] !== undefined
-            ? ((adjMap[edge[0].toString()] = adjMap[edge[0].toString()]!.concat(edge[1])), adjMap)
-            : ((adjMap[edge[0].toString()] = [edge[1]]), adjMap),
-        {} as Dictionary<readonly number[]>
-      )
-  )
-}
-
 const filterMapl = <T, U>(
   it: Iterable<T>,
   fn: (value: T) => U,
@@ -73,7 +52,7 @@ const hasValue = <T>(it: LazyIterable<T>): boolean => {
 type Label = number | string
 
 /*
-path[-1] !== nbr  | path.includes(nbr)  |  path[0] === nbr  | result
+  path[-1] !== nbr  | path.includes(nbr)  |  path[0] === nbr  | result
             T         T                       T                 T  <--  a cycle
             T         T                       F                 F  <--  already in path discard
             T         F                       *                 F  <--  Not possible
@@ -132,6 +111,27 @@ export function* findCycles(
     // start to find the next size up paths
     candidatePaths = growPaths(paths, neighbors)
   }
+}
+
+export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> => {
+  return (
+    indexedPairs
+
+      // create edge list
+      .reduce(
+        (edgeList, ip) =>
+          edgeList.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
+        new Array<readonly [number, number]>()
+      )
+      // create adjacency map from edge list
+      .reduce(
+        (adjMap, edge) =>
+          adjMap[edge[0].toString()] !== undefined
+            ? ((adjMap[edge[0].toString()] = adjMap[edge[0].toString()]!.concat(edge[1])), adjMap)
+            : ((adjMap[edge[0].toString()] = [edge[1]]), adjMap),
+        {} as Dictionary<readonly number[]>
+      )
+  )
 }
 
 export const createGraphProfitCallback = (
