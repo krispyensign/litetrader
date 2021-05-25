@@ -41,7 +41,7 @@ const createShutdownCallback = (
   })
 
 export const app = async (config: Config): Promise<readonly [WebSocket, Worker]> => {
-  console.log('TODO: Replace lib. Implement coinbase sandbox')
+  console.log('TODO: Implement coinbase sandbox')
   // configure everything
   const [, createOrderRequest, , authWebSocketUrl, , parseEvent, getToken] = await orderSelector(
     config.exchangeName
@@ -49,7 +49,6 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
   const [assets, pairs, pairMap] = await setupData(
     await getAvailablePairs(getExchangeApi(config.exchangeName))
   )
-
   // validate initialasset before continuing
   const initialAssetIndex = await getIndex(
     assets.findIndex(a => a === config.initialAsset),
@@ -88,7 +87,8 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
     orderws,
     sendMutex,
     createOrderRequest,
-    shutdownCallback
+    shutdownCallback,
+    new Date(Date.now())
   )
   const tickCallback = createTickCallback(pairs, pairMap)
 
@@ -98,9 +98,12 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
   graphWorker.on('message', graphWorkerCallback)
   exchangeWs.on('ticker', tickCallback)
 
+  // start subscriptions and wait for initial flood of tick updates to stabilize
   startSubscription(pairs, exchangeWs)
+  await new Promise(res => setTimeout(res, 2000))
 
   // return configured threads
+  console.timeEnd('startup')
   return [orderws, graphWorker]
 }
 
@@ -128,7 +131,7 @@ argv.initialAsset === null
         apiKey: argv.apiKey,
         apiPrivateKey: argv.apiPrivateKey,
       },
-    }).then((): void => console.timeEnd('startup'))
+    })
   : worker()
 
 // wait till shutdown of sockets and readline

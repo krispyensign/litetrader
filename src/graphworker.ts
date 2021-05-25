@@ -5,7 +5,6 @@ import { calcProfit } from './profitcalc.js'
 import WebSocket from 'ws'
 
 let graphCount = 0
-const startTime = Date.now()
 const isError = util.types.isNativeError
 
 type LazyIterable<T> = {
@@ -139,7 +138,8 @@ export const createGraphProfitCallback = (
   orderws: WebSocket,
   mutex: Mutex,
   createOrderRequest: (token: string, step: OrderCreateRequest) => string,
-  shutdownCallback: () => void
+  shutdownCallback: () => void,
+  startTime: Date
 ): ((arg: readonly number[]) => Promise<void>) => async (
   cycle: readonly number[]
 ): Promise<void> => {
@@ -165,8 +165,8 @@ export const createGraphProfitCallback = (
         // log value and die for now
         console.log(result)
         console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
-        console.log(`time: ${t2 - t1}ms`)
-        console.log(`calcTime: ${t3 - startTime}ms`)
+        console.log(`latency time: ${t2 - t1}ms`)
+        console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
         console.log(`count: ${graphCount}`)
         shutdownCallback()
         // isSending = false
