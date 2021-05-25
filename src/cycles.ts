@@ -1,4 +1,61 @@
-import { filterl, filterMapl, flatMapl, hasValue, LazyIterable, partitionl, peekl } from './lib.js'
+type LazyIterable<T> = {
+  [Symbol.iterator](): IterableIterator<T>
+}
+
+const filterMapl = <T, U>(
+  it: Iterable<T>,
+  fn: (value: T) => U,
+  fnFilter: (value: T) => boolean
+): LazyIterable<U> => ({
+  *[Symbol.iterator](): IterableIterator<U> {
+    for (const item of it) {
+      if (!fnFilter(item)) continue
+      else yield fn!(item)
+    }
+  },
+})
+
+const filterl = <T>(it: Iterable<T>, fn: (value: T) => boolean): LazyIterable<T> => ({
+  *[Symbol.iterator](): IterableIterator<T> {
+    for (const item of it) {
+      if (fn!(item)) {
+        yield item
+      }
+    }
+  },
+})
+
+const flatMapl = <T, U>(it: Iterable<T>, fn: (value: T) => Iterable<U>): LazyIterable<U> => ({
+  *[Symbol.iterator](): IterableIterator<U> {
+    for (const item of it) {
+      for (const subItem of fn!(item)) {
+        yield subItem
+      }
+    }
+  },
+})
+
+const partitionl = <T>(
+  it: LazyIterable<T>,
+  fn: (value: T) => boolean
+): readonly [LazyIterable<T>, LazyIterable<T>] => [
+  filterl(it, fn),
+  filterl(it, (value: T): boolean => !fn(value)),
+]
+
+const peekl = <T>(it: LazyIterable<T>): LazyIterable<T> => ({
+  *[Symbol.iterator](): IterableIterator<T> {
+    for (const item of it) {
+      yield item
+      break
+    }
+  },
+})
+
+const hasValue = <T>(it: LazyIterable<T>): boolean => {
+  for (const item of it) return item !== null
+  return false
+}
 
 type Label = number | string
 

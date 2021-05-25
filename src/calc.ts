@@ -1,6 +1,5 @@
-import type { IndexedPair, Step, StepMaterial, Steps, StepSnapshot, ValidatedSteps } from './types'
-import type { GraphWorkerData } from './callbacks'
-import { isError } from './helpers.js'
+import * as util from 'node:util'
+const isError = util.types.isNativeError
 
 const validatePair = (
   steps: ValidatedSteps,

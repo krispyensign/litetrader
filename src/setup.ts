@@ -1,5 +1,3 @@
-import type { Dictionary, ExchangePair, IndexedPair } from './types'
-
 export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> => {
   return (
     indexedPairs
@@ -41,11 +39,8 @@ const validateTradePairs = async (
 }
 
 export const setupData = async (
-  getAvailablePairs: (threshold?: number) => Promise<readonly ExchangePair[]>
+  tradePairs: ExchangePair[]
 ): Promise<[readonly string[], IndexedPair[], Map<string, number>]> => {
-  // get pairs from exchange
-  const tradePairs = await getAvailablePairs()
-
   // extract assets from pairs
   const assets = [
     ...tradePairs.reduce(
@@ -65,6 +60,7 @@ export const setupData = async (
   // create a mapping of baseNamequoteName and baseName,quoteName
   const pairMap = new Map([
     ...new Map<string, number>(tradePairs.map((pair, index) => [pair.tradename, index])),
+    ...new Map<string, number>(tradePairs.map((pair, index) => [pair.name, index])),
     ...new Map<string, number>(
       tradePairs.map(pair => [[pair.baseName, pair.quoteName].join(','), pair.index])
     ),

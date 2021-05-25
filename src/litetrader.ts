@@ -1,7 +1,6 @@
-console.time('startup completed')
+console.time('startup')
 import { isMainThread } from 'worker_threads'
 
-import type { ExchangeName } from './types'
 import yargs from 'yargs'
 import * as sourceMap from 'source-map-support'
 import { app, worker } from './app.js'
@@ -33,8 +32,7 @@ argv.initialAsset === null
         apiKey: argv.apiKey,
         apiPrivateKey: argv.apiPrivateKey,
       },
-    })
+    }).then(() => console.timeEnd('startup'))
   : worker()
 
-console.timeEnd('startup completed')
 // wait till shutdown of sockets and readline

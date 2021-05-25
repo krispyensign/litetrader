@@ -140,6 +140,7 @@ declare module 'ccxws' {
 
   export class Exchange {
     constructor(options?: ExchangeOptions)
+    close(): void
 
     candlePeriod: keyof CandlePeriod
     hasTickers: boolean

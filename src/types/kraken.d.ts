@@ -1,253 +1,9 @@
-export type Token = {
+type Token = {
   token: string
   expires: number
 }
 
-type TickerResponse = {
-  /**
-   * Ask
-   */
-  readonly a: readonly [number, number, number]
-  /**
-   * Bid
-   */
-  readonly b: readonly [number, number, number]
-  /**
-   * Close
-   */
-  readonly c: readonly [number, number]
-  /**
-   * Volume
-   */
-  readonly v: readonly [number, number]
-  /**
-   * Volume weighted average price
-   */
-  readonly p: readonly [number, number]
-  /**
-   * Number of trades
-   */
-  readonly t: readonly [number, number]
-  /**
-   * Low price
-   */
-  readonly l: readonly [number, number]
-  /**
-   * High price
-   */
-  readonly h: readonly [number, number]
-  /**
-   * Open price
-   */
-  readonly o: readonly [number, number]
-}
-
-/**
- * Publication: Ticker information on currency pair.
- */
-export type Ticker = {
-  /**
-   * Ask
-   */
-  a: [number, number, number]
-  /**
-   * Bid
-   */
-  b: [number, number, number]
-  /**
-   * Close
-   */
-  c: [number, number]
-  /**
-   * Volume
-   */
-  v: [number, number]
-  /**
-   * Volume weighted average price
-   */
-  p: [number, number]
-  /**
-   * Number of trades
-   */
-  t: [number, number]
-  /**
-   * Low price
-   */
-  l: [number, number]
-  /**
-   * High price
-   */
-  h: [number, number]
-  /**
-   * Open price
-   */
-  o: [number, number]
-}
-
-/**
- * Container for public publications
- */
-export type Publication = [
-  number,
-  (
-    | {
-        /**
-         * Ask
-         */
-        a: [number, number, number]
-        /**
-         * Bid
-         */
-        b: [number, number, number]
-        /**
-         * Close
-         */
-        c: [number, number]
-        /**
-         * Volume
-         */
-        v: [number, number]
-        /**
-         * Volume weighted average price
-         */
-        p: [number, number]
-        /**
-         * Number of trades
-         */
-        t: [number, number]
-        /**
-         * Low price
-         */
-        l: [number, number]
-        /**
-         * High price
-         */
-        h: [number, number]
-        /**
-         * Open price
-         */
-        o: [number, number]
-      }
-    | [number, number, number, number, number, number, number, number, number]
-    | [number, number, number, string, string, string][]
-    | [number, number, number, number, number]
-    | {
-        /**
-         * Array of price levels, ascending from best ask
-         */
-        as: [number, number, number][]
-        /**
-         * Array of price levels, descending from best bid
-         */
-        bs: [number, number, number][]
-      }
-    | (
-        | {
-            /**
-             * Ask array of level updates
-             */
-            a: [number, number, number] | [number, number, number, string][]
-            /**
-             * Optional - Book checksum as a quoted unsigned 32-bit integer, present only within
-             * the last update container in the message.
-             */
-            c: string
-          }
-        | {
-            /**
-             * Bid array of level updates
-             */
-            b: [number, number, number] | [number, number, number, string][]
-            /**
-             * Optional - Book checksum as a quoted unsigned 32-bit integer, present only within
-             * the last update container in the message.
-             */
-            c: string
-          }
-      )
-  ),
-  number,
-  string
-]
-
-export type AssetPair = {
-  /**
-   * alternate pair name
-   */
-  altname?: string
-  /**
-   * WebSocket pair name (if available)
-   */
-  wsname: string
-  /**
-   * asset class of base component
-   */
-  aclass_base?: string
-  /**
-   * asset id of base component
-   */
-  base: string
-  /**
-   * asset class of quote component
-   */
-  aclass_quote?: string
-  /**
-   * asset id of quote component
-   */
-  quote: string
-  /**
-   * volume lot size
-   */
-  lot?: string
-  /**
-   * scaling decimal places for pair
-   */
-  pair_decimals: number
-  /**
-   * scaling decimal places for volume
-   */
-  lot_decimals: number
-  /**
-   * amount to multiply lot volume by to get currency volume
-   */
-  lot_multiplier?: number
-  /**
-   * array of leverage amounts available when buying
-   */
-  leverage_buy?: number[]
-  /**
-   * array of leverage amounts available when selling
-   */
-  leverage_sell?: number[]
-  /**
-   * fee schedule array in [volume, percent fee] tuples
-   */
-  fees: [number, number][]
-  /**
-   * fee schedule array in [volume, percent fee] tuples (if on maker/taker)
-   */
-  fees_maker: [number, number][]
-  /**
-   * volume discount currency
-   */
-  fee_volume_currency?: string
-  /**
-   * margin call level
-   */
-  margin_call?: number
-  /**
-   * stop-out/liquidation margin level
-   */
-  margin_stop?: number
-  /**
-   * minimum order volume for pair
-   */
-  ordermin?: string
-}
-/**
- * Request. Cancel order or list of orders.
- */
-export type CancelOrder = {
+type CancelOrder = {
   event: 'cancelOrder'
   /**
    * Session token string
@@ -263,7 +19,7 @@ export type CancelOrder = {
   txid: string[]
 }
 
-export type AddOrder = {
+type AddOrder = {
   event: 'addOrder'
   /**
    * Session token string
@@ -351,9 +107,9 @@ export type AddOrder = {
   trading_agreement?: string
 }
 
-export type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
+type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
 
-export type AddOrderStatus = {
+type AddOrderStatus = {
   readonly event: 'addOrderStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message
@@ -378,7 +134,7 @@ export type AddOrderStatus = {
   readonly errorMessage: string
 }
 
-export type CancelOrderStatus = {
+type CancelOrderStatus = {
   readonly event: 'cancelOrderStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message
@@ -394,7 +150,7 @@ export type CancelOrderStatus = {
   readonly errorMessage?: string
 }
 
-export type SubscriptionStatus = {
+type SubscriptionStatus = {
   readonly event: 'subscriptionStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message

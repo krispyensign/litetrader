@@ -1,16 +1,12 @@
-import type { Config, Dictionary } from './types'
 import WebSocket from 'ws'
 import { dirname } from 'path'
 import { Worker, parentPort, workerData } from 'worker_threads'
-import {
-  createTickCallback,
-  createShutdownCallback,
-  createGraphProfitCallback,
-} from './callbacks.js'
-import { orderSelector, tickSelector } from './helpers.js'
+import { createShutdownCallback, createGraphProfitCallback } from './callbacks.js'
 import { buildGraph, setupData } from './setup.js'
-import { findCycles } from './unicycle/unicycle.js'
+import { findCycles } from './cycles.js'
 import { Mutex } from 'async-mutex'
+import { getAvailablePairs, getExchangeApi, getExchangeWs, startSubscription } from './tick.js'
+import { orderSelector } from './exchange/orders.js'
 
 export const worker = (): true => {
   // post each cycle
@@ -33,24 +29,15 @@ const getIndex = async (initialAssetIndexF: number, initialAsset: string): Promi
     ? Promise.reject(new Error(`invalid asset ${initialAsset}`))
     : Promise.resolve(initialAssetIndexF)
 
-export const app = async (config: Config): Promise<readonly [WebSocket, WebSocket, Worker]> => {
-  console.log('TODO: Use ws extension. Use monads for lib. Move to ccxt.  Move to ccxws.')
+export const app = async (config: Config): Promise<readonly [WebSocket, Worker]> => {
+  console.log('TODO: Replace lib. Implement coinbase sandbox')
   // configure everything
-  const [
-    createStopRequest,
-    createTickSubRequest,
-    getAvailablePairs,
-    webSocketUrl,
-    parseTick,
-  ] = await tickSelector(config.exchangeName)
   const [, createOrderRequest, , authWebSocketUrl, , parseEvent, getToken] = await orderSelector(
     config.exchangeName
   )
-
-  const exchangeData = await setupData(getAvailablePairs)
-  const [assets, pairs, pairMap] = exchangeData
-
-  const token = await getToken(config.key, new Date().getTime() * 1000)
+  const [assets, pairs, pairMap] = await setupData(
+    await getAvailablePairs(getExchangeApi(config.exchangeName))
+  )
 
   // validate initialasset before continuing
   const initialAssetIndex = await getIndex(
@@ -59,7 +46,6 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
   )
 
   // setup sockets and graph worker
-  const tickws = new WebSocket(webSocketUrl)
   const orderws = new WebSocket(authWebSocketUrl)
   const graphWorker = new Worker(dirname(process.argv[1]) + '/litetrader.js', {
     workerData: {
@@ -67,16 +53,16 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
       initialAssetIndex: initialAssetIndex,
     },
   })
+  const exchangeWs = getExchangeWs(config.exchangeName)
 
   // setup callbacks
   const sendMutex = new Mutex()
-  const tickCallback = createTickCallback(pairs, pairMap, parseTick)
   const shutdownCallback = createShutdownCallback(
-    tickws,
     orderws,
     graphWorker,
-    createStopRequest(pairs.map(p => p.tradename)),
-    sendMutex
+    sendMutex,
+    pairs,
+    exchangeWs
   )
   const graphWorkerCallback = createGraphProfitCallback(
     {
@@ -86,7 +72,7 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
       initialAssetIndex: initialAssetIndex,
       pairMap: pairMap,
       pairs: pairs,
-      token: token,
+      token: await getToken(config.key, new Date().getTime() * 1000),
     },
     orderws,
     sendMutex,
@@ -94,18 +80,24 @@ export const app = async (config: Config): Promise<readonly [WebSocket, WebSocke
     shutdownCallback
   )
 
-  // sleep until websockets are stable before proceeding
-  while (tickws.readyState !== WebSocket.OPEN || orderws.readyState !== WebSocket.OPEN)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
   // setup all thread and process handlers
   process.on('SIGINT', shutdownCallback)
-  tickws.on('message', tickCallback)
   orderws.on('message', eventData => console.log(parseEvent(eventData.toLocaleString())))
   graphWorker.on('message', graphWorkerCallback)
+  exchangeWs.on(
+    'ticker',
+    async (tick, market): Promise<void> => {
+      const pairIndex = pairMap.get(market.id)
+      if (pairIndex === undefined)
+        return Promise.reject(Error(`Invalid pair encountered. ${market.id}`))
+      pairs[pairIndex].ask = Number(tick.ask)
+      pairs[pairIndex].bid = Number(tick.bid)
+      return
+    }
+  )
 
-  tickws.send(createTickSubRequest(pairs.map(p => p.tradename)))
+  startSubscription(pairs, exchangeWs)
 
   // return configured threads
-  return [tickws, orderws, graphWorker]
+  return [orderws, graphWorker]
 }

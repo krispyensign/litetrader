@@ -1,55 +1,26 @@
-import type { OrderCreateRequest, PairPriceUpdate, IndexedPair } from './types'
 import WebSocket from 'ws'
 import { Worker } from 'worker_threads'
 import { calcProfit } from './calc.js'
-import { isError } from './helpers.js'
 import { Mutex } from 'async-mutex'
+import { stopSubscription } from './tick.js'
+import * as util from 'node:util'
 
 let graphCount = 0
 const startTime = Date.now()
-
-export type GraphWorkerData = {
-  initialAssetIndex: number
-  initialAmount: number
-  assets: readonly string[]
-  pairs: IndexedPair[]
-  pairMap: ReadonlyMap<string, number>
-  eta: number
-  token: string
-}
-
-export const createTickCallback = (
-  pairs: IndexedPair[],
-  pairMap: ReadonlyMap<string, number>,
-  parseTick: (arg: string) => PairPriceUpdate | string | Error
-) => async (x: WebSocket.MessageEvent): Promise<void> => {
-  const pairUpdate = parseTick(x.toLocaleString())
-  if (typeof pairUpdate === 'string') return
-  if (isError(pairUpdate)) {
-    console.log(pairUpdate)
-    return Promise.reject(pairUpdate)
-  }
-  const pairIndex = pairMap.get(pairUpdate.tradeName)
-  if (pairIndex === undefined)
-    return Promise.reject(Error(`Invalid pair encountered. ${pairUpdate.tradeName}`))
-  pairs[pairIndex].ask = pairUpdate.ask
-  pairs[pairIndex].bid = pairUpdate.bid
-  return
-}
+const isError = util.types.isNativeError
 
 export const createShutdownCallback = (
-  tickws: WebSocket,
   orderws: WebSocket,
   worker: Worker,
-  unSubRequest: string,
-  mutex: Mutex
+  mutex: Mutex,
+  pairs: IndexedPair[],
+  wsExchange: { close: () => void }
 ): (() => void) => async (): Promise<void> =>
   mutex.acquire().then(() => {
     // unsubsribe from everything
-    tickws.send(unSubRequest)
+    stopSubscription(pairs, wsExchange)
 
     // kill the connections ( will also kill detached threads and thus the app )
-    tickws.close()
     orderws.close()
     worker.terminate()
     console.log('shutdown complete')
