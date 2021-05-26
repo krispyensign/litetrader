@@ -109,7 +109,7 @@ type IndexedPair = {
   readonly quoteName: string
   readonly makerFee: number
   readonly takerFee: number
-  readonly volume: number
+  volume: number
   readonly ordermin: number
   ask: number
   bid: number

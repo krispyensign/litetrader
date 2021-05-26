@@ -49,6 +49,7 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
   const [assets, pairs, pairMap] = await setupData(
     await getAvailablePairs(getExchangeApi(config.exchangeName))
   )
+
   // validate initialasset before continuing
   const initialAssetIndex = await getIndex(
     assets.findIndex(a => a === config.initialAsset),

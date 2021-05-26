@@ -40,34 +40,33 @@ export const createTickCallback = (pairs: IndexedPair[], pairMap: Map<string, nu
   const pairIndex = pairMap.get(market.id)
   if (pairIndex === undefined)
     return Promise.reject(Error(`Invalid pair encountered. ${market.id}`))
+  pairs[pairIndex].volume = Number(tick.askVolume) + Number(tick.bidVolume)
   pairs[pairIndex].ask = Number(tick.ask)
   pairs[pairIndex].bid = Number(tick.bid)
   return
 }
 
 export const getAvailablePairs = async (apiExchange: ccxt.Exchange): Promise<ExchangePair[]> =>
-  apiExchange.fetchTickers().then(tickers =>
-    apiExchange.loadMarkets().then(markets =>
-      Object.entries(markets)
-        .filter(([marketName]) => tickers[marketName] !== undefined)
-        .map(
-          ([marketName, market], index): ExchangePair => ({
-            baseName: market.baseId,
-            quoteName: market.quoteId,
-            index: index,
-            name: market.id,
-            tradename: market.symbol,
-            ordermin: market.limits.amount['min'],
-            makerFee: market.maker,
-            takerFee: market.taker,
-            precision: market.precision.amount,
-            precisionMode: apiExchange.precisionMode,
-            volume: (tickers[marketName].baseVolume ?? 0) + (tickers[marketName].quoteVolume ?? 0),
-            ask: tickers[marketName].ask,
-            bid: tickers[marketName].bid,
-          })
-        )
-    )
+  apiExchange.loadMarkets().then(markets =>
+    Object.entries(markets)
+      .filter(([, market]) => market.symbol !== undefined)
+      .map(
+        ([, market], index): ExchangePair => ({
+          baseName: market.baseId,
+          quoteName: market.quoteId,
+          index: index,
+          name: market.id,
+          tradename: market.symbol,
+          ordermin: market.limits.amount['min'],
+          makerFee: market.maker,
+          takerFee: market.taker,
+          precision: market.precision.amount,
+          precisionMode: apiExchange.precisionMode,
+          volume: 0,
+          ask: 0,
+          bid: 0,
+        })
+      )
   )
 
 const buildAssets = (tradePairs: ExchangePair[]): string[] => [

@@ -1,5 +1,5 @@
 import { Mutex } from 'async-mutex'
-import * as util from 'node:util'
+import * as util from 'util'
 import { parentPort, workerData } from 'worker_threads'
 import { calcProfit } from './profitcalc.js'
 import WebSocket from 'ws'
