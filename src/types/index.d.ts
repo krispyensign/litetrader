@@ -93,10 +93,10 @@ type ExchangePair = {
   readonly quoteName: string
   readonly makerFee: number
   readonly takerFee: number
-  readonly volume: number
+  readonly volume?: number
   readonly ordermin: number
-  readonly ask: number
-  readonly bid: number
+  readonly ask?: number
+  readonly bid?: number
 }
 
 type IndexedPair = {
@@ -109,10 +109,10 @@ type IndexedPair = {
   readonly quoteName: string
   readonly makerFee: number
   readonly takerFee: number
-  volume: number
+  volume?: number
   readonly ordermin: number
-  ask: number
-  bid: number
+  ask?: number
+  bid?: number
   readonly quoteIndex: number
   readonly baseIndex: number
 }

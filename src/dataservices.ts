@@ -62,9 +62,6 @@ export const getAvailablePairs = async (apiExchange: ccxt.Exchange): Promise<Exc
           takerFee: market.taker,
           precision: market.precision.amount,
           precisionMode: apiExchange.precisionMode,
-          volume: 0,
-          ask: 0,
-          bid: 0,
         })
       )
   )
