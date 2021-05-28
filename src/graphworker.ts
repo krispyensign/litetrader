@@ -13,8 +13,8 @@ type LazyIterable<T> = {
 
 const filterMapl = <T, U>(
   it: Iterable<T>,
-  fn: (value: T) => U,
-  fnFilter: (value: T) => boolean
+  fnFilter: (value: T) => boolean,
+  fn: (value: T) => U
 ): LazyIterable<U> => ({
   *[Symbol.iterator](): IterableIterator<U> {
     for (const item of it)
@@ -75,16 +75,15 @@ const growPaths = (
       filterMapl(
         // loop through each neighbor of the last element of the current path
         neighbors.get(currentPath[currentPath.length - 1])!.values(),
-
-        // build new paths with remaining neighbors
-        neighbor => currentPath.concat(neighbor),
-
         // discard nbrs that don't meet the criteria for a cycle or path
         neighbor =>
           // assert that the current neighbor isn't a loop
           currentPath[currentPath.length - 1] !== neighbor &&
           // if the neighbor completes the circuit or is not already included
-          currentPath.includes(neighbor) === (currentPath[0] === neighbor)
+          currentPath.includes(neighbor) === (currentPath[0] === neighbor),
+
+        // build new paths with remaining neighbors
+        neighbor => currentPath.concat(neighbor)
       )
   )
 

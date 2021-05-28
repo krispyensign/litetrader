@@ -28,11 +28,12 @@ const createShutdownCallback = (
   worker: Worker,
   mutex: Mutex,
   pairs: IndexedPair[],
-  wsExchange: unknown
+  wsExchange: { close(): void }
 ): (() => void) => async (): Promise<void> =>
   mutex.acquire().then(() => {
     // unsubsribe from everything and kill tick thread
     stopSubscription(pairs, wsExchange)
+    wsExchange.close()
 
     // kill the connections ( will also kill detached threads and thus the app )
     orderws.close()
@@ -47,7 +48,7 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
     config.exchangeName
   )
   const [assets, pairs, pairMap] = await setupData(
-    await getAvailablePairs(getExchangeApi(config.exchangeName))
+    await getAvailablePairs(await getExchangeApi(config.exchangeName))
   )
 
   // validate initialasset before continuing
@@ -64,7 +65,7 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
       initialAssetIndex: initialAssetIndex,
     },
   })
-  const exchangeWs = getExchangeWs(config.exchangeName)
+  const exchangeWs = await getExchangeWs(config.exchangeName)
 
   // setup callbacks
   const sendMutex = new Mutex()
@@ -93,15 +94,18 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
   )
   const tickCallback = createTickCallback(pairs, pairMap)
 
-  // setup all thread and process handlers
+  // setup process handler and websockets
   process.on('SIGINT', shutdownCallback)
   orderws.on('message', eventData => console.log(parseEvent(eventData.toLocaleString())))
-  graphWorker.on('message', graphWorkerCallback)
   exchangeWs.on('ticker', tickCallback)
 
   // start subscriptions and wait for initial flood of tick updates to stabilize
+  console.log('stabilizing...')
   startSubscription(pairs, exchangeWs)
   await new Promise(res => setTimeout(res, 2000))
+
+  // start processing with the graph thread
+  graphWorker.on('message', graphWorkerCallback)
 
   // return configured threads
   console.timeEnd('startup')

@@ -1,15 +1,15 @@
 import ccxt from 'ccxt'
 import ccxws from 'ccxws'
 
-export const getExchangeApi = (exchangeName: ExchangeName): ccxt.Exchange => {
-  if (exchangeName === 'kraken') return new ccxt.kraken()
-  else throw Error('unknown exchange ' + exchangeName)
-}
+export const getExchangeApi = async (exchangeName: ExchangeName): Promise<ccxt.Exchange> =>
+  exchangeName === 'kraken'
+    ? new ccxt.kraken()
+    : Promise.reject(new Error('unknown exchange ' + exchangeName))
 
-export const getExchangeWs = (exchangeName: ExchangeName): ccxws.Exchange => {
-  if (exchangeName === 'kraken') return new ccxws.Kraken()
-  else throw Error('unknown exchange ' + exchangeName)
-}
+export const getExchangeWs = async (exchangeName: ExchangeName): Promise<ccxws.Exchange> =>
+  exchangeName === 'kraken'
+    ? new ccxws.Kraken()
+    : Promise.reject(new Error('unknown exchange ' + exchangeName))
 
 export const startSubscription = (pairs: IndexedPair[], wsExchange: ccxws.Exchange): void =>
   pairs.forEach(pair =>
@@ -21,7 +21,7 @@ export const startSubscription = (pairs: IndexedPair[], wsExchange: ccxws.Exchan
     })
   )
 
-export const stopSubscription = (pairs: IndexedPair[], wsExchange: unknown): void => {
+export const stopSubscription = (pairs: IndexedPair[], wsExchange: unknown): void =>
   pairs.forEach(pair =>
     (wsExchange as ccxws.Exchange).unsubscribeTicker({
       base: pair.baseName,
@@ -30,8 +30,6 @@ export const stopSubscription = (pairs: IndexedPair[], wsExchange: unknown): voi
       type: 'spot',
     })
   )
-  ;(wsExchange as ccxws.Exchange).close()
-}
 
 export const createTickCallback = (pairs: IndexedPair[], pairMap: Map<string, number>) => async (
   tick: ccxws.Ticker,
