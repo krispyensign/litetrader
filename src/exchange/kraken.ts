@@ -6,16 +6,6 @@ const krakenTokenPath = '/0/private/GetWebSocketsToken'
 const krakenApiUrl = 'https://api.kraken.com'
 export const webSocketUrl = 'wss://ws-auth.kraken.com'
 
-const isObject = (o: unknown): o is object => o !== null && o !== undefined && typeof o === 'object'
-
-export const isStatusEvent = (event: unknown): event is StatusEvent =>
-  !isObject(event)
-    ? false
-    : (event as StatusEvent).event !== undefined && (event as StatusEvent).reqid !== undefined
-
-export const getReqId = (parsedEvent: unknown): string =>
-  isStatusEvent(parsedEvent) ? parsedEvent.reqid?.toString() || '0' : '0'
-
 export const createOrderRequest = (token: string, order: OrderCreateRequest): string =>
   JSON.stringify({
     ordertype: order.orderType,
@@ -28,13 +18,6 @@ export const createOrderRequest = (token: string, order: OrderCreateRequest): st
     price: order.price?.toString(),
     userref: order.orderId,
   } as AddOrder)
-
-export const cancelOrderRequest = (token: string, cancel: OrderCancelRequest): string =>
-  JSON.stringify({
-    event: 'cancelOrder',
-    token: token,
-    txid: [cancel.orderId],
-  } as CancelOrder)
 
 export const parseEvent = (eventData: string): string => eventData
 

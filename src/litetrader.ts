@@ -44,7 +44,7 @@ const createShutdownCallback = (
 export const app = async (config: Config): Promise<readonly [WebSocket, Worker]> => {
   console.log('TODO: Implement coinbase sandbox')
   // configure everything
-  const [, createOrderRequest, , authWebSocketUrl, , parseEvent, getToken] = await orderSelector(
+  const [createOrderRequest, authWebSocketUrl, parseEvent, getToken] = await orderSelector(
     config.exchangeName
   )
   const [assets, pairs, pairMap] = await setupData(

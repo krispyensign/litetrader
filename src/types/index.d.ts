@@ -1,9 +1,6 @@
 type OrderModule = readonly [
-  (token: string, cancel: OrderCancelRequest) => string,
   (token: string, order: OrderCreateRequest) => string,
-  (parsedEvent: unknown) => string,
   string,
-  (event: unknown) => boolean,
   (eventData: string) => string,
   (key: Key, nonce: number) => Promise<string>
 ]
