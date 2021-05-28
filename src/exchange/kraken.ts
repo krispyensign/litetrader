@@ -71,8 +71,8 @@ const makeAuthCall = async <T = object>(
       .json()
   )
 
-export const getToken = async (key: Key, nonce: number): Promise<string> => {
-  return (
+export const getToken = async (key: Key, nonce: number): Promise<string> =>
+  (
     await makeAuthCall<Token>(
       krakenApiUrl + krakenTokenPath,
       qs.stringify({
@@ -82,4 +82,3 @@ export const getToken = async (key: Key, nonce: number): Promise<string> => {
       key
     )
   ).token
-}
