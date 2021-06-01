@@ -7,15 +7,7 @@ import WebSocket from 'ws'
 let graphCount = 0
 const isError = util.types.isNativeError
 
-type LazyIterable<T> = {
-  [Symbol.iterator](): IterableIterator<T>
-}
-
-const filterMapl = <T, U>(
-  it: Iterable<T>,
-  fnFilter: (value: T) => boolean,
-  fn: (value: T) => U
-): LazyIterable<U> => ({
+const filterMapl = <T, U>(it: Iterable<T>, fnFilter: FnFilter<T>, fn: Fn<T, U>): Lazy<U> => ({
   *[Symbol.iterator](): IterableIterator<U> {
     for (const item of it)
       if (!fnFilter(item)) continue
@@ -23,32 +15,27 @@ const filterMapl = <T, U>(
   },
 })
 
-const filterl = <T>(it: Iterable<T>, fn: (value: T) => boolean): LazyIterable<T> => ({
+const filterl = <T>(it: Iterable<T>, fn: FnFilter<T>): Lazy<T> => ({
   *[Symbol.iterator](): IterableIterator<T> {
     for (const item of it) if (fn!(item)) yield item
   },
 })
 
-const flatMapl = <T, U>(it: Iterable<T>, fn: (value: T) => Iterable<U>): LazyIterable<U> => ({
+const flatMapl = <T, U>(it: Iterable<T>, fn: FnMulti<T, U>): Lazy<U> => ({
   *[Symbol.iterator](): IterableIterator<U> {
     for (const item of it) for (const subItem of fn!(item)) yield subItem
   },
 })
 
-const partitionl = <T>(
-  it: LazyIterable<T>,
-  fn: (value: T) => boolean
-): readonly [LazyIterable<T>, LazyIterable<T>] => [
+const partitionl = <T>(it: Lazy<T>, fn: FnFilter<T>): readonly [Lazy<T>, Lazy<T>] => [
   filterl(it, fn),
   filterl(it, (value: T): boolean => !fn(value)),
 ]
 
-const hasValue = <T>(it: LazyIterable<T>): boolean => {
+const hasValue = <T>(it: Lazy<T>): boolean => {
   for (const item of it) return item !== null
   return false
 }
-
-type Label = number | string
 
 /*
   path[-1] !== nbr  | path.includes(nbr)  |  path[0] === nbr  | result
@@ -63,7 +50,7 @@ type Label = number | string
 const growPaths = (
   paths: Iterable<readonly Label[]>,
   neighbors: ReadonlyMap<Label, readonly Label[]>
-): LazyIterable<readonly Label[]> =>
+): Lazy<readonly Label[]> =>
   flatMapl(
     // only perform grow operation if there are neighbors
     filterl(paths, path => neighbors.has(path[path.length - 1])),
