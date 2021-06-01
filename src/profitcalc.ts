@@ -39,7 +39,7 @@ const lookupPair = (gwd: GraphWorkerData, left: number, right: number): number |
   gwd.pairMap.get(`${gwd.assets[right]},${gwd.assets[left]}`) ??
   Error(`Invalid pair requested. quote: ${gwd.assets[left]}, ${gwd.assets[right]}`)
 
-const mutateArray = <T>(t: T[], v: T): T[] | Error =>
+const mutateStepArray = (t: Step[], v: Step): Step[] | Error =>
   t.push(v) > 0 ? t : Error('Failed to expand array.')
 
 // helper function to safely round a number
@@ -90,7 +90,7 @@ const buildStep = (sm: StepMaterial): Step =>
 const buildNextStepInPlace = (ss: StepSnapshot, eta: number): Steps =>
   isError(ss) || ss === 0
     ? ss
-    : mutateArray(
+    : mutateStepArray(
         ss.steps,
         buildStep({
           index: ss.index,

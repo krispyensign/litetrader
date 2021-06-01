@@ -21,12 +21,12 @@ export const createOrderRequest = (token: string, order: OrderCreateRequest): st
 
 export const parseEvent = (eventData: string): string => eventData
 
-type ResponseWrapper<T = object> = {
+type TokenResponseWrapper = {
   readonly error: readonly string[]
-  readonly result: T
+  readonly result: Token
 }
 
-const validateResponse = async <T>(response: ResponseWrapper<T>): Promise<T> =>
+const validateResponse = async (response: TokenResponseWrapper): Promise<Token> =>
   response.error?.length > 0
     ? Promise.reject(
         Error(
@@ -38,12 +38,12 @@ const validateResponse = async <T>(response: ResponseWrapper<T>): Promise<T> =>
       )
     : response.result
 
-const makeAuthCall = async <T = object>(
+const makeAuthCall = async (
   url: string,
   request: string,
   nonce: number,
   key: Key
-): Promise<T> =>
+): Promise<Token> =>
   validateResponse(
     await got
       .post({
@@ -73,7 +73,7 @@ const makeAuthCall = async <T = object>(
 
 export const getToken = async (key: Key, nonce: number): Promise<string> =>
   (
-    await makeAuthCall<Token>(
+    await makeAuthCall(
       krakenApiUrl + krakenTokenPath,
       qs.stringify({
         nonce,
