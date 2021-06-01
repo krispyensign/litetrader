@@ -20,7 +20,7 @@ import {
 
 const getIndex = async (initialAssetIndexF: number, initialAsset: string): Promise<number> =>
   initialAssetIndexF === -1
-    ? Promise.reject(new Error(`invalid asset ${initialAsset}`))
+    ? Promise.reject(Error(`invalid asset ${initialAsset}`))
     : Promise.resolve(initialAssetIndexF)
 
 const createShutdownCallback = (

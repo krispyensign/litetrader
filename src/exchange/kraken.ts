@@ -29,7 +29,7 @@ type ResponseWrapper<T = object> = {
 const validateResponse = async <T>(response: ResponseWrapper<T>): Promise<T> =>
   response.error?.length > 0
     ? Promise.reject(
-        new Error(
+        Error(
           response.error
             .filter(e => e.startsWith('E'))
             .map(e => e.substr(1))

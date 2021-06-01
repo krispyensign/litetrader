@@ -65,11 +65,8 @@ const growPaths = (
   neighbors: ReadonlyMap<Label, readonly Label[]>
 ): LazyIterable<readonly Label[]> =>
   flatMapl(
-    filterl(
-      paths,
-      // only perform grow operation if there are neighbors
-      path => neighbors.has(path[path.length - 1])
-    ),
+    // only perform grow operation if there are neighbors
+    filterl(paths, path => neighbors.has(path[path.length - 1])),
 
     currentPath =>
       filterMapl(
@@ -77,11 +74,8 @@ const growPaths = (
         neighbors.get(currentPath[currentPath.length - 1])!.values(),
         // discard nbrs that don't meet the criteria for a cycle or path
         neighbor =>
-          // assert that the current neighbor isn't a loop
           currentPath[currentPath.length - 1] !== neighbor &&
-          // if the neighbor completes the circuit or is not already included
           currentPath.includes(neighbor) === (currentPath[0] === neighbor),
-
         // build new paths with remaining neighbors
         neighbor => currentPath.concat(neighbor)
       )

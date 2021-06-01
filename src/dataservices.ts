@@ -4,12 +4,12 @@ import ccxws from 'ccxws'
 export const getExchangeApi = async (exchangeName: ExchangeName): Promise<ccxt.Exchange> =>
   exchangeName === 'kraken'
     ? new ccxt.kraken()
-    : Promise.reject(new Error('unknown exchange ' + exchangeName))
+    : Promise.reject(Error('unknown exchange ' + exchangeName))
 
 export const getExchangeWs = async (exchangeName: ExchangeName): Promise<ccxws.Exchange> =>
   exchangeName === 'kraken'
     ? new ccxws.Kraken()
-    : Promise.reject(new Error('unknown exchange ' + exchangeName))
+    : Promise.reject(Error('unknown exchange ' + exchangeName))
 
 export const startSubscription = (pairs: IndexedPair[], wsExchange: ccxws.Exchange): void =>
   pairs.forEach(pair =>
