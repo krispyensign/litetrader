@@ -31,18 +31,17 @@ export const stopSubscription = (pairs: IndexedPair[], wsExchange: unknown): voi
     })
   )
 
-export const createTickCallback = (pairs: IndexedPair[], pairMap: Map<string, number>) => async (
-  tick: ccxws.Ticker,
-  market: ccxws.Market
-): Promise<void> => {
-  const pairIndex = pairMap.get(market.id)
-  if (pairIndex === undefined)
-    return Promise.reject(Error(`Invalid pair encountered. ${market.id}`))
-  pairs[pairIndex].volume = Number(tick.askVolume) + Number(tick.bidVolume)
-  pairs[pairIndex].ask = Number(tick.ask)
-  pairs[pairIndex].bid = Number(tick.bid)
-  return
-}
+export const createTickCallback =
+  (pairs: IndexedPair[], pairMap: Map<string, number>) =>
+  async (tick: ccxws.Ticker, market: ccxws.Market): Promise<void> => {
+    const pairIndex = pairMap.get(market.id)
+    if (pairIndex === undefined)
+      return Promise.reject(Error(`Invalid pair encountered. ${market.id}`))
+    pairs[pairIndex].volume = Number(tick.askVolume) + Number(tick.bidVolume)
+    pairs[pairIndex].ask = Number(tick.ask)
+    pairs[pairIndex].bid = Number(tick.bid)
+    return
+  }
 
 export const getAvailablePairs = async (apiExchange: ccxt.Exchange): Promise<ExchangePair[]> =>
   apiExchange.loadMarkets().then(markets =>

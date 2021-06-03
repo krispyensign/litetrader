@@ -29,14 +29,14 @@ const createShutdownCallback =
     worker: Worker,
     mutex: Mutex,
     pairs: IndexedPair[],
-    wsExchange: Closeable 
+    wsExchange: Closeable
   ): (() => void) =>
   async (): Promise<void> =>
     mutex.acquire().then(() => {
-      // unsubsribe from everything 
+      // unsubsribe from everything
       stopSubscription(pairs, wsExchange)
 
-      // kill the connections 
+      // kill the connections
       dropConnection(conn)
       wsExchange.close()
 
@@ -49,9 +49,8 @@ const createShutdownCallback =
 export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
   console.log('TODO: Implement coinbase sandbox')
   // configure everything
-  const [createOrderRequest, getToken, getConnection, dropConnection, sendData] = await orderSelector(
-    config.exchangeName
-  )
+  const [createOrderRequest, getToken, getConnection, dropConnection, sendData] =
+    await orderSelector(config.exchangeName)
   const [assets, pairs, pairMap] = await setupData(
     await getAvailablePairs(await getExchangeApi(config.exchangeName))
   )
