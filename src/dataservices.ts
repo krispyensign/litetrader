@@ -86,10 +86,24 @@ const buildPairMap = (tradePairs: ExchangePair[]): Map<string, number> =>
     ),
   ])
 
+const getIndex = async (initialAssetIndexF: number, initialAsset: string): Promise<number> =>
+  initialAssetIndexF === -1
+    ? Promise.reject(Error(`invalid asset ${initialAsset}`))
+    : Promise.resolve(initialAssetIndexF)
+
+// validate initialasset before continuing
+const getInitialAssetIndex = async (assets: string[], initialAsset: string): Promise<number> =>
+  await getIndex(
+    assets.findIndex(a => a === initialAsset),
+    initialAsset
+  )
+
 export const setupData = async (
-  tradePairs: ExchangePair[]
-): Promise<[readonly string[], IndexedPair[], Map<string, number>]> => [
+  tradePairs: ExchangePair[],
+  initialAsset: string
+): Promise<[readonly string[], IndexedPair[], Map<string, number>, number]> => [
   buildAssets(tradePairs),
   buildIndexedPairs(tradePairs, buildAssets(tradePairs)),
   buildPairMap(tradePairs),
+  await getInitialAssetIndex(buildAssets(tradePairs), initialAsset),
 ]

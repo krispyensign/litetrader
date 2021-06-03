@@ -17,11 +17,6 @@ import {
   stopSubscription,
 } from './dataservices.js'
 
-const getIndex = async (initialAssetIndexF: number, initialAsset: string): Promise<number> =>
-  initialAssetIndexF === -1
-    ? Promise.reject(Error(`invalid asset ${initialAsset}`))
-    : Promise.resolve(initialAssetIndexF)
-
 const createShutdownCallback =
   (
     dropConnection: (ws: unknown) => void,
@@ -51,13 +46,8 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
   // configure everything
   const [createOrderRequest, getToken, getConnection, dropConnection, sendData] =
     await orderSelector(config.exchangeName)
-  const [assets, pairs, pairMap] = await setupData(
-    await getAvailablePairs(await getExchangeApi(config.exchangeName))
-  )
-
-  // validate initialasset before continuing
-  const initialAssetIndex = await getIndex(
-    assets.findIndex(a => a === config.initialAsset),
+  const [assets, pairs, pairMap, initialAssetIndex] = await setupData(
+    await getAvailablePairs(await getExchangeApi(config.exchangeName)),
     config.initialAsset
   )
 
