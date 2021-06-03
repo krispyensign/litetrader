@@ -3,6 +3,11 @@ type Token = {
   expires: number
 }
 
+type TokenResponseWrapper = {
+  readonly error: readonly string[]
+  readonly result: Token
+}
+
 type CancelOrder = {
   event: 'cancelOrder'
   /**

@@ -1,6 +1,7 @@
 import got from 'got'
 import qs from 'qs'
 import crypto from 'crypto'
+import WebSocket from 'ws'
 
 const krakenTokenPath = '/0/private/GetWebSocketsToken'
 const krakenApiUrl = 'https://api.kraken.com'
@@ -19,12 +20,7 @@ export const createOrderRequest = (token: string, order: OrderCreateRequest): st
     userref: order.orderId,
   } as AddOrder)
 
-export const parseEvent = (eventData: string): string => eventData
-
-type TokenResponseWrapper = {
-  readonly error: readonly string[]
-  readonly result: Token
-}
+const parseEvent = (eventData: string): string => eventData
 
 const validateResponse = async (response: TokenResponseWrapper): Promise<Token> =>
   response.error?.length > 0
@@ -82,3 +78,13 @@ export const getToken = async (key: Key, nonce: number): Promise<string> =>
       key
     )
   ).token
+
+export const getConnection = (): unknown => {
+  const sock = new WebSocket(webSocketUrl)
+  sock.on('message', eventData => console.log(parseEvent(eventData.toLocaleString())))
+  return sock
+}
+
+export const dropConnection = (ws: unknown): void => (ws as WebSocket).close()
+
+export const sendData = (data: string, ws: unknown): void => (ws as WebSocket).send(data)

@@ -8,36 +8,35 @@
   },
   "dependencies": {
     "async-mutex": "^0.3.1",
-    "ccxt": "^1.50.30",
+    "ccxt": "^1.50.76",
     "ccxws": "^0.43.1",
-    "got": "^11.8.1",
+    "got": "^11.8.2",
     "qs": "^6.10.1",
     "source-map-support": "^0.5.19",
     "winston": "^3.3.3",
-    "ws": "^7.4.2",
-    "yargs": "^16.2.0"
+    "ws": "^7.4.6",
+    "yargs": "^17.0.1"
   },
   "devDependencies": {
-    "@types/node": "^14.14.41",
+    "@types/node": "^15.9.0",
     "@types/qs": "^6.9.6",
     "@types/source-map-support": "^0.5.3",
-    "@types/ws": "^7.4.0",
-    "@types/yargs": "^15.0.12",
-    "@typescript-eslint/eslint-plugin": "^4.12.0",
-    "@typescript-eslint/parser": "^4.12.0",
-    "eslint": "^7.25.0",
-    "eslint-config-prettier": "^7.1.0",
-    "eslint-plugin-functional": "^3.2.1",
+    "@types/ws": "^7.4.4",
+    "@types/yargs": "^17.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.3.1",
-    "prettier": "^2.2.1",
-    "typescript": "^4.3.0-beta"
+    "eslint-plugin-prettier": "^3.4.0",
+    "prettier": "^2.3.0",
+    "typescript": "^4.3.2"
   },
   "scripts": {
     "start": "node --no-lazy ./dist/litetrader.js",
     "compile": "npx tsc",
     "build": "./build.sh",
-    "fix": "npx prettier -w src/ && npx eslint --fix src/",
+    "fix": "npx prettier -w src/** && npx eslint --fix src/",
     "clean": "rimraf bin/ dist/ node_modules/ logs/"
   },
   "repository": {

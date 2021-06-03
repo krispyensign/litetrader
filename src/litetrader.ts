@@ -3,7 +3,6 @@ import * as sourceMap from 'source-map-support'
 sourceMap.install()
 import { Worker, isMainThread } from 'worker_threads'
 import yargs from 'yargs'
-import WebSocket from 'ws'
 import { dirname } from 'path'
 import { Mutex } from 'async-mutex'
 import { orderSelector } from './exchange/orders.js'
@@ -23,28 +22,34 @@ const getIndex = async (initialAssetIndexF: number, initialAsset: string): Promi
     ? Promise.reject(Error(`invalid asset ${initialAsset}`))
     : Promise.resolve(initialAssetIndexF)
 
-const createShutdownCallback = (
-  orderws: WebSocket,
-  worker: Worker,
-  mutex: Mutex,
-  pairs: IndexedPair[],
-  wsExchange: { close(): void }
-): (() => void) => async (): Promise<void> =>
-  mutex.acquire().then(() => {
-    // unsubsribe from everything and kill tick thread
-    stopSubscription(pairs, wsExchange)
-    wsExchange.close()
+const createShutdownCallback =
+  (
+    dropConnection: (ws: unknown) => void,
+    conn: unknown,
+    worker: Worker,
+    mutex: Mutex,
+    pairs: IndexedPair[],
+    wsExchange: Closeable 
+  ): (() => void) =>
+  async (): Promise<void> =>
+    mutex.acquire().then(() => {
+      // unsubsribe from everything 
+      stopSubscription(pairs, wsExchange)
 
-    // kill the connections ( will also kill detached threads and thus the app )
-    orderws.close()
-    worker.terminate()
-    console.log('shutdown complete')
-  })
+      // kill the connections 
+      dropConnection(conn)
+      wsExchange.close()
 
-export const app = async (config: Config): Promise<readonly [WebSocket, Worker]> => {
+      // kill detached worker thread
+      worker.terminate()
+
+      console.log('shutdown complete')
+    })
+
+export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
   console.log('TODO: Implement coinbase sandbox')
   // configure everything
-  const [createOrderRequest, authWebSocketUrl, parseEvent, getToken] = await orderSelector(
+  const [createOrderRequest, getToken, getConnection, dropConnection, sendData] = await orderSelector(
     config.exchangeName
   )
   const [assets, pairs, pairMap] = await setupData(
@@ -58,7 +63,6 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
   )
 
   // setup sockets and graph worker
-  const orderws = new WebSocket(authWebSocketUrl)
   const graphWorker = new Worker(dirname(process.argv[1]) + '/litetrader.js', {
     workerData: {
       graph: buildGraph(pairs),
@@ -66,11 +70,13 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
     },
   })
   const exchangeWs = await getExchangeWs(config.exchangeName)
+  const exchangeConn = getConnection()
 
   // setup callbacks
   const sendMutex = new Mutex()
   const shutdownCallback = createShutdownCallback(
-    orderws,
+    dropConnection,
+    exchangeConn,
     graphWorker,
     sendMutex,
     pairs,
@@ -86,7 +92,8 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
       pairs: pairs,
       token: await getToken(config.key, new Date().getTime() * 1000),
     },
-    orderws,
+    exchangeConn,
+    sendData,
     sendMutex,
     createOrderRequest,
     shutdownCallback,
@@ -96,7 +103,6 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
 
   // setup process handler and websockets
   process.on('SIGINT', shutdownCallback)
-  orderws.on('message', eventData => console.log(parseEvent(eventData.toLocaleString())))
   exchangeWs.on('ticker', tickCallback)
 
   // start subscriptions and wait for initial flood of tick updates to stabilize
@@ -109,18 +115,20 @@ export const app = async (config: Config): Promise<readonly [WebSocket, Worker]>
 
   // return configured threads
   console.timeEnd('startup')
-  return [orderws, graphWorker]
+  return [exchangeConn, graphWorker]
 }
 
 // process the command line args
-const argv = yargs(process.argv.slice(2)).options({
-  exchangeName: { type: 'string', default: 'kraken' },
-  initialAmount: { type: 'number', default: 200 },
-  initialAsset: { type: 'string', default: 'ADA' },
-  eta: { type: 'number', default: 0.001 },
-  apiKey: { type: 'string', default: '' },
-  apiPrivateKey: { type: 'string', default: '' },
-}).argv
+const argv = yargs(process.argv.slice(2))
+  .options({
+    exchangeName: { type: 'string', default: 'kraken' },
+    initialAmount: { type: 'number', default: 200 },
+    initialAsset: { type: 'string', default: 'ADA' },
+    eta: { type: 'number', default: 0.001 },
+    apiKey: { type: 'string', default: '' },
+    apiPrivateKey: { type: 'string', default: '' },
+  })
+  .parseSync()
 
 // do some error handling
 argv.initialAsset === null

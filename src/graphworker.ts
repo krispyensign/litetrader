@@ -2,7 +2,6 @@ import { Mutex } from 'async-mutex'
 import * as util from 'util'
 import { parentPort, workerData } from 'worker_threads'
 import { calcProfit } from './profitcalc.js'
-import WebSocket from 'ws'
 
 let graphCount = 0
 const isError = util.types.isNativeError
@@ -92,67 +91,65 @@ export function* findCycles(
   }
 }
 
-export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> => {
-  return (
-    indexedPairs
+export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>
+  indexedPairs
 
-      // create edge list
-      .reduce(
-        (edgeList, ip) =>
-          edgeList.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
-        new Array<readonly [number, number]>()
-      )
-      // create adjacency map from edge list
-      .reduce(
-        (adjMap, edge) =>
-          adjMap[edge[0].toString()] !== undefined
-            ? ((adjMap[edge[0].toString()] = adjMap[edge[0].toString()]!.concat(edge[1])), adjMap)
-            : ((adjMap[edge[0].toString()] = [edge[1]]), adjMap),
-        {} as Dictionary<readonly number[]>
-      )
-  )
-}
+    // create edge list
+    .reduce(
+      (edgeList, ip) =>
+        edgeList.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
+      new Array<readonly [number, number]>()
+    )
+    // create adjacency map from edge list
+    .reduce(
+      (adjMap, edge) =>
+        adjMap[edge[0].toString()] !== undefined
+          ? ((adjMap[edge[0].toString()] = adjMap[edge[0].toString()]!.concat(edge[1])), adjMap)
+          : ((adjMap[edge[0].toString()] = [edge[1]]), adjMap),
+      {} as Dictionary<readonly number[]>
+    )
 
-export const createGraphProfitCallback = (
-  d: GraphWorkerData,
-  orderws: WebSocket,
-  mutex: Mutex,
-  createOrderRequest: (token: string, step: OrderCreateRequest) => string,
-  shutdownCallback: () => void,
-  startTime: Date
-): ((arg: readonly number[]) => Promise<void>) => async (
-  cycle: readonly number[]
-): Promise<void> => {
-  // calc profit, hopefully something good is found
-  const t1 = Date.now()
-  const result = calcProfit(d, cycle)
-  graphCount++
+export const createGraphProfitCallback =
+  (
+    d: GraphWorkerData,
+    ws: unknown,
+    sendData: (data: string, ws: unknown) => void,
+    mutex: Mutex,
+    createOrderRequest: (token: string, step: OrderCreateRequest) => string,
+    shutdownCallback: () => void,
+    startTime: Date
+  ): ((arg: readonly number[]) => Promise<void>) =>
+  async (cycle: readonly number[]): Promise<void> => {
+    // calc profit, hopefully something good is found
+    const t1 = Date.now()
+    const result = calcProfit(d, cycle)
+    graphCount++
 
-  // if not just an amount and is a cycle then do stuff
-  return isError(result)
-    ? Promise.reject(result)
-    : // check if the result is worthless
-    result === 0
-    ? Promise.resolve()
-    : // check if the last state object amount > initialAmount
-    result[result.length - 1].amount > d.initialAmount
-    ? mutex.runExclusive(() => {
-        // send orders
-        const t3 = Date.now()
-        result.forEach(step => orderws.send(createOrderRequest(d.token, step.orderCreateRequest)))
-        const t2 = Date.now()
+    // if not just an amount and is a cycle then do stuff
+    return isError(result)
+      ? Promise.reject(result)
+      : // check if the result is worthless
+      result === 0
+      ? Promise.resolve()
+      : // check if the last state object amount > initialAmount
+      result[result.length - 1].amount > d.initialAmount
+      ? mutex.runExclusive(() => {
+          // send orders
+          const t3 = Date.now()
+          result.forEach(step => sendData(createOrderRequest(d.token, step.orderCreateRequest), ws))
+          const t2 = Date.now()
 
-        // log value and die for now
-        console.log(result)
-        console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
-        console.log(`latency time: ${t2 - t1}ms`)
-        console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
-        console.log(`count: ${graphCount}`)
-        shutdownCallback()
-        // isSending = false
-      })
-    : Promise.resolve()
-}
+          // log value and die for now
+          console.log(result)
+          console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
+          console.log(`latency time: ${t2 - t1}ms`)
+          console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
+          console.log(`count: ${graphCount}`)
+          shutdownCallback()
+          // isSending = false
+        })
+      : Promise.resolve()
+  }
 
 export const worker = (): true => {
   // post each cycle

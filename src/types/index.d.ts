@@ -18,10 +18,13 @@ type Config = {
 
 type OrderModule = readonly [
   (token: string, order: OrderCreateRequest) => string,
-  string,
-  (eventData: string) => string,
-  (key: Key, nonce: number) => Promise<string>
+  (key: Key, nonce: number) => Promise<string>,
+  () => unknown,
+  (ws: unknown) => void,
+  (data: string, ws: unknown) => void
 ]
+
+type Closeable = { close(): void }
 
 type OrderCreateRequest = {
   readonly event: 'create'
