@@ -3,9 +3,9 @@ import qs from 'qs'
 import crypto from 'crypto'
 import WebSocket from 'ws'
 
-const krakenTokenPath = '/0/private/GetWebSocketsToken'
-const krakenApiUrl = 'https://api.kraken.com'
-export const webSocketUrl = 'wss://ws-auth.kraken.com'
+const tokenPath = '/0/private/GetWebSocketsToken'
+const apiUrl = 'https://api.kraken.com'
+const webSocketUrl = 'wss://ws-auth.kraken.com'
 
 export const createOrderRequest = (token: string, order: OrderCreateRequest): string =>
   JSON.stringify({
@@ -49,7 +49,7 @@ const makeAuthCall = async (
           'API-Sign': crypto
             .createHmac('sha512', Buffer.from(key.apiPrivateKey, 'base64'))
             .update(
-              '/0/private/GetWebSocketsToken' +
+              tokenPath +
                 crypto
                   .createHash('sha256')
                   .update(nonce + request)
@@ -70,7 +70,7 @@ const makeAuthCall = async (
 export const getToken = async (key: Key, nonce: number): Promise<string> =>
   (
     await makeAuthCall(
-      krakenApiUrl + krakenTokenPath,
+      apiUrl + tokenPath,
       qs.stringify({
         nonce,
       }),
