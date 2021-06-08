@@ -122,8 +122,7 @@ const argv = yargs(process.argv.slice(2))
 // do some error handling
 argv.initialAsset === null
   ? console.log('Invalid asset provided')
-  : // fire it up
-  isMainThread
+  : isMainThread
   ? app({
       exchangeName: argv.exchangeName as ExchangeName,
       initialAmount: argv.initialAmount,
@@ -136,4 +135,4 @@ argv.initialAsset === null
     })
   : worker()
 
-// wait till shutdown of sockets and readline
+// wait for shutdown
