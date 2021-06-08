@@ -83,6 +83,6 @@ export const getConnection = (): WebSocket => {
   return sock
 }
 
-export const dropConnection = (ws: WebSocket): void => ws.close()
+export const dropConnection = (ws: unknown): void => (ws as WebSocket).close()
 
-export const sendData = (data: string, ws: WebSocket): void => ws.send(data)
+export const sendData = (data: string, ws: unknown): void => (ws as WebSocket).send(data)
