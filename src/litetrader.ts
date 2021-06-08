@@ -5,7 +5,13 @@ import { Worker, isMainThread } from 'worker_threads'
 import yargs from 'yargs'
 import { dirname } from 'path'
 import { Mutex } from 'async-mutex'
-import { orderSelector } from './exchange/orders.js'
+import {
+  Connection,
+  dropConnection,
+  getConnection,
+  getToken,
+  setupAuthService,
+} from './exchange/auth.js'
 import { buildGraph, createGraphProfitCallback, worker } from './graphworker.js'
 import {
   createTickCallback,
@@ -19,8 +25,7 @@ import {
 
 const createShutdownCallback =
   (
-    dropConnection: (ws: unknown) => void,
-    conn: unknown,
+    conn: Connection,
     worker: Worker,
     mutex: Mutex,
     pairs: IndexedPair[],
@@ -41,11 +46,9 @@ const createShutdownCallback =
       console.log('shutdown complete')
     })
 
-export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
-  console.log('TODO: Implement coinbase sandbox')
+export const app = async (config: Config): Promise<readonly [Connection, Worker]> => {
   // configure everything
-  const [createOrderRequest, getToken, getConnection, dropConnection, sendData] =
-    await orderSelector(config.exchangeName)
+  setupAuthService(config.exchangeName)
   const [assets, pairs, pairMap, initialAssetIndex] = await setupData(
     await getAvailablePairs(await getExchangeApi(config.exchangeName)),
     config.initialAsset
@@ -64,7 +67,6 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
   // setup callbacks
   const sendMutex = new Mutex()
   const shutdownCallback = createShutdownCallback(
-    dropConnection,
     exchangeConn,
     graphWorker,
     sendMutex,
@@ -82,9 +84,7 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
       token: await getToken(config.key, new Date().getTime() * 1000),
     },
     exchangeConn,
-    sendData,
     sendMutex,
-    createOrderRequest,
     shutdownCallback,
     new Date(Date.now())
   )

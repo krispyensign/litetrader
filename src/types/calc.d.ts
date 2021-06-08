@@ -16,6 +16,7 @@ type Step = {
   orderCreateRequest: OrderCreateRequest
   index: number
   amount: number
+  price?: number
 }
 
 type StepMaterial = {

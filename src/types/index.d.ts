@@ -19,9 +19,9 @@ type Config = {
 type OrderModule = readonly [
   (token: string, order: OrderCreateRequest) => string,
   (key: Key, nonce: number) => Promise<string>,
-  () => unknown,
-  (ws: unknown) => void,
-  (data: string, ws: unknown) => void
+  () => WebSocket,
+  (ws: WebSocket) => void,
+  (data: string, ws: WebSocket) => void
 ]
 
 type Closeable = { close(): void }
