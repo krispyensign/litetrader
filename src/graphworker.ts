@@ -1,7 +1,7 @@
 import { Mutex } from 'async-mutex'
 import * as util from 'util'
 import { parentPort, workerData } from 'worker_threads'
-import { Connection, createOrderRequest, sendData } from './exchange/auth.js'
+import { createOrderRequest, sendData } from './exchange/auth.js'
 import { calcProfit } from './profitcalc.js'
 
 let graphCount = 0
@@ -113,7 +113,7 @@ export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<rea
 export const createGraphProfitCallback =
   (
     d: GraphWorkerData,
-    ws: Connection,
+    ws: unknown,
     mutex: Mutex,
     shutdownCallback: () => void,
     startTime: Date
