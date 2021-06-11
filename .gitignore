@@ -4,5 +4,7 @@ node_modules/
 .vscode/
 private/
 bin/
+bundle/
+.DS_Store
 
 *.swp

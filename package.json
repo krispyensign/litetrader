@@ -2,7 +2,6 @@
   "name": "litetrader",
   "version": "0.0.6",
   "description": "simple platform for crypto exchanges",
-  "type": "module",
   "engines": {
     "node": ">=12.11.0"
   },
@@ -30,14 +29,18 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.4.0",
     "prettier": "^2.3.0",
-    "typescript": "^4.3.2"
+    "typescript": "^4.3.2",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.2",
+    "webpack-node-externals": "^3.0.0"
   },
   "scripts": {
     "start": "node --no-lazy ./dist/litetrader.js",
     "compile": "npx tsc",
     "build": "./build.sh",
     "fix": "npx prettier -w src/** && npx eslint --fix src/",
-    "clean": "rimraf bin/ dist/ node_modules/ logs/"
+    "clean": "rimraf bin/ dist/ node_modules/ logs/ package-lock.json",
+    "bundle": "webpack"
   },
   "repository": {
     "type": "git",

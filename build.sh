@@ -7,8 +7,9 @@ else
 fi
 
 npx tsc
+npm run bundle
 mkdir -p bin/
-pkg ./dist/litetrader.js\
+pkg ./bundle/litetrader.js\
     --compress GZip\
     --out-path bin/\
     --options\

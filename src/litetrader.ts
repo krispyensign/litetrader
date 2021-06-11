@@ -5,13 +5,7 @@ import { Worker, isMainThread } from 'worker_threads'
 import yargs from 'yargs'
 import { dirname } from 'path'
 import { Mutex } from 'async-mutex'
-import {
-  Connection,
-  dropConnection,
-  getConnection,
-  getToken,
-  setupAuthService,
-} from './exchange/auth.js'
+import { dropConnection, getConnection, getToken, setupAuthService } from './exchange/auth.js'
 import { buildGraph, createGraphProfitCallback, worker } from './graphworker.js'
 import {
   createTickCallback,
@@ -25,7 +19,7 @@ import {
 
 const createShutdownCallback =
   (
-    conn: Connection,
+    conn: unknown,
     worker: Worker,
     mutex: Mutex,
     pairs: IndexedPair[],
@@ -46,7 +40,7 @@ const createShutdownCallback =
       console.log('shutdown complete')
     })
 
-export const app = async (config: Config): Promise<readonly [Connection, Worker]> => {
+export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
   // configure everything
   setupAuthService(config.exchangeName)
   const [assets, pairs, pairMap, initialAssetIndex] = await setupData(
