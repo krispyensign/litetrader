@@ -11,6 +11,4 @@ npm run bundle
 mkdir -p bin/
 pkg ./bundle/litetrader.js\
     --compress GZip\
-    --out-path bin/\
-    --options\
-    --no-lazy
+    --out-path bin/
