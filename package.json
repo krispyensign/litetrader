@@ -35,12 +35,11 @@
     "webpack-node-externals": "^3.0.0"
   },
   "scripts": {
-    "start": "node --no-lazy ./dist/litetrader.js",
+    "start": "node ./dist/litetrader.js",
     "compile": "npx tsc",
     "build": "./build.sh",
     "fix": "npx prettier -w src/** && npx eslint --fix src/",
-    "clean": "rimraf bin/ dist/ node_modules/ logs/ package-lock.json",
-    "bundle": "webpack"
+    "clean": "rimraf bin/ dist/ node_modules/ logs/ package-lock.json"
   },
   "repository": {
     "type": "git",

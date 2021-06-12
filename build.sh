@@ -7,7 +7,7 @@ else
 fi
 
 npx tsc
-npm run bundle
+npx webpack
 mkdir -p bin/
 pkg ./bundle/litetrader.js\
     --compress GZip\
