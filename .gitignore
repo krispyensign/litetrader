@@ -6,5 +6,6 @@ private/
 bin/
 bundle/
 .DS_Store
+temp/
 
 *.swp
