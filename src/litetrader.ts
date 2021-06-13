@@ -42,6 +42,7 @@ const createShutdownCallback =
 
 export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
   // configure everything
+  console.log(config)
   setupAuthService(config.exchangeName)
   const [assets, pairs, pairMap, initialAssetIndex] = await setupData(
     await getAvailablePairs(await getExchangeApi(config.exchangeName)),
@@ -56,7 +57,7 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
     },
   })
   const exchangeWs = await getExchangeWs(config.exchangeName)
-  const exchangeConn = getConnection()
+  const exchangeConn = getConnection(config.key)
 
   // setup callbacks
   const sendMutex = new Mutex()
@@ -110,6 +111,7 @@ const argv = yargs(process.argv.slice(2))
     eta: { type: 'number', default: 0.001 },
     apiKey: { type: 'string', default: '' },
     apiPrivateKey: { type: 'string', default: '' },
+    passphrase: { type: 'string', default: '' },
   })
   .parseSync()
 
@@ -125,6 +127,7 @@ argv.initialAsset === null
       key: {
         apiKey: argv.apiKey,
         apiPrivateKey: argv.apiPrivateKey,
+        passphrase: argv.passphrase,
       },
     })
   : worker()

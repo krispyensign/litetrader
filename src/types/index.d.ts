@@ -7,7 +7,9 @@ type Dictionary<T> = {
 type Key = {
   readonly apiKey: string
   readonly apiPrivateKey: string
+  readonly passphrase: string
 }
+
 type Config = {
   readonly exchangeName: ExchangeName
   readonly initialAmount: number

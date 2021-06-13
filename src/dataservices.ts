@@ -4,15 +4,19 @@ import ccxws from 'ccxws'
 export const getExchangeApi = async (exchangeName: ExchangeName): Promise<ccxt.Exchange> =>
   exchangeName === 'kraken'
     ? new ccxt.kraken()
+    : exchangeName === 'coinbase'
+    ? new ccxt.coinbase()
     : Promise.reject(Error('unknown exchange ' + exchangeName))
 
 export const getExchangeWs = async (exchangeName: ExchangeName): Promise<ccxws.Exchange> =>
   exchangeName === 'kraken'
     ? new ccxws.Kraken()
+    : exchangeName === 'coinbase'
+    ? new ccxws.CoinbasePro()
     : Promise.reject(Error('unknown exchange ' + exchangeName))
 
 export const startSubscription = (pairs: IndexedPair[], wsExchange: ccxws.Exchange): void =>
-  pairs.forEach(pair =>
+  pairs.forEach(async pair =>
     wsExchange.subscribeTicker({
       base: pair.baseName,
       id: pair.name,
@@ -54,10 +58,10 @@ export const getAvailablePairs = async (apiExchange: ccxt.Exchange): Promise<Exc
           index: index,
           name: market.id,
           tradename: market.symbol,
-          ordermin: market.limits.amount['min'],
-          makerFee: market.maker,
-          takerFee: market.taker,
-          precision: market.precision.amount,
+          ordermin: market.limits.amount['min'] ?? Number(market.info?.['min_size'] ?? 0),
+          makerFee: market.maker ?? 0.005,
+          takerFee: market.taker ?? 0.005,
+          precision: market.precision.amount ?? 8,
           precisionMode: apiExchange.precisionMode,
         })
       )
