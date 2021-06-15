@@ -42,7 +42,6 @@ const createShutdownCallback =
 
 export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
   // configure everything
-  console.log(config)
   setupAuthService(config.exchangeName)
   const [assets, pairs, pairMap, initialAssetIndex] = await setupData(
     await getAvailablePairs(await getExchangeApi(config.exchangeName)),
