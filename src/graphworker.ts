@@ -121,8 +121,8 @@ export const createGraphProfitCallback =
   async (cycle: readonly number[]): Promise<void> => {
     // calc profit, hopefully something good is found
     const t1 = Date.now()
-    const result = calcProfit(d, cycle)
     graphCount++
+    const result = calcProfit(d, cycle)
 
     // if not just an amount and is a cycle then do stuff
     return isError(result)
@@ -132,22 +132,25 @@ export const createGraphProfitCallback =
       ? Promise.resolve()
       : // check if the last state object amount > initialAmount
       result[result.length - 1].amount > d.initialAmount
-      ? mutex.runExclusive(async () => {
-          // send orders
-          const t3 = Date.now()
-          for (const step of result) {
-            sendData(createOrderRequest(d.token, step.orderCreateRequest), ws)
-          }
-          const t2 = Date.now()
+      ? mutex
+          .acquire()
+          .then(async () => {
+            // send orders
+            const t3 = Date.now()
+            for (const step of result) {
+              sendData(createOrderRequest(d.token, step.orderCreateRequest), ws)
+              await new Promise(res => setTimeout(res, 2))
+            }
+            const t2 = Date.now()
 
-          // log value and die for now
-          console.log(result)
-          console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
-          console.log(`latency time: ${t2 - t1}ms`)
-          console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
-          console.log(`count: ${graphCount}`)
-          shutdownCallback()
-        })
+            // log value and die for now
+            console.log(result)
+            console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
+            console.log(`latency time: ${t2 - t1}ms`)
+            console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
+            console.log(`count: ${graphCount}`)
+          })
+          .then(async () => await shutdownCallback())
       : Promise.resolve()
   }
 

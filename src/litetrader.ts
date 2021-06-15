@@ -18,27 +18,21 @@ import {
 } from './dataservices.js'
 
 const createShutdownCallback =
-  (
-    conn: unknown,
-    worker: Worker,
-    mutex: Mutex,
-    pairs: IndexedPair[],
-    wsExchange: Closeable
-  ): (() => Promise<void>) =>
-  async (): Promise<void> =>
-    mutex.acquire().then(async () => {
-      // kill detached worker thread
-      worker.terminate()
+  (conn: unknown, worker: Worker, pairs: IndexedPair[], wsExchange: Closeable) =>
+  async (): Promise<void> => {
+    // kill detached worker thread
+    worker.terminate()
 
-      // unsubsribe from everything
-      stopSubscription(pairs, wsExchange)
+    // unsubsribe from everything
+    stopSubscription(pairs, wsExchange)
+    wsExchange.close()
 
-      // kill the connections
-      dropConnection(conn)
-      wsExchange.close()
+    // kill the connections
+    await new Promise(res => setTimeout(res, 2000))
+    dropConnection(conn)
 
-      console.log('shutdown complete')
-    })
+    console.log('shutdown complete')
+  }
 
 export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
   // configure everything
@@ -60,13 +54,7 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
 
   // setup callbacks
   const sendMutex = new Mutex()
-  const shutdownCallback = createShutdownCallback(
-    exchangeConn,
-    graphWorker,
-    sendMutex,
-    pairs,
-    exchangeWs
-  )
+  const shutdownCallback = createShutdownCallback(exchangeConn, graphWorker, pairs, exchangeWs)
   const graphWorkerCallback = createGraphProfitCallback(
     {
       assets: assets,
@@ -85,7 +73,7 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
   const tickCallback = createTickCallback(pairs, pairMap)
 
   // setup process handler and websockets
-  process.on('SIGINT', shutdownCallback)
+  process.on('SIGINT', () => sendMutex.acquire().then(() => shutdownCallback))
   exchangeWs.on('ticker', tickCallback)
 
   // start subscriptions and wait for initial flood of tick updates to stabilize
