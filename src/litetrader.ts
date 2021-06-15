@@ -24,18 +24,18 @@ const createShutdownCallback =
     mutex: Mutex,
     pairs: IndexedPair[],
     wsExchange: Closeable
-  ): (() => void) =>
+  ): (() => Promise<void>) =>
   async (): Promise<void> =>
-    mutex.acquire().then(() => {
+    mutex.acquire().then(async () => {
+      // kill detached worker thread
+      worker.terminate()
+
       // unsubsribe from everything
       stopSubscription(pairs, wsExchange)
 
       // kill the connections
       dropConnection(conn)
       wsExchange.close()
-
-      // kill detached worker thread
-      worker.terminate()
 
       console.log('shutdown complete')
     })

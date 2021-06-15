@@ -115,9 +115,9 @@ export const createGraphProfitCallback =
     d: GraphWorkerData,
     ws: unknown,
     mutex: Mutex,
-    shutdownCallback: () => void,
+    shutdownCallback: () => Promise<void>,
     startTime: Date
-  ): ((arg: readonly number[]) => Promise<void>) =>
+  ): ((arg: readonly number[]) => void) =>
   async (cycle: readonly number[]): Promise<void> => {
     // calc profit, hopefully something good is found
     const t1 = Date.now()
@@ -132,10 +132,12 @@ export const createGraphProfitCallback =
       ? Promise.resolve()
       : // check if the last state object amount > initialAmount
       result[result.length - 1].amount > d.initialAmount
-      ? mutex.runExclusive(() => {
+      ? mutex.runExclusive(async () => {
           // send orders
           const t3 = Date.now()
-          result.forEach(step => sendData(createOrderRequest(d.token, step.orderCreateRequest), ws))
+          for (const step of result) {
+            sendData(createOrderRequest(d.token, step.orderCreateRequest), ws)
+          }
           const t2 = Date.now()
 
           // log value and die for now
@@ -145,7 +147,6 @@ export const createGraphProfitCallback =
           console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
           console.log(`count: ${graphCount}`)
           shutdownCallback()
-          // isSending = false
         })
       : Promise.resolve()
   }
@@ -160,8 +161,8 @@ export const worker = (): true => {
         v,
       ])
     )
-  )) {
+  ))
     parentPort?.postMessage(cycle)
-  }
+
   return true
 }

@@ -1,6 +1,76 @@
 import ccxt from 'ccxt'
 import ccxws from 'ccxws'
 
+const bannedPairIds = [
+  'AUDUSD',
+  'AUDJPY',
+  'EURJPY',
+  'GBPUSD',
+  'ZGBPZUSD',
+  'EURUSD',
+  'ZEURZUSD',
+  'USDJPY',
+  'ZUSDZJPY',
+  'SANDUSD',
+  'SANDEUR',
+  'MKRUSD',
+  'MKRGBP',
+  'MINAUSD',
+  'MINAGBP',
+  'EURGBP',
+  'RENUSD',
+  'RENEUR',
+  'ENJUSD',
+  'ENJEUR',
+  'USDCHF',
+  'EURCHF',
+  'SUSHIUSD',
+  'SUSHIEUR',
+  'EURUSD',
+
+  'GRTAUD',
+  'GRTETH',
+  'GRTEUR',
+  'GRTGBP',
+  'GRTUSD',
+  'GRTXBT',
+
+  'LPTUSD',
+  'LPTEUR',
+  'EURCAD',
+  'USDCAD',
+  'FLOWUSD',
+  'FLOWEUR',
+  'XRPEUR',
+  'XRPUSD',
+  'EURUSD',
+  'USDJPY',
+  'RARIUSD',
+  'RARIEUR',
+  'XRPAUD',
+  'XRPETH',
+  'XRPGBP',
+  'XRPUSDT',
+  'XXRPXXBT',
+  'XXRPZCAD',
+  'XXRPZEUR',
+  'XXRPZJPY',
+  'XXRPZUSD',
+
+  'BNTUSD',
+  'BNTEUR',
+  'EWTUSD',
+  'EWTEUR',
+  'GHSTUSD',
+  'GHSTEUR',
+  'ZRXUSD',
+  'ZRXEUR',
+  'ZUSDZCAD',
+  'XREPZEUR',
+  'XREPZUSD',
+  'ZEURZAUD',
+]
+
 export const getExchangeApi = async (exchangeName: ExchangeName): Promise<ccxt.Exchange> =>
   exchangeName === 'kraken'
     ? new ccxt.kraken()
@@ -50,7 +120,14 @@ export const createTickCallback =
 export const getAvailablePairs = async (apiExchange: ccxt.Exchange): Promise<ExchangePair[]> =>
   apiExchange.loadMarkets().then(markets =>
     Object.entries(markets)
-      .filter(([, market]) => market.symbol !== undefined)
+      .filter(
+        ([, market]) => (
+          console.log(market.id),
+          market.symbol !== undefined &&
+            market.active &&
+            bannedPairIds.find(id => market.id === id) === undefined
+        )
+      )
       .map(
         ([, market], index): ExchangePair => ({
           baseName: market.baseId,
