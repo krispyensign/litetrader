@@ -11,19 +11,19 @@ const filterMapl = <T, U>(it: Iterable<T>, fnFilter: FnFilter<T>, fn: Fn<T, U>):
   *[Symbol.iterator](): IterableIterator<U> {
     for (const item of it)
       if (!fnFilter(item)) continue
-      else yield fn!(item)
+      else yield fn(item)
   },
 })
 
 const filterl = <T>(it: Iterable<T>, fn: FnFilter<T>): Lazy<T> => ({
   *[Symbol.iterator](): IterableIterator<T> {
-    for (const item of it) if (fn!(item)) yield item
+    for (const item of it) if (fn(item)) yield item
   },
 })
 
 const flatMapl = <T, U>(it: Iterable<T>, fn: FnMulti<T, U>): Lazy<U> => ({
   *[Symbol.iterator](): IterableIterator<U> {
-    for (const item of it) for (const subItem of fn!(item)) yield subItem
+    for (const item of it) for (const subItem of fn(item)) yield subItem
   },
 })
 
@@ -47,10 +47,10 @@ const hasValue = <T>(it: Lazy<T>): boolean => {
                                                                         checks
 */
 
-const growPaths = (
-  paths: Iterable<readonly Label[]>,
-  neighbors: ReadonlyMap<Label, readonly Label[]>
-): Lazy<readonly Label[]> =>
+const growPaths = <T>(
+  paths: Iterable<readonly T[]>,
+  neighbors: ReadonlyMap<T, readonly T[]>
+): Lazy<readonly T[]> =>
   flatMapl(
     // only perform grow operation if there are neighbors
     filterl(paths, path => neighbors.has(path[path.length - 1])),
@@ -68,10 +68,10 @@ const growPaths = (
       )
   )
 
-export function* findCycles(
-  startAssets: readonly Label[],
-  neighbors: ReadonlyMap<Label, readonly Label[]>
-): Generator<readonly Label[], void, unknown> {
+export function* findCycles<T>(
+  startAssets: readonly T[],
+  neighbors: ReadonlyMap<T, readonly T[]>
+): Generator<readonly T[], void, unknown> {
   let candidatePaths = growPaths(
     startAssets.map(val => [val]),
     neighbors
