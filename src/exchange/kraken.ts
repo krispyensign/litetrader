@@ -79,11 +79,12 @@ export const getToken = async (key: Key, nonce: number): Promise<string> =>
 
 export const getConnection = (): WebSocket => {
   const sock = new WebSocket(webSocketUrl)
-  sock.on('message', eventData =>
-    console.log({ data: eventData.toLocaleString(), time: Date.now() })
-  )
+  sock.on('message', eventData => console.log(eventData.toLocaleString()))
   return sock
 }
+
+export const setCallback = (sock: unknown, callback: (data: string) => void): WebSocket =>
+  (sock as WebSocket).on('message', callback)
 
 export const dropConnection = (ws: unknown): void => (ws as WebSocket).close()
 

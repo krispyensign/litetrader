@@ -138,7 +138,6 @@ export const createGraphProfitCallback =
             // send orders
             const t3 = Date.now()
             for (const step of result) {
-              console.log({ doing: 'sending', time: Date.now() })
               sendData(createOrderRequest(d.token, step.orderCreateRequest), ws)
               await new Promise(res => setTimeout(res, 20))
             }
