@@ -14,7 +14,7 @@ export const createOrderRequest = (token: string, order: OrderCreateRequest): st
     pair: order.pair,
     token: token,
     type: order.direction,
-    volume: order.amount.toFixed(20),
+    volume: order.amount.toFixed(8),
     validate: 'true',
     price: order.price?.toString(),
     userref: order.orderId,
@@ -79,7 +79,9 @@ export const getToken = async (key: Key, nonce: number): Promise<string> =>
 
 export const getConnection = (): WebSocket => {
   const sock = new WebSocket(webSocketUrl)
-  sock.on('message', eventData => console.log(eventData.toLocaleString()))
+  sock.on('message', eventData =>
+    console.log({ data: eventData.toLocaleString(), time: Date.now() })
+  )
   return sock
 }
 

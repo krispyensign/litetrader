@@ -69,6 +69,7 @@ const bannedPairIds = [
   'XREPZEUR',
   'XREPZUSD',
   'ZEURZAUD',
+  'EURAUD',
 ]
 
 export const getExchangeApi = async (exchangeName: ExchangeName): Promise<ccxt.Exchange> =>
