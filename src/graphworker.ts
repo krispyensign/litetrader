@@ -139,7 +139,7 @@ export const createGraphProfitCallback =
           let seq = 0
           sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
           setCallback(ws, async data => {
-            console.log(data)
+            console.log({ time: Date.now(), data: data })
             seq++
             if (seq < result.length)
               sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
@@ -150,6 +150,7 @@ export const createGraphProfitCallback =
               console.log(result)
               console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
               console.log(`latency time: ${t2 - t1}ms`)
+              console.log(`average latency: ${(t2 - t1) / result.length}ms`)
               console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
               console.log(`count: ${graphCount}`)
               await shutdownCallback()
