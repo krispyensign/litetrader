@@ -77,11 +77,7 @@ export const getToken = async (key: Key, nonce: number): Promise<string> =>
     )
   ).token
 
-export const getConnection = (): WebSocket => {
-  const sock = new WebSocket(webSocketUrl)
-  sock.on('message', eventData => console.log(eventData.toLocaleString()))
-  return sock
-}
+export const getConnection = (): WebSocket => new WebSocket(webSocketUrl)
 
 export const setCallback = (sock: unknown, callback: (data: string) => void): WebSocket =>
   (sock as WebSocket).on('message', callback)

@@ -28,7 +28,6 @@ const createShutdownCallback =
     wsExchange.close()
 
     // kill the connections
-    await new Promise(res => setTimeout(res, 5000))
     dropConnection(conn)
 
     console.log('shutdown complete')

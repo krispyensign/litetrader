@@ -2,6 +2,7 @@ import { Mutex } from 'async-mutex'
 import * as util from 'util'
 import { parentPort, workerData } from 'worker_threads'
 import { createOrderRequest, sendData } from './exchange/auth.js'
+import { setCallback } from './exchange/kraken.js'
 import { calcProfit } from './profitcalc.js'
 
 let graphCount = 0
@@ -132,25 +133,29 @@ export const createGraphProfitCallback =
       ? Promise.resolve()
       : // check if the last state object amount > initialAmount
       result[result.length - 1].amount > d.initialAmount
-      ? mutex
-          .acquire()
-          .then(async () => {
-            // send orders
-            const t3 = Date.now()
-            for (const step of result) {
-              sendData(createOrderRequest(d.token, step.orderCreateRequest), ws)
-              await new Promise(res => setTimeout(res, 20))
-            }
-            const t2 = Date.now()
+      ? mutex.acquire().then(async () => {
+          // send orders
+          const t3 = Date.now()
+          let seq = 0
+          sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
+          setCallback(ws, async data => {
+            console.log(data)
+            seq++
+            if (seq < result.length)
+              sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
+            else {
+              const t2 = Date.now()
 
-            // log value and die for now
-            console.log(result)
-            console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
-            console.log(`latency time: ${t2 - t1}ms`)
-            console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
-            console.log(`count: ${graphCount}`)
+              // log value and die for now
+              console.log(result)
+              console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
+              console.log(`latency time: ${t2 - t1}ms`)
+              console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
+              console.log(`count: ${graphCount}`)
+              await shutdownCallback()
+            }
           })
-          .then(async () => await shutdownCallback())
+        })
       : Promise.resolve()
   }
 

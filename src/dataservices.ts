@@ -122,12 +122,10 @@ export const getAvailablePairs = async (apiExchange: ccxt.Exchange): Promise<Exc
   apiExchange.loadMarkets().then(markets =>
     Object.entries(markets)
       .filter(
-        ([, market]) => (
-          console.log(market.id),
+        ([, market]) =>
           market.symbol !== undefined &&
-            market.active &&
-            bannedPairIds.find(id => market.id === id) === undefined
-        )
+          market.active &&
+          bannedPairIds.find(id => market.id === id) === undefined
       )
       .map(
         ([, market], index): ExchangePair => ({
