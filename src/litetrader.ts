@@ -78,7 +78,11 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
   // start subscriptions and wait for initial flood of tick updates to stabilize
   console.log('stabilizing...')
   startSubscription(pairs, exchangeWs)
+  await new Promise(res => setTimeout(res, 10))
+  console.log('done stabilizing...')
+  console.log('syncing...')
   await new Promise(res => setTimeout(res, 2000))
+  console.log('done syncing...')
 
   // start processing with the graph thread
   graphWorker.on('message', graphWorkerCallback)

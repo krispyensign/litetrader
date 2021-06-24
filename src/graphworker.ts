@@ -141,13 +141,20 @@ export const createGraphProfitCallback =
           setCallback(ws, async () => {
             // console.log({ time: Date.now(), data: data })
             seq++
-            if (seq < result.length)
+            if (seq < result.length) {
               sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
-            else {
-              const t2 = Date.now()
-
+            } else {
               // log and die for now
-              console.log(result)
+              const t2 = Date.now()
+              for (const trade of result) {
+                const pair = d.pairs.find(p => p.tradename === trade.orderCreateRequest.pair)
+                console.log({
+                  name: pair?.name,
+                  a: pair?.ask,
+                  b: pair?.bid,
+                  e: trade.price,
+                })
+              }
               console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
               console.log(`total latency: ${t2 - t1}ms`)
               console.log(`mean latency: ${(t2 - t1) / result.length}ms`)
