@@ -149,10 +149,13 @@ export const createGraphProfitCallback =
               for (const trade of result) {
                 const pair = d.pairs.find(p => p.tradename === trade.orderCreateRequest.pair)
                 console.log({
-                  name: pair?.name,
+                  n: pair?.name,
                   a: pair?.ask,
                   b: pair?.bid,
                   e: trade.price,
+                  m: trade.orderCreateRequest.amount,
+                  nm: trade.amount,
+                  s: trade.orderCreateRequest.direction,
                 })
               }
               console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)

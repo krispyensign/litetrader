@@ -82,7 +82,7 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
   console.log('done stabilizing...')
   console.log('syncing...')
   await new Promise(res => setTimeout(res, 2000))
-  console.log('done syncing...')
+  console.log(`done syncing... ${Date.now()}`)
 
   // start processing with the graph thread
   graphWorker.on('message', graphWorkerCallback)

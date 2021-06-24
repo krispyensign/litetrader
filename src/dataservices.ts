@@ -110,7 +110,7 @@ export const createTickCallback =
   (pairs: IndexedPair[], pairMap: Map<string, number>) =>
   async (tick: ccxws.Ticker, market: ccxws.Market): Promise<void> => {
     const pairIndex = pairMap.get(market.id)
-    console.log({ tickName: market.id, ask: tick.ask, bid: tick.bid })
+    // console.log({ id: market.id, a: tick.ask, b: tick.bid, t: Date.now() })
     if (pairIndex === undefined)
       return Promise.reject(Error(`Invalid pair encountered. ${market.id}`))
     pairs[pairIndex].volume = Number(tick.askVolume) + Number(tick.bidVolume)
