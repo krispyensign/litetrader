@@ -138,8 +138,8 @@ export const createGraphProfitCallback =
           const t3 = Date.now()
           let seq = 0
           sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
-          setCallback(ws, async data => {
-            console.log({ time: Date.now(), data: data })
+          setCallback(ws, async () => {
+            // console.log({ time: Date.now(), data: data })
             seq++
             if (seq < result.length)
               sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
