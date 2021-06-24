@@ -146,13 +146,13 @@ export const createGraphProfitCallback =
             else {
               const t2 = Date.now()
 
-              // log value and die for now
+              // log and die for now
               console.log(result)
               console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
-              console.log(`latency time: ${t2 - t1}ms`)
-              console.log(`average latency: ${(t2 - t1) / result.length}ms`)
-              console.log(`calcTime: ${t3 - startTime.getTime()}ms`)
-              console.log(`count: ${graphCount}`)
+              console.log(`total latency: ${t2 - t1}ms`)
+              console.log(`mean latency: ${(t2 - t1) / result.length}ms`)
+              console.log(`total calc time: ${t3 - startTime.getTime()}ms`)
+              console.log(`# trades evaluated: ${graphCount}`)
               await shutdownCallback()
             }
           })
