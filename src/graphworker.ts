@@ -111,6 +111,34 @@ export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<rea
       {} as Dictionary<readonly number[]>
     )
 
+const logResult = (
+  result: Step[],
+  t1: number,
+  startTime: Date,
+  d: GraphWorkerData,
+  t3: number
+): void => {
+  // log and die for now
+  const t2 = Date.now()
+  for (const trade of result) {
+    const pair = d.pairs.find(p => p.tradename === trade.orderCreateRequest.pair)
+    console.log({
+      n: pair?.name,
+      a: pair?.ask,
+      b: pair?.bid,
+      e: trade.price,
+      m: trade.orderCreateRequest.amount,
+      nm: trade.amount,
+      s: trade.orderCreateRequest.direction,
+    })
+  }
+  console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
+  console.log(`total latency: ${t2 - t1}ms`)
+  console.log(`mean latency: ${(t2 - t1) / result.length}ms`)
+  console.log(`total calc time: ${t3 - startTime.getTime()}ms`)
+  console.log(`# trades evaluated: ${graphCount}`)
+}
+
 export const createGraphProfitCallback =
   (
     d: GraphWorkerData,
@@ -138,34 +166,11 @@ export const createGraphProfitCallback =
           const t3 = Date.now()
           let seq = 0
           sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
-          setCallback(ws, async () => {
-            // console.log({ time: Date.now(), data: data })
-            seq++
-            if (seq < result.length) {
-              sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
-            } else {
-              // log and die for now
-              const t2 = Date.now()
-              for (const trade of result) {
-                const pair = d.pairs.find(p => p.tradename === trade.orderCreateRequest.pair)
-                console.log({
-                  n: pair?.name,
-                  a: pair?.ask,
-                  b: pair?.bid,
-                  e: trade.price,
-                  m: trade.orderCreateRequest.amount,
-                  nm: trade.amount,
-                  s: trade.orderCreateRequest.direction,
-                })
-              }
-              console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
-              console.log(`total latency: ${t2 - t1}ms`)
-              console.log(`mean latency: ${(t2 - t1) / result.length}ms`)
-              console.log(`total calc time: ${t3 - startTime.getTime()}ms`)
-              console.log(`# trades evaluated: ${graphCount}`)
-              await shutdownCallback()
-            }
-          })
+          setCallback(ws, async () =>
+            ++seq < result.length
+              ? sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
+              : (logResult(result, t1, startTime, d, t3), await shutdownCallback())
+          )
         })
       : Promise.resolve()
   }
