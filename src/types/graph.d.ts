@@ -8,6 +8,13 @@ type GraphWorkerData = {
   token: string
 }
 
+type GraphWorkerTimer = {
+  t1?: number
+  t2?: number
+  t3?: number
+  startTime: Date
+}
+
 type Lazy<T> = {
   [Symbol.iterator](): IterableIterator<T>
 }

@@ -6,7 +6,7 @@ import yargs from 'yargs'
 import { dirname } from 'path'
 import { Mutex } from 'async-mutex'
 import { dropConnection, getConnection, getToken, setupAuthService } from './exchange/auth.js'
-import { buildGraph, createGraphProfitCallback, worker } from './graphworker.js'
+import { createGraphProfitCallback, worker } from './graphworker.js'
 import {
   createTickCallback,
   getAvailablePairs,
@@ -16,6 +16,7 @@ import {
   startSubscription,
   stopSubscription,
 } from './dataservices.js'
+import { buildGraph } from './graphlib.js'
 
 const createShutdownCallback =
   (conn: unknown, worker: Worker, pairs: IndexedPair[], wsExchange: Closeable) =>
@@ -66,8 +67,7 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
     },
     exchangeConn,
     sendMutex,
-    shutdownCallback,
-    new Date(Date.now())
+    shutdownCallback
   )
   const tickCallback = createTickCallback(pairs, pairMap)
 
