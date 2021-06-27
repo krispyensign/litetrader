@@ -17,9 +17,10 @@ export function createGraphProfitCallback(
   const startTime = new Date(Date.now())
   let graphCount = 0
   return async (cycle: readonly number[]): Promise<unknown> => {
-    const result = calcProfit(d, cycle)
-    const t1 = Date.now()
+    // calc the profit
     graphCount++
+    const t1 = Date.now()
+    const result = calcProfit(d, cycle)
 
     // check if there was an error
     if (isError(result)) return Promise.reject(result)
