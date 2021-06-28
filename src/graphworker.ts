@@ -11,9 +11,7 @@ const isError = util.types.isNativeError
 const createOrderCallback = (
   result: Step[],
   d: GraphWorkerData,
-  t1: number,
-  t3: number,
-  startTime: Date,
+  t: GraphWorkerTimer,
   graphCount: number,
   ws: unknown,
   shutdownCallback: () => Promise<void>
@@ -38,9 +36,9 @@ const createOrderCallback = (
         })
       }
       console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
-      console.log(`total latency: ${t2 - t1}ms`)
-      console.log(`mean latency: ${(t2 - t1) / result.length}ms`)
-      console.log(`total calc time: ${t3 - startTime.getTime()}ms`)
+      console.log(`total latency: ${t2 - t.t1!}ms`)
+      console.log(`mean latency: ${(t2 - t.t1!) / result.length}ms`)
+      console.log(`total calc time: ${t.t3! - t.startTime.getTime()}ms`)
       console.log(`# trades evaluated: ${graphCount}`)
       await shutdownCallback()
       return
@@ -81,9 +79,11 @@ export const createGraphProfitCallback = (
     const orderCallback = createOrderCallback(
       result,
       d,
-      t1,
-      t3,
-      startTime,
+      {
+        t1,
+        t3,
+        startTime,
+      },
       graphCount,
       ws,
       shutdownCallback
