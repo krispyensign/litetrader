@@ -17,13 +17,14 @@ const createOrderCallback = (
   graphCount: number,
   ws: unknown,
   shutdownCallback: () => Promise<void>
-): (() => Promise<void>) => {
+): ((data: string) => Promise<void>) => {
   let seq = 0
-  return async (): Promise<void> => {
+  return async (data: string): Promise<void> => {
     // shortcircuit and shutdown (for now) if all processed
     if (++seq >= result.length) {
       // log and die for now
       const t2 = Date.now()
+      console.log(data)
       for (const trade of result) {
         const pair = d.pairs.find(p => p.tradename === trade.orderCreateRequest.pair)
         console.log({
@@ -47,6 +48,7 @@ const createOrderCallback = (
 
     // send the next order
     sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
+    console.log(data)
   }
 }
 
@@ -88,7 +90,7 @@ export const createGraphProfitCallback = (
     )
 
     // set the callback to place more orders with each response
-    setCallback(ws, async () => orderCallback)
+    setCallback(ws, orderCallback)
     return
   }
 }
