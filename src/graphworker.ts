@@ -68,7 +68,16 @@ export const createGraphProfitCallback = (
     if (isError(result)) return Promise.reject(result)
 
     // check if the calc was profitable
-    if (result === 0 || result[result.length - 1].newAmount <= d.initialAmount) return
+    if (result === 0) return
+    if (result[result.length - 1].newAmount <= d.initialAmount) {
+      if (graphCount % 10000 === 0)
+        console.log({
+          count: graphCount,
+          cycle: cycle,
+          amount: result[result.length - 1].newAmount,
+        })
+      return
+    }
 
     // lock the processs so no other orders are placed
     await mutex.acquire()
