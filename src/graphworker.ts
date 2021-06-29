@@ -31,11 +31,11 @@ const createOrderCallback = (
           b: pair?.bid,
           e: trade.price,
           m: trade.orderCreateRequest.amount,
-          nm: trade.amount,
+          nm: trade.newAmount,
           s: trade.orderCreateRequest.direction,
         })
       }
-      console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].amount}`)
+      console.log(`amounts: ${d.initialAmount} -> ${result[result.length - 1].newAmount}`)
       console.log(`total latency: ${t2 - t.t1!}ms`)
       console.log(`mean latency: ${(t2 - t.t1!) / result.length}ms`)
       console.log(`total calc time: ${t.t3! - t.startTime.getTime()}ms`)
@@ -68,11 +68,11 @@ export const createGraphProfitCallback = (
     if (isError(result)) return Promise.reject(result)
 
     // check if the calc was profitable
-    if (result === 0 || result[result.length - 1].amount <= d.initialAmount) return
+    if (result === 0 || result[result.length - 1].newAmount <= d.initialAmount) return
 
     // lock the processs so no other orders are placed
-    const t3 = Date.now()
     await mutex.acquire()
+    const t3 = Date.now()
 
     // send the initial order
     sendData(createOrderRequest(d.token, result[0].orderCreateRequest), ws)

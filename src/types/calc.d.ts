@@ -15,8 +15,9 @@ type StepSnapshot =
 type Step = {
   orderCreateRequest: OrderCreateRequest
   index: number
-  amount: number
+  newAmount: number
   price?: number
+  fee?: number
 }
 
 type StepMaterial = {

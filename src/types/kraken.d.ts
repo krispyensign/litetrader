@@ -110,6 +110,11 @@ type AddOrder = {
    * terms of the Kraken Trading Agreement.
    */
   trading_agreement?: string
+
+  /**
+   * Optional - GTC, IOC, GTD
+   */
+  timeinforce?: 'GTC' | 'IOC' | 'GTD'
 }
 
 type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus

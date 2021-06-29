@@ -8,7 +8,7 @@ import { Mutex } from 'async-mutex'
 import { dropConnection, getConnection, getToken, setupAuthService } from './exchange/auth.js'
 import { createGraphProfitCallback, worker } from './graphworker.js'
 import {
-  createTickCallback,
+  createSnapshotCallback,
   getAvailablePairs,
   getExchangeApi,
   getExchangeWs,
@@ -69,11 +69,12 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
     sendMutex,
     shutdownCallback
   )
-  const tickCallback = createTickCallback(pairs, pairMap)
+  const snapshotCallback = createSnapshotCallback(pairs, pairMap)
 
   // setup process handler and websockets
   process.on('SIGINT', () => sendMutex.acquire().then(() => shutdownCallback))
-  exchangeWs.on('ticker', tickCallback)
+  exchangeWs.on('l2snapshot', snapshotCallback)
+  exchangeWs.on('l2update', snapshotCallback)
 
   // start subscriptions and wait for initial flood of tick updates to stabilize
   console.log('stabilizing...')
@@ -81,7 +82,7 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
   await new Promise(res => setTimeout(res, 10))
   console.log('done stabilizing...')
   console.log('syncing...')
-  await new Promise(res => setTimeout(res, 2000))
+  await new Promise(res => setTimeout(res, 20000))
   console.log(`done syncing... ${Date.now()}`)
 
   // start processing with the graph thread

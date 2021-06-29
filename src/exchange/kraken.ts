@@ -15,9 +15,10 @@ export const createOrderRequest = (token: string, order: OrderCreateRequest): st
     token: token,
     type: order.direction,
     volume: order.amount.toFixed(8),
-    // validate: 'true',
+    validate: 'true',
     price: order.price?.toString(),
     userref: order.orderId,
+    // timeinforce: 'IOC',
   } as AddOrder)
 
 const validateResponse = async (response: TokenResponseWrapper): Promise<Token> =>

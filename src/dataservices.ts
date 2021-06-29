@@ -65,17 +65,26 @@ const bannedPairIds = [
   'EWTEUR',
   'GHSTUSD',
   'GHSTEUR',
-  'ZRXUSD',
-  'ZRXEUR',
   'ZUSDZCAD',
   'XREPZEUR',
   'XREPZUSD',
   'ZEURZAUD',
   'EURAUD',
+
   'RENUSD',
   'RENGBP',
   'RENEUR',
   'RENXBT',
+
+  'SRMUSD',
+  'SRMGBP',
+  'SRMEUR',
+  'SRMXBT',
+
+  'ZRXUSD',
+  'ZRXGBP',
+  'ZRXEUR',
+  'ZRXXBT',
 ]
 
 export const getExchangeApi = async (exchangeName: ExchangeName): Promise<ccxt.Exchange> =>
@@ -93,35 +102,50 @@ export const getExchangeWs = async (exchangeName: ExchangeName): Promise<ccxws.E
     : Promise.reject(Error('unknown exchange ' + exchangeName))
 
 export const startSubscription = (pairs: IndexedPair[], wsExchange: ccxws.Exchange): void =>
-  pairs.forEach(async pair =>
-    wsExchange.subscribeTicker({
-      base: pair.baseName,
-      id: pair.name,
-      quote: pair.quoteName,
-      type: 'spot',
-    })
+  pairs.forEach(
+    pair => (
+      wsExchange.subscribeLevel2Snapshots({
+        base: pair.baseName,
+        id: pair.name,
+        quote: pair.quoteName,
+        type: 'spot',
+      }),
+      wsExchange.subscribeLevel2Updates({
+        base: pair.baseName,
+        id: pair.name,
+        quote: pair.quoteName,
+        type: 'spot',
+      })
+    )
   )
 
 export const stopSubscription = (pairs: IndexedPair[], wsExchange: unknown): void =>
-  pairs.forEach(pair =>
-    (wsExchange as ccxws.Exchange).unsubscribeTicker({
-      base: pair.baseName,
-      id: pair.name,
-      quote: pair.quoteName,
-      type: 'spot',
-    })
+  pairs.forEach(
+    pair => (
+      (wsExchange as ccxws.Exchange).unsubscribeLevel2Snapshots({
+        base: pair.baseName,
+        id: pair.name,
+        quote: pair.quoteName,
+        type: 'spot',
+      }),
+      (wsExchange as ccxws.Exchange).unsubscribeLevel2Updates({
+        base: pair.baseName,
+        id: pair.name,
+        quote: pair.quoteName,
+        type: 'spot',
+      })
+    )
   )
 
-export const createTickCallback =
+export const createSnapshotCallback =
   (pairs: IndexedPair[], pairMap: Map<string, number>) =>
-  async (tick: ccxws.Ticker, market: ccxws.Market): Promise<void> => {
+  async (snap: ccxws.Level2Data, market: ccxws.Market): Promise<void> => {
     const pairIndex = pairMap.get(market.id)
-    // console.log({ id: market.id, a: tick.ask, b: tick.bid, t: Date.now() })
     if (pairIndex === undefined)
       return Promise.reject(Error(`Invalid pair encountered. ${market.id}`))
-    pairs[pairIndex].volume = Number(tick.askVolume) + Number(tick.bidVolume)
-    pairs[pairIndex].ask = Number(tick.ask)
-    pairs[pairIndex].bid = Number(tick.bid)
+    pairs[pairIndex].volume ??= (snap.asks[0]?.count ?? 0) + (snap.bids[0]?.count ?? 0)
+    pairs[pairIndex].ask = Number(snap.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
+    pairs[pairIndex].bid = Number(snap.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
     return
   }
 
