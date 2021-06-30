@@ -1,8 +1,8 @@
 import { Mutex } from 'async-mutex'
 import * as util from 'util'
 import { parentPort, workerData } from 'worker_threads'
-import { createOrderRequest, sendData } from './exchange/auth.js'
-import { setCallback } from './exchange/kraken.js'
+import { createOrderRequest, sendData } from './config.js'
+import { setCallback } from './coinexchange/kraken.js'
 import { findCycles } from './graphlib.js'
 import { calcProfit } from './profitcalc.js'
 

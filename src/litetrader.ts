@@ -5,28 +5,34 @@ import { Worker, isMainThread } from 'worker_threads'
 import yargs from 'yargs'
 import { dirname } from 'path'
 import { Mutex } from 'async-mutex'
-import { dropConnection, getConnection, getToken, setupAuthService } from './exchange/auth.js'
-import { createGraphProfitCallback, worker } from './graphworker.js'
 import {
-  createSnapshotCallback,
-  getAvailablePairs,
+  closeExchangeWs,
+  dropConnection,
+  getConnection,
   getExchangeApi,
   getExchangeWs,
-  setupData,
+  getToken,
+  setupAuthService,
+} from './config.js'
+import { createGraphProfitCallback, worker } from './graphworker.js'
+import { setupData } from './dataservices.js'
+import { buildGraph } from './graphlib.js'
+import {
+  createSubscriptionCallback,
+  getAvailablePairs,
   startSubscription,
   stopSubscription,
-} from './dataservices.js'
-import { buildGraph } from './graphlib.js'
+} from './coinexchange/cryptodataservices.js'
 
 const createShutdownCallback =
-  (conn: unknown, worker: Worker, pairs: IndexedPair[], wsExchange: Closeable) =>
+  (conn: unknown, worker: Worker, pairs: IndexedPair[], wsExchange: unknown) =>
   async (): Promise<void> => {
     // kill detached worker thread
     worker.terminate()
 
     // unsubsribe from everything
     stopSubscription(pairs, wsExchange)
-    wsExchange.close()
+    closeExchangeWs(wsExchange)
 
     // kill the connections
     dropConnection(conn)
@@ -69,7 +75,7 @@ export const app = async (config: Config): Promise<readonly [unknown, Worker]> =
     sendMutex,
     shutdownCallback
   )
-  const snapshotCallback = createSnapshotCallback(pairs, pairMap)
+  const snapshotCallback = createSubscriptionCallback(pairs, pairMap)
 
   // setup process handler and websockets
   process.on('SIGINT', () => sendMutex.acquire().then(() => shutdownCallback))

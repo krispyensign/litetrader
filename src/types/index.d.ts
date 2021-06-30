@@ -1,4 +1,4 @@
-type ExchangeName = 'kraken' | 'binance' | 'cexio' | 'coinbase'
+type ExchangeName = 'kraken' | 'oanda'
 
 type Dictionary<T> = {
   [key: string]: T
@@ -25,8 +25,6 @@ type OrderModule = readonly [
   (ws: WebSocket) => void,
   (data: string, ws: WebSocket) => void
 ]
-
-type Closeable = { close(): void }
 
 type OrderCreateRequest = {
   readonly event: 'create'

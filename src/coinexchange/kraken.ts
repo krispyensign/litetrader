@@ -18,10 +18,9 @@ export const createOrderRequest = (token: string, order: OrderCreateRequest): st
     validate: 'true',
     price: order.price?.toString(),
     userref: order.orderId,
-    // timeinforce: 'IOC',
-  } as AddOrder)
+  } as KrakenAddOrder)
 
-const validateResponse = async (response: TokenResponseWrapper): Promise<Token> =>
+const validateResponse = async (response: KrakenTokenResponseWrapper): Promise<KrakenToken> =>
   response.error?.length > 0
     ? Promise.reject(
         Error(
@@ -38,7 +37,7 @@ const makeAuthCall = async (
   request: string,
   nonce: number,
   key: Key
-): Promise<Token> =>
+): Promise<KrakenToken> =>
   validateResponse(
     await got
       .post({
@@ -85,4 +84,6 @@ export const setCallback = (sock: unknown, callback: (data: string) => void): We
 
 export const dropConnection = (ws: unknown): void => (ws as WebSocket).close()
 
-export const sendData = (data: string, ws: unknown): void => (ws as WebSocket).send(data)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const sendData = (data: string, ws: unknown, _key?: Key): void =>
+  (ws as WebSocket).send(data)

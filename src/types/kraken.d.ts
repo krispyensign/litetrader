@@ -1,14 +1,14 @@
-type Token = {
+type KrakenToken = {
   token: string
   expires: number
 }
 
-type TokenResponseWrapper = {
+type KrakenTokenResponseWrapper = {
   readonly error: readonly string[]
-  readonly result: Token
+  readonly result: KrakenToken
 }
 
-type CancelOrder = {
+type KrakenCancelOrder = {
   event: 'cancelOrder'
   /**
    * Session token string
@@ -24,7 +24,7 @@ type CancelOrder = {
   txid: string[]
 }
 
-type AddOrder = {
+type KrakenAddOrder = {
   event: 'addOrder'
   /**
    * Session token string
@@ -117,9 +117,9 @@ type AddOrder = {
   timeinforce?: 'GTC' | 'IOC' | 'GTD'
 }
 
-type StatusEvent = AddOrderStatus | CancelOrderStatus | SubscriptionStatus
+type KrakenStatusEvent = KrakenAddOrderStatus | KrakenCancelOrderStatus | KrakenSubscriptionStatus
 
-type AddOrderStatus = {
+type KrakenAddOrderStatus = {
   readonly event: 'addOrderStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message
@@ -144,7 +144,7 @@ type AddOrderStatus = {
   readonly errorMessage: string
 }
 
-type CancelOrderStatus = {
+type KrakenCancelOrderStatus = {
   readonly event: 'cancelOrderStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message
@@ -160,7 +160,7 @@ type CancelOrderStatus = {
   readonly errorMessage?: string
 }
 
-type SubscriptionStatus = {
+type KrakenSubscriptionStatus = {
   readonly event: 'subscriptionStatus' | 'error'
   /**
    * Optional - client originated ID reflected in response message
