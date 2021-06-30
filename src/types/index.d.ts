@@ -8,6 +8,7 @@ type Key = {
   readonly apiKey: string
   readonly apiPrivateKey: string
   readonly passphrase: string
+  readonly accountId: string
 }
 
 type Config = {

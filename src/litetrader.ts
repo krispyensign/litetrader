@@ -109,6 +109,7 @@ const argv = yargs(process.argv.slice(2))
     apiKey: { type: 'string', default: '' },
     apiPrivateKey: { type: 'string', default: '' },
     passphrase: { type: 'string', default: '' },
+    accountId: { type: 'string', default: '' },
   })
   .parseSync()
 
@@ -125,6 +126,7 @@ argv.initialAsset === null
         apiKey: argv.apiKey,
         apiPrivateKey: argv.apiPrivateKey,
         passphrase: argv.passphrase,
+        accountId: argv.accountId,
       },
     })
   : worker()

@@ -11,7 +11,7 @@ const validateResponse = async <T>(response: OandaResponseWrapper): Promise<T> =
     ? Promise.reject(Error(response.errorMessage))
     : (response as unknown as T)
 
-const postAuthEndpoint = async <T>(path: string, request: string, key: Key): Promise<T> =>
+const postAuthEndpoint = async <T>(path: string, payload: string, key: Key): Promise<T> =>
   validateResponse(
     await got
       .post({
@@ -22,7 +22,7 @@ const postAuthEndpoint = async <T>(path: string, request: string, key: Key): Pro
         timeout: 50000,
         method: 'POST',
         responseType: 'json',
-        body: request,
+        body: payload,
         isStream: false,
       })
       .json()
@@ -51,18 +51,14 @@ export const createOrderRequest = (_token: string, order: OrderCreateRequest): s
       instrument: order.pair,
       positionFill: 'REDUCE_FIRST',
       timeInForce: 'FOK',
-      units: (order.direction === 'buy' ? order.amount : -order.amount).toFixed(5),
+      units: (order.direction === 'buy' ? order.amount : -order.amount).toFixed(2),
     },
   } as OandaAddOrder)
 
-export const getAvailablePairs = async (
-  accountId: string,
-  key: Key,
-  url: string
-): Promise<ExchangePair[]> =>
+export const getAvailablePairs = async (key: Key): Promise<ExchangePair[]> =>
   (
     await getAuthEndpoint<OandaAccountInstruments>(
-      `${url}${instrumentsPath}/${accountId}/instruments`,
+      `${apiUrl}${instrumentsPath}/${key.accountId}/instruments`,
       key
     )
   ).instruments.map((i, ind) => ({
@@ -80,5 +76,5 @@ export const getAvailablePairs = async (
 export const setCallback = (_sock: unknown, callback: (data: string) => void): unknown =>
   (internalOrderCallback = callback)
 
-export const sendData = async (data: string, _ws: unknown, key?: Key): Promise<void> =>
-  internalOrderCallback(JSON.stringify(await postAuthEndpoint(orderPath, data, key!)))
+export const sendData = async (payload: string, _ws: unknown, key?: Key): Promise<void> =>
+  internalOrderCallback(JSON.stringify(await postAuthEndpoint(orderPath, payload, key!)))
