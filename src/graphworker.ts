@@ -85,21 +85,23 @@ export const createGraphProfitCallback = (
 
     // send the initial order
     sendData(createOrderRequest(d.token, result[0].orderCreateRequest), ws)
-    const orderCallback = createOrderCallback(
-      result,
-      d,
-      {
-        t1,
-        t3,
-        startTime,
-      },
-      graphCount,
-      ws,
-      shutdownCallback
-    )
 
     // set the callback to place more orders with each response
-    setCallback(ws, orderCallback)
+    setCallback(
+      ws,
+      createOrderCallback(
+        result,
+        d,
+        {
+          t1,
+          t3,
+          startTime,
+        },
+        graphCount,
+        ws,
+        shutdownCallback
+      )
+    )
     return
   }
 }

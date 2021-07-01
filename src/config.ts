@@ -12,12 +12,12 @@ export let getToken: (key: Key, nonce: number) => Promise<string>
 export let sendData: (data: string, ws: unknown, key?: Key) => void
 export let createOrderRequest: (token: string, order: OrderCreateRequest) => string
 
-export const getExchangeApi = async (exchangeName: ExchangeName): Promise<ccxt.Exchange> =>
+export const getExchangeApi = async (exchangeName: ExchangeName): Promise<unknown> =>
   exchangeName === 'kraken'
     ? new ccxt.kraken()
     : Promise.reject(Error('unknown exchange ' + exchangeName))
 
-export const getExchangeWs = async (exchangeName: ExchangeName): Promise<ccxws.Exchange> =>
+export const getExchangeWs = async (exchangeName: ExchangeName): Promise<unknown> =>
   exchangeName === 'kraken'
     ? new ccxws.Kraken()
     : Promise.reject(Error('unknown exchange ' + exchangeName))

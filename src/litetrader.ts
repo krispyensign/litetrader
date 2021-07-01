@@ -18,7 +18,6 @@ import { createGraphProfitCallback, worker } from './graphworker.js'
 import { setupData } from './dataservices.js'
 import { buildGraph } from './graphlib.js'
 import {
-  createSubscriptionCallback,
   getAvailablePairs,
   startSubscription,
   stopSubscription,
@@ -28,7 +27,7 @@ const createShutdownCallback =
   (conn: unknown, worker: Worker, pairs: IndexedPair[], wsExchange: unknown) =>
   async (): Promise<void> => {
     // kill detached worker thread
-    worker.terminate()
+    await worker.terminate()
 
     // unsubsribe from everything
     stopSubscription(pairs, wsExchange)
@@ -41,58 +40,52 @@ const createShutdownCallback =
   }
 
 export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
-  // configure everything
-  setupAuthService(config.exchangeName)
-  const [assets, pairs, pairMap, initialAssetIndex] = await setupData(
-    await getAvailablePairs(await getExchangeApi(config.exchangeName)),
-    config.initialAsset
-  )
-
-  // setup sockets and graph worker
-  const graphWorker = new Worker(dirname(process.argv[1]) + '/litetrader.js', {
-    workerData: {
-      graph: buildGraph(pairs),
-      initialAssetIndex: initialAssetIndex,
-    },
-  })
-  const exchangeWs = await getExchangeWs(config.exchangeName)
-  const exchangeConn = getConnection(config.key)
-
-  // setup callbacks
-  const sendMutex = new Mutex()
-  const shutdownCallback = createShutdownCallback(exchangeConn, graphWorker, pairs, exchangeWs)
-  const graphWorkerCallback = createGraphProfitCallback(
-    {
-      assets: assets,
-      eta: config.eta,
-      initialAmount: config.initialAmount,
-      initialAssetIndex: initialAssetIndex,
-      pairMap: pairMap,
-      pairs: pairs,
-      token: await getToken(config.key, new Date().getTime() * 1000),
-    },
-    exchangeConn,
-    sendMutex,
-    shutdownCallback
-  )
-  const snapshotCallback = createSubscriptionCallback(pairs, pairMap)
+  console.log('Litetrader.')
+  const //
+    [assets, pairs, pairMap, initialAssetIndex] = await setupData(
+      await getAvailablePairs(await getExchangeApi(config.exchangeName)),
+      config.initialAsset
+    ),
+    // setup sockets and graph worker
+    graphWorker = new Worker(dirname(process.argv[1]) + '/litetrader.js', {
+      workerData: {
+        graph: buildGraph(pairs),
+        initialAssetIndex: initialAssetIndex,
+      },
+    }),
+    exchangeWs = await getExchangeWs(config.exchangeName),
+    exchangeConn = getConnection(config.key),
+    sendMutex = new Mutex()
 
   // setup process handler and websockets
-  process.on('SIGINT', () => sendMutex.acquire().then(() => shutdownCallback))
-  exchangeWs.on('l2snapshot', snapshotCallback)
-  exchangeWs.on('l2update', snapshotCallback)
+  process.on('SIGINT', () =>
+    sendMutex
+      .acquire()
+      .then(createShutdownCallback(exchangeConn, graphWorker, pairs, exchangeWs))
+      .then(() => process.exit(0))
+  )
 
   // start subscriptions and wait for initial flood of tick updates to stabilize
-  console.log('stabilizing...')
-  startSubscription(pairs, exchangeWs)
-  await new Promise(res => setTimeout(res, 10))
-  console.log('done stabilizing...')
-  console.log('syncing...')
-  await new Promise(res => setTimeout(res, 20000))
-  console.log(`done syncing... ${Date.now()}`)
+  await startSubscription(pairs, pairMap, exchangeWs)
 
   // start processing with the graph thread
-  graphWorker.on('message', graphWorkerCallback)
+  graphWorker.on(
+    'message',
+    createGraphProfitCallback(
+      {
+        assets: assets,
+        eta: config.eta,
+        initialAmount: config.initialAmount,
+        initialAssetIndex: initialAssetIndex,
+        pairMap: pairMap,
+        pairs: pairs,
+        token: await getToken(config.key, new Date().getTime() * 1000),
+      },
+      exchangeConn,
+      sendMutex,
+      createShutdownCallback(exchangeConn, graphWorker, pairs, exchangeWs)
+    )
+  )
 
   // return configured threads
   console.timeEnd('startup')
@@ -113,7 +106,9 @@ const argv = yargs(process.argv.slice(2))
   })
   .parseSync()
 
-// do some error handling
+// configure everything
+setupAuthService(argv.exchangeName as ExchangeName)
+
 argv.initialAsset === null
   ? console.log('Invalid asset provided')
   : isMainThread
