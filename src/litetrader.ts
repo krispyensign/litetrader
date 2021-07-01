@@ -40,7 +40,7 @@ const createShutdownCallback =
   }
 
 export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
-  console.log('Litetrader.')
+  console.log('Starting.')
   const //
     [assets, pairs, pairMap, initialAssetIndex] = await setupData(
       await getAvailablePairs(await getExchangeApi(config.exchangeName)),
