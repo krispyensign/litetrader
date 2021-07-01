@@ -39,7 +39,7 @@ const createShutdownCallback =
     console.log('shutdown complete')
   }
 
-export const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
+const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
   console.log('Starting.')
   const //
     [assets, pairs, pairMap, initialAssetIndex] = await setupData(
