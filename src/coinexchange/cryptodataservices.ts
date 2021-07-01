@@ -2,8 +2,6 @@ import ccxt from 'ccxt'
 import ccxws from 'ccxws'
 import * as bannedConfig from './bannedPairs.json'
 
-const bannedPairIds = bannedConfig.pairs
-
 const createSubscriptionCallback =
   (pairs: IndexedPair[], pairMap: Map<string, number>) =>
   async (snap: ccxws.Level2Data, market: ccxws.Market): Promise<void> => {
@@ -70,7 +68,7 @@ export const getAvailablePairs = async (apiExchange: unknown): Promise<ExchangeP
         ([, market]) =>
           market.symbol !== undefined &&
           market.active &&
-          bannedPairIds.find(id => market.id === id) === undefined
+          bannedConfig.pairs.find(id => market.id === id) === undefined
       )
       .map(
         ([, market], index): ExchangePair => ({
