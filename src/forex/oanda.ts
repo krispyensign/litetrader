@@ -1,7 +1,8 @@
 import got from 'got'
+import { Duplex } from 'stream'
+import { pipeline } from 'stream/promises'
 
-const orderPath = '/0/private/GetWebSocketsToken'
-const instrumentsPath = '/v3/accounts/'
+const basePath = '/v3/accounts/'
 const apiUrl = 'https://api.kraken.com'
 
 let internalOrderCallback: (data: string) => void
@@ -44,6 +45,16 @@ const getAuthEndpoint = async <T>(path: string, key: Key): Promise<T> =>
       .json()
   )
 
+const getStreamEndpoint = (path: string, key: Key): Duplex =>
+  got.stream({
+    url: apiUrl + path,
+    headers: {
+      Authorization: `Bearer ${key.apiKey}`,
+    },
+    method: 'GET',
+    isStream: true,
+  })
+
 export const createOrderRequest = (_token: string, order: OrderCreateRequest): string =>
   JSON.stringify({
     order: {
@@ -55,10 +66,41 @@ export const createOrderRequest = (_token: string, order: OrderCreateRequest): s
     },
   } as OandaAddOrder)
 
+const createSubscriptionCallback =
+  (pairs: IndexedPair[], pairMap: Map<string, number>) =>
+  async (tick: OandaTicker): Promise<void> => {
+    const pairIndex = pairMap.get(tick.instrument)
+    if (pairIndex === undefined)
+      return Promise.reject(Error(`Invalid pair encountered. ${tick.instrument}`))
+    pairs[pairIndex].ask = Number(tick.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
+    pairs[pairIndex].bid = Number(tick.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
+    // console.log({ id: pairs[pairIndex].name, a: pairs[pairIndex].ask, b: pairs[pairIndex].bid })
+  }
+
+export const startSubscription = async (
+  pairs: IndexedPair[],
+  pairMap: Map<string, number>,
+  _wsExchange: unknown,
+  key?: Key
+): Promise<void> => {
+  const callback = createSubscriptionCallback(pairs, pairMap)
+  await pipeline(
+    getStreamEndpoint(
+      `${apiUrl}${basePath}${key!.accountId}/pricing/stream?instruments=` +
+        pairs.map(p => p.name).join('%2'),
+
+      key!
+    ),
+    async (source: AsyncIterable<string>) => {
+      for await (const chunk of source) callback(JSON.parse(chunk) as OandaTicker)
+    }
+  )
+}
+
 export const getAvailablePairs = async (key: Key): Promise<ExchangePair[]> =>
   (
     await getAuthEndpoint<OandaAccountInstruments>(
-      `${apiUrl}${instrumentsPath}/${key.accountId}/instruments`,
+      `${apiUrl}${basePath}/${key.accountId}/instruments`,
       key
     )
   ).instruments.map((i, ind) => ({
@@ -77,4 +119,8 @@ export const setCallback = (_sock: unknown, callback: (data: string) => void): u
   (internalOrderCallback = callback)
 
 export const sendData = async (payload: string, _ws: unknown, key?: Key): Promise<void> =>
-  internalOrderCallback(JSON.stringify(await postAuthEndpoint(orderPath, payload, key!)))
+  internalOrderCallback(
+    JSON.stringify(
+      await postAuthEndpoint(`${apiUrl}${basePath}${key?.accountId}/orders`, payload, key!)
+    )
+  )

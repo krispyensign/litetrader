@@ -31,3 +31,19 @@ type OandaMarketOrderRequest = {
 type OandaAddOrder = {
   order: OandaMarketOrderRequest
 }
+
+type PriceBucket = {
+  price: string
+  liquidity: number
+}
+
+type OandaTicker = {
+  type: 'PRICE' | 'HEARTBEAT'
+  time: string
+  instrument: string
+  tradeable: boolean
+  bids: PriceBucket[]
+  asks: PriceBucket[]
+  closeoutBid: string
+  closeoutAsk: string
+}
