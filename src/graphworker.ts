@@ -14,6 +14,7 @@ const createOrderCallback = (
   t: GraphWorkerTimer,
   graphCount: number,
   ws: unknown,
+  key: Key,
   shutdownCallback: () => Promise<void>
 ): ((data: string) => Promise<void>) => {
   let seq = 0
@@ -45,7 +46,7 @@ const createOrderCallback = (
     }
 
     // send the next order
-    sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws)
+    sendData(createOrderRequest(d.token, result[seq].orderCreateRequest), ws, key)
     console.log(data)
   }
 }
@@ -54,6 +55,7 @@ export const createGraphProfitCallback = (
   d: GraphWorkerData,
   ws: unknown,
   mutex: Mutex,
+  key: Key,
   shutdownCallback: () => Promise<void>
 ): ((arg: readonly number[]) => void) => {
   const startTime = new Date(Date.now())
@@ -84,7 +86,7 @@ export const createGraphProfitCallback = (
     const t3 = Date.now()
 
     // send the initial order
-    sendData(createOrderRequest(d.token, result[0].orderCreateRequest), ws)
+    sendData(createOrderRequest(d.token, result[0].orderCreateRequest), ws, key)
 
     // set the callback to place more orders with each response
     setCallback(
@@ -99,6 +101,7 @@ export const createGraphProfitCallback = (
         },
         graphCount,
         ws,
+        key,
         shutdownCallback
       )
     )
