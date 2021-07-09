@@ -12,23 +12,6 @@ const validateResponse = async <T>(response: OandaResponseWrapper): Promise<T> =
     ? Promise.reject(Error(response.errorMessage))
     : (response as unknown as T)
 
-const postAuthEndpoint = async <T>(url: string, payload: string, key: Key): Promise<T> =>
-  validateResponse(
-    await got
-      .post({
-        url: url,
-        headers: {
-          Authorization: `Bearer ${key.apiKey}`,
-        },
-        timeout: 50000,
-        method: 'POST',
-        responseType: 'json',
-        body: payload,
-        isStream: false,
-      })
-      .json()
-  )
-
 const getAuthEndpoint = async <T>(url: string, key: Key): Promise<T> =>
   validateResponse(
     await got
@@ -83,29 +66,40 @@ export const startSubscription = async (
   _wsExchange: unknown,
   key: Key
 ): Promise<unknown> => {
+  // setup subscription callback and stream
   const callback = createSubscriptionCallback(pairs, pairMap)
   const duplex = getStreamEndpoint(
     `${streamUrl}${basePath}${key.accountId}/pricing/stream?instruments=` +
       pairs.map(p => p.name).join(','),
     key!
   )
-  duplex.on('data', (chunk: Buffer) => {
-    console.log(chunk.toLocaleString())
-    chunk
-      .toLocaleString()
-      .trim()
-      .split(/\r\n|\n\r|\n|\r/)
-      .filter(d => d[d.length - 1] === '}')
-      .forEach(d => callback(JSON.parse(d.toLocaleString()) as OandaTicker))
-  })
+
+  // register callback
+  duplex.on(
+    'data',
+    (chunk: Buffer) => (
+      console.log(chunk.toLocaleString()),
+      chunk
+        .toLocaleString()
+        .trim()
+        .replace(/\r\n|\n\r|\n|\r/, '')
+        .split('}{')
+        .map((d, index, arr) =>
+          arr.length === 1
+            ? d
+            : index === 0
+            ? d + '}'
+            : index === index - 1
+            ? '{' + d
+            : '{' + d + '}'
+        )
+        .forEach(d => callback(JSON.parse(d)))
+    )
+  )
   return duplex
 }
 
-export const getAvailablePairs = async (
-  _apiExchange: unknown,
-  key: Key
-): Promise<ExchangePair[]> => (
-  console.log(`${apiUrl}${basePath}${key.accountId}/instruments`),
+export const getAvailablePairs = async (_apiExchange: unknown, key: Key): Promise<ExchangePair[]> =>
   (
     await getAuthEndpoint<OandaAccountInstruments>(
       `${apiUrl}${basePath}${key.accountId}/instruments`,
@@ -122,7 +116,6 @@ export const getAvailablePairs = async (
     takerFee: 0,
     tradename: i.name,
   }))
-)
 
 export const setCallback = (_sock: unknown, callback: (data: string) => void): unknown =>
   (internalOrderCallback = callback)
@@ -130,6 +123,20 @@ export const setCallback = (_sock: unknown, callback: (data: string) => void): u
 export const sendData = async (payload: string, _ws: unknown, key: Key): Promise<void> =>
   internalOrderCallback(
     JSON.stringify(
-      await postAuthEndpoint(`${apiUrl}${basePath}${key.accountId}/orders`, payload, key!)
+      validateResponse(
+        await got
+          .post({
+            url: `${apiUrl}${basePath}${key.accountId}/orders`,
+            headers: {
+              Authorization: `Bearer ${key.apiKey}`,
+            },
+            timeout: 50000,
+            method: 'POST',
+            responseType: 'json',
+            body: payload,
+            isStream: false,
+          })
+          .json()
+      )
     )
   )
