@@ -85,7 +85,7 @@ export const startSubscription = async (
 
 export const getAvailablePairs = async (_apiExchange: unknown, key: Key): Promise<ExchangePair[]> =>
   (
-    (await validateResponse(
+    await validateResponse<OandaAccountInstruments>(
       await got
         .get({
           url: `${apiUrl}${basePath}${key.accountId}/instruments`,
@@ -98,7 +98,7 @@ export const getAvailablePairs = async (_apiExchange: unknown, key: Key): Promis
           isStream: false,
         })
         .json()
-    )) as OandaAccountInstruments
+    )
   ).instruments.map((i, ind) => ({
     baseName: i.name.split('_')[1],
     quoteName: i.name.split('_')[0],
