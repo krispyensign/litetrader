@@ -12,22 +12,6 @@ const validateResponse = async <T>(response: OandaResponseWrapper): Promise<T> =
     ? Promise.reject(Error(response.errorMessage))
     : (response as unknown as T)
 
-const getAuthEndpoint = async <T>(url: string, key: Key): Promise<T> =>
-  validateResponse(
-    await got
-      .get({
-        url: url,
-        headers: {
-          Authorization: `Bearer ${key.apiKey}`,
-        },
-        timeout: 50000,
-        method: 'GET',
-        responseType: 'json',
-        isStream: false,
-      })
-      .json()
-  )
-
 const getStreamEndpoint = (url: string, key: Key): Duplex =>
   got.stream({
     url: url,
@@ -101,10 +85,20 @@ export const startSubscription = async (
 
 export const getAvailablePairs = async (_apiExchange: unknown, key: Key): Promise<ExchangePair[]> =>
   (
-    await getAuthEndpoint<OandaAccountInstruments>(
-      `${apiUrl}${basePath}${key.accountId}/instruments`,
-      key
-    )
+    (await validateResponse(
+      await got
+        .get({
+          url: `${apiUrl}${basePath}${key.accountId}/instruments`,
+          headers: {
+            Authorization: `Bearer ${key.apiKey}`,
+          },
+          timeout: 50000,
+          method: 'GET',
+          responseType: 'json',
+          isStream: false,
+        })
+        .json()
+    )) as OandaAccountInstruments
   ).instruments.map((i, ind) => ({
     baseName: i.name.split('_')[1],
     quoteName: i.name.split('_')[0],
