@@ -8,20 +8,18 @@ import { Mutex } from 'async-mutex'
 import {
   closeExchangeWs,
   dropConnection,
+  getAvailablePairs,
   getConnection,
   getExchangeApi,
   getExchangeWs,
   getToken,
   configureService,
+  startSubscription,
+  stopSubscription,
 } from './config.js'
 import { createGraphProfitCallback, worker } from './graphworker.js'
 import { setupData } from './dataservices.js'
 import { buildGraph } from './graphlib.js'
-import {
-  getAvailablePairs,
-  startSubscription,
-  stopSubscription,
-} from './coinexchange/cryptodataservices.js'
 
 const createShutdownCallback =
   (conn: unknown, worker: Worker, pairs: IndexedPair[], wsExchange: unknown) =>
@@ -45,7 +43,7 @@ const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
 
   const //
     [assets, pairs, pairMap, initialAssetIndex] = await setupData(
-      await getAvailablePairs(await getExchangeApi(config.exchangeName)),
+      await getAvailablePairs(await getExchangeApi(config.exchangeName), config.key),
       config.initialAsset
     ),
     // setup sockets and graph worker
@@ -68,7 +66,7 @@ const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
   )
 
   // start subscriptions and wait for initial flood of tick updates to stabilize
-  await startSubscription(pairs, pairMap, exchangeWs)
+  await startSubscription(pairs, pairMap, exchangeWs, config.key)
 
   // start processing with the graph thread
   graphWorker.on(
@@ -85,6 +83,7 @@ const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
       },
       exchangeConn,
       sendMutex,
+      config.key,
       createShutdownCallback(exchangeConn, graphWorker, pairs, exchangeWs)
     )
   )

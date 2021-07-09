@@ -18,7 +18,7 @@ export const startSubscription = async (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   wsExchange: unknown
-): Promise<void> => {
+): Promise<unknown> => {
   const ex: ccxws.Exchange = wsExchange as ccxws.Exchange
   ex.on('l2snapshot', createSubscriptionCallback(pairs, pairMap))
   ex.on('l2update', createSubscriptionCallback(pairs, pairMap))
@@ -40,6 +40,7 @@ export const startSubscription = async (
   )
   console.log('syncing.')
   await new Promise(res => setTimeout(res, 10000))
+  return wsExchange
 }
 
 export const stopSubscription = (pairs: IndexedPair[], wsExchange: unknown): void =>
@@ -60,7 +61,8 @@ export const stopSubscription = (pairs: IndexedPair[], wsExchange: unknown): voi
     )
   )
 
-export const getAvailablePairs = async (apiExchange: unknown): Promise<ExchangePair[]> =>
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const getAvailablePairs = async (apiExchange: unknown, _key: Key): Promise<ExchangePair[]> =>
   (apiExchange as ccxt.Exchange).loadMarkets().then(markets =>
     Object.entries(markets)
       .filter(
