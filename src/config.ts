@@ -26,7 +26,7 @@ export const closeExchangeWs = (ex: unknown): void => {
   if ((ex as ccxws.Exchange).close !== undefined) (ex as ccxws.Exchange).close()
 }
 
-export const setupAuthService = async (exchangeName: ExchangeName): Promise<void> => {
+export const configureService = async (exchangeName: ExchangeName): Promise<void> => {
   switch (exchangeName) {
     case 'kraken':
       getConnection = kraken.getConnection

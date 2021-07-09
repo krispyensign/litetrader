@@ -12,7 +12,7 @@ import {
   getExchangeApi,
   getExchangeWs,
   getToken,
-  setupAuthService,
+  configureService,
 } from './config.js'
 import { createGraphProfitCallback, worker } from './graphworker.js'
 import { setupData } from './dataservices.js'
@@ -41,6 +41,8 @@ const createShutdownCallback =
 
 const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
   console.log('Starting.')
+  configureService(config.exchangeName)
+
   const //
     [assets, pairs, pairMap, initialAssetIndex] = await setupData(
       await getAvailablePairs(await getExchangeApi(config.exchangeName)),
@@ -57,7 +59,7 @@ const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
     exchangeConn = getConnection(config.key),
     sendMutex = new Mutex()
 
-  // setup process handler and websockets
+  // setup process handler
   process.on('SIGINT', () =>
     sendMutex
       .acquire()
@@ -105,9 +107,6 @@ const argv = yargs(process.argv.slice(2))
     accountId: { type: 'string', default: '' },
   })
   .parseSync()
-
-// configure everything
-setupAuthService(argv.exchangeName as ExchangeName)
 
 argv.initialAsset === null
   ? console.log('Invalid asset provided')
