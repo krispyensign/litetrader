@@ -36,6 +36,7 @@ export const createOrderRequest = (_token: string, order: OrderCreateRequest): s
 const createSubscriptionCallback =
   (pairs: IndexedPair[], pairMap: Map<string, number>) =>
   async (tick: OandaTicker): Promise<void> => {
+    if (tick.type === 'HEARTBEAT') return
     const pairIndex = pairMap.get(tick.instrument)
     if (pairIndex === undefined)
       return Promise.reject(Error(`Invalid pair encountered. ${tick.instrument}`))
@@ -59,26 +60,12 @@ export const startSubscription = async (
   )
 
   // register callback
-  duplex.on(
-    'data',
-    (chunk: Buffer) => (
-      console.log(chunk.toLocaleString()),
-      chunk
-        .toLocaleString()
-        .trim()
-        .replace(/\r\n|\n\r|\n|\r/, '')
-        .split('}{')
-        .map((d, index, arr) =>
-          arr.length === 1
-            ? d
-            : index === 0
-            ? d + '}'
-            : index === index - 1
-            ? '{' + d
-            : '{' + d + '}'
-        )
-        .forEach(d => callback(JSON.parse(d)))
-    )
+  duplex.on('data', (chunk: Buffer) =>
+    chunk
+      .toLocaleString()
+      .split(/\r\n|\n\r|\n|\r/)
+      .filter(d => d.startsWith('{"type"') && d.endsWith('}'))
+      .forEach(d => callback(JSON.parse(d)))
   )
   return duplex
 }

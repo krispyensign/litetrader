@@ -16,9 +16,9 @@ import {
   configureService,
   startSubscription,
   stopSubscription,
-} from './config.js'
-import { createGraphProfitCallback, worker } from './graphworker.js'
-import { setupData } from './dataservices.js'
+} from './configureservices.js'
+import { createGraphProfitCallback, graphWorker } from './graphworker.js'
+import { setupData } from './builddata.js'
 import { buildGraph } from './graphlib.js'
 
 const createShutdownCallback =
@@ -46,30 +46,34 @@ const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
       await getAvailablePairs(await getExchangeApi(config.exchangeName), config.key),
       config.initialAsset
     ),
-    // setup sockets and graph worker
-    graphWorker = new Worker(dirname(process.argv[1]) + '/litetrader.js', {
-      workerData: {
-        graph: buildGraph(pairs),
-        initialAssetIndex: initialAssetIndex,
-      },
-    }),
     exchangeWs = await getExchangeWs(config.exchangeName),
     exchangeConn = getConnection(config.key),
     sendMutex = new Mutex()
+
+  // start subscriptions and wait for initial flood of tick updates to stabilize
+  await startSubscription(pairs, pairMap, exchangeWs, config.key)
+  console.log('syncing.')
+  await new Promise(res => setTimeout(res, 10000))
+
+  // setup sockets and graph worker
+  const graphWorkerTask = new Worker(dirname(process.argv[1]) + '/litetrader.js', {
+    workerData: {
+      exchangeName: config.exchangeName,
+      graph: buildGraph(pairs),
+      initialAssetIndex: initialAssetIndex,
+    },
+  })
 
   // setup process handler
   process.on('SIGINT', () =>
     sendMutex
       .acquire()
-      .then(createShutdownCallback(exchangeConn, graphWorker, pairs, exchangeWs))
+      .then(createShutdownCallback(exchangeConn, graphWorkerTask, pairs, exchangeWs))
       .then(() => process.exit(0))
   )
 
-  // start subscriptions and wait for initial flood of tick updates to stabilize
-  await startSubscription(pairs, pairMap, exchangeWs, config.key)
-
   // start processing with the graph thread
-  graphWorker.on(
+  graphWorkerTask.on(
     'message',
     createGraphProfitCallback(
       {
@@ -84,13 +88,13 @@ const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
       exchangeConn,
       sendMutex,
       config.key,
-      createShutdownCallback(exchangeConn, graphWorker, pairs, exchangeWs)
+      createShutdownCallback(exchangeConn, graphWorkerTask, pairs, exchangeWs)
     )
   )
 
   // return configured threads
   console.timeEnd('startup')
-  return [exchangeConn, graphWorker]
+  return [exchangeConn, graphWorkerTask]
 }
 
 // process the command line args
@@ -122,6 +126,6 @@ argv.initialAsset === null
         accountId: argv.accountId,
       },
     })
-  : worker()
+  : graphWorker()
 
 // wait for shutdown

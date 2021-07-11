@@ -63,6 +63,7 @@ export function* findCycles<T>(
   startAssets: readonly T[],
   neighbors: ReadonlyMap<T, readonly T[]>
 ): Generator<readonly T[], void, unknown> {
+  console.log(startAssets)
   let candidatePaths = growPaths(
     startAssets.map(val => [val]),
     neighbors

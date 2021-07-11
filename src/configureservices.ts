@@ -1,6 +1,6 @@
-import * as kraken from './coinexchange/kraken.js'
-import * as crypto from './coinexchange/cryptodataservices.js'
-import * as oanda from './forex/oanda.js'
+import * as kraken from './krakenservice.js'
+import * as crypto from './cryptodataservices.js'
+import * as oanda from './oandaservice.js'
 import ccxt from 'ccxt'
 import ccxws from 'ccxws'
 
@@ -36,7 +36,7 @@ export const getExchangeWs = async (exchangeName: ExchangeName): Promise<unknown
     : Promise.reject(Error('unknown exchange ' + exchangeName))
 
 export const closeExchangeWs = (ex: unknown): void => {
-  if ((ex as ccxws.Exchange).close !== undefined) (ex as ccxws.Exchange).close()
+  if (ex !== undefined && (ex as ccxws.Exchange).close !== undefined) (ex as ccxws.Exchange).close()
 }
 
 export const configureService = async (exchangeName: ExchangeName): Promise<void> => {

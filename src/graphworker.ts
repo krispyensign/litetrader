@@ -1,9 +1,9 @@
 import { Mutex } from 'async-mutex'
 import * as util from 'util'
 import { parentPort, workerData } from 'worker_threads'
-import { createOrderRequest, sendData } from './config.js'
-import { setCallback } from './coinexchange/kraken.js'
+import { createOrderRequest, sendData } from './configureservices.js'
 import { findCycles } from './graphlib.js'
+import { setCallback } from './oandaservice.js'
 import { calcProfit } from './profitcalc.js'
 
 const isError = util.types.isNativeError
@@ -70,13 +70,12 @@ export const createGraphProfitCallback = (
     if (isError(result)) return Promise.reject(result)
 
     // check if the calc was profitable
-    if (result === 0) return
-    if (result[result.length - 1].newAmount <= d.initialAmount) {
+    if (result === 0 || result[result.length - 1].newAmount <= d.initialAmount) {
       if (graphCount % 10000 === 0)
         console.log({
           count: graphCount,
           cycle: cycle,
-          amount: result[result.length - 1].newAmount,
+          amount: result === 0 ? 0 : result[result.length - 1].newAmount,
         })
       return
     }
@@ -86,6 +85,7 @@ export const createGraphProfitCallback = (
     const t3 = Date.now()
 
     // send the initial order
+    console.log(result)
     sendData(createOrderRequest(d.token, result[0].orderCreateRequest), ws, key)
 
     // set the callback to place more orders with each response
@@ -109,7 +109,7 @@ export const createGraphProfitCallback = (
   }
 }
 
-export const worker = (): true => {
+export const graphWorker = async (): Promise<true> => {
   // loop through each cycle and post
   for (const cycle of findCycles(
     [workerData.initialAssetIndex],

@@ -38,8 +38,6 @@ export const startSubscription = async (
       })
     )
   )
-  console.log('syncing.')
-  await new Promise(res => setTimeout(res, 10000))
   return wsExchange
 }
 
