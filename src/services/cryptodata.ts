@@ -2,9 +2,8 @@ import ccxt from 'ccxt'
 import ccxws from 'ccxws'
 import * as bannedConfig from './../lib/bannedPairs.json'
 
-const createSubscriptionCallback =
-  (pairs: IndexedPair[], pairMap: Map<string, number>) =>
-  async (snap: ccxws.Level2Data, market: ccxws.Market): Promise<void> => {
+const createSubscriptionCallback = (pairs: IndexedPair[], pairMap: Map<string, number>) =>
+  async function (snap: ccxws.Level2Data, market: ccxws.Market): Promise<void> {
     const pairIndex = pairMap.get(market.id)
     if (pairIndex === undefined)
       return Promise.reject(Error(`Invalid pair encountered. ${market.id}`))
@@ -14,11 +13,11 @@ const createSubscriptionCallback =
     // console.log({ id: pairs[pairIndex].name, a: pairs[pairIndex].ask, b: pairs[pairIndex].bid })
   }
 
-export const startSubscription = async (
+export async function startSubscription(
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   wsExchange: unknown
-): Promise<unknown> => {
+): Promise<unknown> {
   const ex: ccxws.Exchange = wsExchange as ccxws.Exchange
   ex.on('l2snapshot', createSubscriptionCallback(pairs, pairMap))
   ex.on('l2update', createSubscriptionCallback(pairs, pairMap))

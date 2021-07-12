@@ -22,6 +22,17 @@ const getStreamEndpoint = (url: string, key: Key): Duplex =>
     isStream: true,
   })
 
+const createSubscriptionCallback = (pairs: IndexedPair[], pairMap: Map<string, number>) =>
+  async function (tick: OandaTicker): Promise<void> {
+    if (tick.type === 'HEARTBEAT') return
+    const pairIndex = pairMap.get(tick.instrument)
+    if (pairIndex === undefined)
+      return Promise.reject(Error(`Invalid pair encountered. ${tick.instrument}`))
+    pairs[pairIndex].ask = Number(tick.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
+    pairs[pairIndex].bid = Number(tick.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
+    console.log({ id: pairs[pairIndex].name, a: pairs[pairIndex].ask, b: pairs[pairIndex].bid })
+  }
+
 export const createOrderRequest = (_token: string, order: OrderCreateRequest): string =>
   JSON.stringify({
     order: {
@@ -33,24 +44,12 @@ export const createOrderRequest = (_token: string, order: OrderCreateRequest): s
     },
   } as OandaAddOrder)
 
-const createSubscriptionCallback =
-  (pairs: IndexedPair[], pairMap: Map<string, number>) =>
-  async (tick: OandaTicker): Promise<void> => {
-    if (tick.type === 'HEARTBEAT') return
-    const pairIndex = pairMap.get(tick.instrument)
-    if (pairIndex === undefined)
-      return Promise.reject(Error(`Invalid pair encountered. ${tick.instrument}`))
-    pairs[pairIndex].ask = Number(tick.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
-    pairs[pairIndex].bid = Number(tick.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
-    console.log({ id: pairs[pairIndex].name, a: pairs[pairIndex].ask, b: pairs[pairIndex].bid })
-  }
-
-export const startSubscription = async (
+export async function startSubscription(
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   _wsExchange: unknown,
   key: Key
-): Promise<unknown> => {
+): Promise<unknown> {
   // setup subscription callback and stream
   const callback = createSubscriptionCallback(pairs, pairMap)
   const duplex = getStreamEndpoint(

@@ -21,9 +21,13 @@ import { createGraphProfitCallback, graphWorker } from './graphworker.js'
 import { setupData } from './lib/datahelpers.js'
 import { buildGraph } from './lib/graphlib.js'
 
-const createShutdownCallback =
-  (conn: unknown, worker: Worker, pairs: IndexedPair[], wsExchange: unknown) =>
-  async (): Promise<void> => {
+const createShutdownCallback = (
+  conn: unknown,
+  worker: Worker,
+  pairs: IndexedPair[],
+  wsExchange: unknown
+) =>
+  async function (): Promise<void> {
     // kill detached worker thread
     await worker.terminate()
 
@@ -37,12 +41,11 @@ const createShutdownCallback =
     console.log('shutdown complete')
   }
 
-const app = async (config: Config): Promise<readonly [unknown, Worker]> => {
+async function app(config: Config): Promise<readonly [unknown, Worker]> {
   console.log('Starting.')
   configureService(config.exchangeName)
 
-  const //
-    [assets, pairs, pairMap, initialAssetIndex] = await setupData(
+  const [assets, pairs, pairMap, initialAssetIndex] = await setupData(
       await getAvailablePairs(await getExchangeApi(config.exchangeName), config.key),
       config.initialAsset
     ),

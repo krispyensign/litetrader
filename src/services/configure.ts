@@ -35,11 +35,11 @@ export const getExchangeWs = async (exchangeName: ExchangeName): Promise<unknown
     ? undefined
     : Promise.reject(Error('unknown exchange ' + exchangeName))
 
-export const closeExchangeWs = (ex: unknown): void => {
+export function closeExchangeWs(ex: unknown): void {
   if (ex !== undefined && (ex as ccxws.Exchange).close !== undefined) (ex as ccxws.Exchange).close()
 }
 
-export const configureService = async (exchangeName: ExchangeName): Promise<void> => {
+export async function configureService(exchangeName: ExchangeName): Promise<void> {
   switch (exchangeName) {
     case 'kraken':
       getConnection = kraken.getConnection

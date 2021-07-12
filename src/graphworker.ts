@@ -18,7 +18,7 @@ const createOrderCallback = (
   shutdownCallback: () => Promise<void>
 ): ((data: string) => Promise<void>) => {
   let seq = 0
-  return async (data: string): Promise<void> => {
+  return async function (data: string): Promise<void> {
     // shortcircuit and shutdown (for now) if all processed
     if (++seq >= result.length) {
       // log and die for now
@@ -60,7 +60,7 @@ export const createGraphProfitCallback = (
 ): ((arg: readonly number[]) => void) => {
   const startTime = new Date(Date.now())
   let graphCount = 0
-  return async (cycle: readonly number[]): Promise<unknown> => {
+  return async function (cycle: readonly number[]): Promise<unknown> {
     // calc the profit
     graphCount++
     const t1 = Date.now()
@@ -109,7 +109,7 @@ export const createGraphProfitCallback = (
   }
 }
 
-export const graphWorker = async (): Promise<true> => {
+export async function graphWorker(): Promise<true> {
   // loop through each cycle and post
   for (const cycle of findCycles(
     [workerData.initialAssetIndex],
