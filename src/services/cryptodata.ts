@@ -1,6 +1,6 @@
 import ccxt from 'ccxt'
 import ccxws from 'ccxws'
-import * as bannedConfig from './bannedPairs.json'
+import * as bannedConfig from './../lib/bannedPairs.json'
 
 const createSubscriptionCallback =
   (pairs: IndexedPair[], pairMap: Map<string, number>) =>

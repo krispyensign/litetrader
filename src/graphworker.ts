@@ -1,10 +1,10 @@
 import { Mutex } from 'async-mutex'
 import * as util from 'util'
 import { parentPort, workerData } from 'worker_threads'
-import { createOrderRequest, sendData } from './configureservices.js'
-import { findCycles } from './graphlib.js'
-import { setCallback } from './oandaservice.js'
-import { calcProfit } from './profitcalc.js'
+import { createOrderRequest, sendData } from './services/configure.js'
+import { findCycles } from './lib/graphlib.js'
+import { setCallback } from './services/oanda.js'
+import { calcProfit } from './lib/profitcalclib.js'
 
 const isError = util.types.isNativeError
 

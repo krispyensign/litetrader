@@ -1,6 +1,6 @@
-import * as kraken from './krakenservice.js'
-import * as crypto from './cryptodataservices.js'
-import * as oanda from './oandaservice.js'
+import * as kraken from './kraken.js'
+import * as crypto from './cryptodata.js'
+import * as oanda from './oanda.js'
 import ccxt from 'ccxt'
 import ccxws from 'ccxws'
 

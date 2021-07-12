@@ -16,10 +16,10 @@ import {
   configureService,
   startSubscription,
   stopSubscription,
-} from './configureservices.js'
+} from './services/configure.js'
 import { createGraphProfitCallback, graphWorker } from './graphworker.js'
-import { setupData } from './builddata.js'
-import { buildGraph } from './graphlib.js'
+import { setupData } from './lib/builddata.js'
+import { buildGraph } from './lib/graphlib.js'
 
 const createShutdownCallback =
   (conn: unknown, worker: Worker, pairs: IndexedPair[], wsExchange: unknown) =>
