@@ -18,7 +18,7 @@ import {
   stopSubscription,
 } from './services/configure.js'
 import { createGraphProfitCallback, graphWorker } from './graphworker.js'
-import { setupData } from './lib/builddata.js'
+import { setupData } from './lib/datahelpers.js'
 import { buildGraph } from './lib/graphlib.js'
 
 const createShutdownCallback =
