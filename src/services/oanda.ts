@@ -1,19 +1,21 @@
 import got from 'got'
 import { Duplex } from 'stream'
+export { createOrderRequest, startSubscription, getAvailablePairs, setCallback, sendData }
 
-const basePath = '/v3/accounts/'
-const apiUrl = 'https://api-fxpractice.oanda.com'
-const streamUrl = 'https://stream-fxpractice.oanda.com'
+let basePath = '/v3/accounts/'
+let apiUrl = 'https://api-fxpractice.oanda.com'
+let streamUrl = 'https://stream-fxpractice.oanda.com'
 
 let internalOrderCallback: (data: string) => void
 
-const validateResponse = async <T>(response: OandaResponseWrapper): Promise<T> =>
-  response.errorCode !== undefined
+async function validateResponse<T>(response: OandaResponseWrapper): Promise<T> {
+  return response.errorCode !== undefined
     ? Promise.reject(Error(response.errorMessage))
     : (response as unknown as T)
+}
 
-const getStreamEndpoint = (url: string, key: Key): Duplex =>
-  got.stream({
+function getStreamEndpoint(url: string, key: Key): Duplex {
+  return got.stream({
     url: url,
     headers: {
       Authorization: `Bearer ${key.apiKey}`,
@@ -21,20 +23,22 @@ const getStreamEndpoint = (url: string, key: Key): Duplex =>
     method: 'GET',
     isStream: true,
   })
+}
 
-const createSubscriptionCallback = (pairs: IndexedPair[], pairMap: Map<string, number>) =>
-  async function (tick: OandaTicker): Promise<void> {
+function createSubscriptionCallback(pairs: IndexedPair[], pairMap: Map<string, number>) {
+  return async (tick: OandaTicker): Promise<void> => {
     if (tick.type === 'HEARTBEAT') return
-    const pairIndex = pairMap.get(tick.instrument)
+    let pairIndex = pairMap.get(tick.instrument)
     if (pairIndex === undefined)
       return Promise.reject(Error(`Invalid pair encountered. ${tick.instrument}`))
     pairs[pairIndex].ask = Number(tick.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
     pairs[pairIndex].bid = Number(tick.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
     console.log({ id: pairs[pairIndex].name, a: pairs[pairIndex].ask, b: pairs[pairIndex].bid })
   }
+}
 
-export const createOrderRequest = (_token: string, order: OrderCreateRequest): string =>
-  JSON.stringify({
+function createOrderRequest(_token: string, order: OrderCreateRequest): string {
+  return JSON.stringify({
     order: {
       type: 'MARKET',
       instrument: order.pair,
@@ -43,34 +47,33 @@ export const createOrderRequest = (_token: string, order: OrderCreateRequest): s
       units: (order.direction === 'buy' ? order.amount : -order.amount).toFixed(2),
     },
   } as OandaAddOrder)
+}
 
-export async function startSubscription(
+async function startSubscription(
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   _wsExchange: unknown,
   key: Key
 ): Promise<unknown> {
   // setup subscription callback and stream
-  const callback = createSubscriptionCallback(pairs, pairMap)
-  const duplex = getStreamEndpoint(
+  let callback = createSubscriptionCallback(pairs, pairMap)
+
+  // create and register callback
+  return getStreamEndpoint(
     `${streamUrl}${basePath}${key.accountId}/pricing/stream?instruments=` +
       pairs.map(p => p.name).join(','),
     key!
-  )
-
-  // register callback
-  duplex.on('data', (chunk: Buffer) =>
+  ).on('data', (chunk: Buffer) =>
     chunk
       .toLocaleString()
       .split(/\r\n|\n\r|\n|\r/)
       .filter(d => d.startsWith('{"type"') && d.endsWith('}'))
       .forEach(d => callback(JSON.parse(d)))
   )
-  return duplex
 }
 
-export const getAvailablePairs = async (_apiExchange: unknown, key: Key): Promise<ExchangePair[]> =>
-  (
+async function getAvailablePairs(_apiExchange: unknown, key: Key): Promise<ExchangePair[]> {
+  return (
     await validateResponse<OandaAccountInstruments>(
       await got
         .get({
@@ -96,12 +99,14 @@ export const getAvailablePairs = async (_apiExchange: unknown, key: Key): Promis
     takerFee: 0,
     tradename: i.name,
   }))
+}
 
-export const setCallback = (_sock: unknown, callback: (data: string) => void): unknown =>
-  (internalOrderCallback = callback)
+function setCallback(_sock: unknown, callback: (data: string) => void): unknown {
+  return (internalOrderCallback = callback)
+}
 
-export const sendData = async (payload: string, _ws: unknown, key: Key): Promise<void> =>
-  internalOrderCallback(
+async function sendData(payload: string, _ws: unknown, key: Key): Promise<void> {
+  return internalOrderCallback(
     JSON.stringify(
       validateResponse(
         await got
@@ -120,3 +125,4 @@ export const sendData = async (payload: string, _ws: unknown, key: Key): Promise
       )
     )
   )
+}

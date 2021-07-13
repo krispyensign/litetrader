@@ -2,13 +2,14 @@ import got from 'got'
 import qs from 'qs'
 import crypto from 'crypto'
 import WebSocket from 'ws'
+export { createOrderRequest, getToken, getConnection, setCallback, dropConnection, sendData }
 
-const tokenPath = '/0/private/GetWebSocketsToken'
-const apiUrl = 'https://api.kraken.com'
-const webSocketUrl = 'wss://ws-auth.kraken.com'
+let tokenPath = '/0/private/GetWebSocketsToken'
+let apiUrl = 'https://api.kraken.com'
+let webSocketUrl = 'wss://ws-auth.kraken.com'
 
-const validateResponse = async (response: KrakenTokenResponseWrapper): Promise<KrakenToken> =>
-  response.error?.length > 0
+async function validateResponse(response: KrakenTokenResponseWrapper): Promise<KrakenToken> {
+  return response.error?.length > 0
     ? Promise.reject(
         Error(
           response.error
@@ -18,14 +19,15 @@ const validateResponse = async (response: KrakenTokenResponseWrapper): Promise<K
         )
       )
     : response.result
+}
 
-const makeAuthCall = async (
+async function makeAuthCall(
   url: string,
   request: string,
   nonce: number,
   key: Key
-): Promise<KrakenToken> =>
-  validateResponse(
+): Promise<KrakenToken> {
+  return validateResponse(
     await got
       .post({
         url: url,
@@ -51,9 +53,10 @@ const makeAuthCall = async (
       })
       .json()
   )
+}
 
-export const createOrderRequest = (token: string, order: OrderCreateRequest): string =>
-  JSON.stringify({
+function createOrderRequest(token: string, order: OrderCreateRequest): string {
+  return JSON.stringify({
     ordertype: order.orderType,
     event: 'addOrder',
     pair: order.pair,
@@ -64,9 +67,10 @@ export const createOrderRequest = (token: string, order: OrderCreateRequest): st
     price: order.price?.toString(),
     userref: order.orderId,
   } as KrakenAddOrder)
+}
 
-export const getToken = async (key: Key, nonce: number): Promise<string> =>
-  (
+async function getToken(key: Key, nonce: number): Promise<string> {
+  return (
     await makeAuthCall(
       apiUrl + tokenPath,
       qs.stringify({
@@ -76,14 +80,21 @@ export const getToken = async (key: Key, nonce: number): Promise<string> =>
       key
     )
   ).token
+}
 
-export const getConnection = (): WebSocket => new WebSocket(webSocketUrl)
+function getConnection(): WebSocket {
+  return new WebSocket(webSocketUrl)
+}
 
-export const setCallback = (sock: unknown, callback: (data: string) => void): WebSocket =>
-  (sock as WebSocket).on('message', callback)
+function setCallback(sock: unknown, callback: (data: string) => void): WebSocket {
+  return (sock as WebSocket).on('message', callback)
+}
 
-export const dropConnection = (ws: unknown): void => (ws as WebSocket).close()
+function dropConnection(ws: unknown): void {
+  return (ws as WebSocket).close()
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const sendData = (data: string, ws: unknown, _key?: Key): void =>
-  (ws as WebSocket).send(data)
+function sendData(data: string, ws: unknown, _key?: Key): void {
+  return (ws as WebSocket).send(data)
+}

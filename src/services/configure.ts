@@ -4,9 +4,6 @@ import * as oanda from './oanda.js'
 import ccxt from 'ccxt'
 import ccxws from 'ccxws'
 
-const invalidExchange = (exchangeName: ExchangeName): Error =>
-  Error(`Invalid exchange ${exchangeName} selected`)
-
 export let getConnection: (key: Key) => unknown
 export let dropConnection: (conn: unknown) => void
 export let getToken: (key: Key, nonce: number) => Promise<string>
@@ -21,19 +18,21 @@ export let startSubscription: (
   key: Key
 ) => Promise<unknown>
 
-export const getExchangeApi = async (exchangeName: ExchangeName): Promise<unknown> =>
-  exchangeName === 'kraken'
+export async function getExchangeApi(exchangeName: ExchangeName): Promise<unknown> {
+  return exchangeName === 'kraken'
     ? new ccxt.kraken()
     : exchangeName === 'oanda'
     ? undefined
     : Promise.reject(Error('unknown exchange ' + exchangeName))
+}
 
-export const getExchangeWs = async (exchangeName: ExchangeName): Promise<unknown> =>
-  exchangeName === 'kraken'
+export async function getExchangeWs(exchangeName: ExchangeName): Promise<unknown> {
+  return exchangeName === 'kraken'
     ? new ccxws.Kraken()
     : exchangeName === 'oanda'
     ? undefined
     : Promise.reject(Error('unknown exchange ' + exchangeName))
+}
 
 export function closeExchangeWs(ex: unknown): void {
   if (ex !== undefined && (ex as ccxws.Exchange).close !== undefined) (ex as ccxws.Exchange).close()
@@ -65,6 +64,6 @@ export async function configureService(exchangeName: ExchangeName): Promise<void
       getAvailablePairs = oanda.getAvailablePairs
       break
     default:
-      return Promise.reject(invalidExchange(exchangeName))
+      return Promise.reject(Error('unknown exchange ' + exchangeName))
   }
 }

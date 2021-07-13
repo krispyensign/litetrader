@@ -1,18 +1,18 @@
-const buildAssets = (tradePairs: ExchangePair[]): string[] => [
+let buildAssets = (tradePairs: ExchangePair[]): string[] => [
   ...tradePairs.reduce(
     (prev, pair) => prev.add(pair.baseName).add(pair.quoteName),
     new Set<string>()
   ),
 ]
 
-const buildIndexedPairs = (tradePairs: ExchangePair[], assets: string[]): IndexedPair[] =>
+let buildIndexedPairs = (tradePairs: ExchangePair[], assets: string[]): IndexedPair[] =>
   tradePairs.map(pair => ({
     ...pair,
     baseIndex: assets.indexOf(pair.baseName),
     quoteIndex: assets.indexOf(pair.quoteName),
   }))
 
-const buildPairMap = (tradePairs: ExchangePair[]): Map<string, number> =>
+let buildPairMap = (tradePairs: ExchangePair[]): Map<string, number> =>
   new Map([
     ...new Map<string, number>(tradePairs.map((pair, index) => [pair.tradename, index])),
     ...new Map<string, number>(tradePairs.map((pair, index) => [pair.name, index])),
@@ -21,19 +21,19 @@ const buildPairMap = (tradePairs: ExchangePair[]): Map<string, number> =>
     ),
   ])
 
-const getIndex = async (initialAssetIndexF: number, initialAsset: string): Promise<number> =>
+let getIndex = async (initialAssetIndexF: number, initialAsset: string): Promise<number> =>
   initialAssetIndexF === -1
     ? Promise.reject(Error(`invalid asset ${initialAsset}`))
     : Promise.resolve(initialAssetIndexF)
 
 // validate initialasset before continuing
-const getInitialAssetIndex = async (assets: string[], initialAsset: string): Promise<number> =>
+let getInitialAssetIndex = async (assets: string[], initialAsset: string): Promise<number> =>
   await getIndex(
     assets.findIndex(a => a === initialAsset),
     initialAsset
   )
 
-export const setupData = async (
+export let setupData = async (
   tradePairs: ExchangePair[],
   initialAsset: string
 ): Promise<[readonly string[], IndexedPair[], Map<string, number>, number]> => [

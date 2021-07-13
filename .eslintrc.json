@@ -19,6 +19,7 @@
     "quotes": ["warn", "single", { "avoidEscape": true }],
     "require-atomic-updates": "off",
     "semi": "off",
+    "prefer-const": "off",
 
     "no-trailing-spaces": "error",
     "no-var": "error",

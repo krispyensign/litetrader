@@ -1,21 +1,21 @@
 import * as util from 'util'
-const isError = util.types.isNativeError
+let isError = util.types.isNativeError
 
-const mutateStepArray = (t: Step[], v: Step): Steps =>
+let mutateStepArray = (t: Step[], v: Step): Steps =>
   t.push(v) > 0 ? t : Error('Failed to expand array.')
 
 // helper function to safely round a number
-const safeRound = (num: number, decimals: number): number =>
+let safeRound = (num: number, decimals: number): number =>
   decimals === 0 ? Math.floor(num) : Number(num.toFixed(decimals))
 
 // helper function to safely divide by 0
-const safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
+let safeDivide = (numA: number, numB: number): number => (numB !== 0 ? numA / numB : 0)
 
-const safeBid = (sm: StepMaterial): number => (sm.pair.bid ?? 0) * (1 - sm.eta)
+let safeBid = (sm: StepMaterial): number => (sm.pair.bid ?? 0) * (1 - sm.eta)
 
-const safeAsk = (sm: StepMaterial): number => (sm.pair.ask ?? 0) * (1 + sm.eta)
+let safeAsk = (sm: StepMaterial): number => (sm.pair.ask ?? 0) * (1 + sm.eta)
 
-const buildStep = (sm: StepMaterial): Step =>
+let buildStep = (sm: StepMaterial): Step =>
   // if current exposure is in base asset then create a sell order else buy order
   sm.index === sm.pair.baseIndex
     ? {
@@ -43,12 +43,12 @@ const buildStep = (sm: StepMaterial): Step =>
         newAmount: sm.amount,
       }
 
-const calcStepAmount = (sm: StepMaterial): number =>
+let calcStepAmount = (sm: StepMaterial): number =>
   sm.index === sm.pair.baseIndex
     ? safeRound(sm.amount, sm.pair.precision)
     : safeRound(safeDivide(sm.amount, (1 + sm.pair.takerFee) * safeAsk(sm)), sm.pair.precision)
 
-const buildNextStepInPlace = (ss: StepSnapshot, eta: number): Steps =>
+let buildNextStepInPlace = (ss: StepSnapshot, eta: number): Steps =>
   isError(ss) || ss === 0
     ? ss
     : mutateStepArray(
@@ -61,7 +61,7 @@ const buildNextStepInPlace = (ss: StepSnapshot, eta: number): Steps =>
         })
       )
 
-const validatePair = (
+let validatePair = (
   steps: ValidatedSteps,
   [index, amount]: [number, number],
   pair: IndexedPair
@@ -75,11 +75,7 @@ const validatePair = (
     ? 0 // mark as worthless if processing results in an impossible trade
     : { steps, pair, index, amount }
 
-const extractState = (
-  gwd: GraphWorkerData,
-  steps: Steps,
-  pairIndex: number | Error
-): StepSnapshot =>
+let extractState = (gwd: GraphWorkerData, steps: Steps, pairIndex: number | Error): StepSnapshot =>
   isError(steps) || steps === 0 // skip elements if an error was encountered or is worthless
     ? steps
     : isError(pairIndex) // error if pair lookup failed earlier
@@ -92,12 +88,12 @@ const extractState = (
         gwd.pairs[pairIndex]
       )
 
-const lookupPair = (gwd: GraphWorkerData, left: number, right: number): number | Error =>
+let lookupPair = (gwd: GraphWorkerData, left: number, right: number): number | Error =>
   gwd.pairMap.get(`${gwd.assets[left]},${gwd.assets[right]}`) ??
   gwd.pairMap.get(`${gwd.assets[right]},${gwd.assets[left]}`) ??
   Error(`Invalid pair requested. quote: ${gwd.assets[left]}, ${gwd.assets[right]}`)
 
-export const calcProfit = (gwd: GraphWorkerData, cycle: readonly number[]): Steps =>
+export let calcProfit = (gwd: GraphWorkerData, cycle: readonly number[]): Steps =>
   cycle
     .slice(1)
     .reduce<Steps>(

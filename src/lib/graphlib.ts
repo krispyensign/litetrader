@@ -1,30 +1,30 @@
-const filterMapl = <T, U>(it: Iterable<T>, fnFilter: FnFilter<T>, fn: Fn<T, U>): Lazy<U> => ({
+let filterMapl = <T, U>(it: Iterable<T>, fnFilter: FnFilter<T>, fn: Fn<T, U>): Lazy<U> => ({
   *[Symbol.iterator](): IterableIterator<U> {
-    for (const item of it)
+    for (let item of it)
       if (!fnFilter(item)) continue
       else yield fn(item)
   },
 })
 
-const filterl = <T>(it: Iterable<T>, fn: FnFilter<T>): Lazy<T> => ({
+let filterl = <T>(it: Iterable<T>, fn: FnFilter<T>): Lazy<T> => ({
   *[Symbol.iterator](): IterableIterator<T> {
-    for (const item of it) if (fn(item)) yield item
+    for (let item of it) if (fn(item)) yield item
   },
 })
 
-const flatMapl = <T, U>(it: Iterable<T>, fn: FnMulti<T, U>): Lazy<U> => ({
+let flatMapl = <T, U>(it: Iterable<T>, fn: FnMulti<T, U>): Lazy<U> => ({
   *[Symbol.iterator](): IterableIterator<U> {
-    for (const item of it) for (const subItem of fn(item)) yield subItem
+    for (let item of it) for (let subItem of fn(item)) yield subItem
   },
 })
 
-const partitionl = <T>(it: Lazy<T>, fn: FnFilter<T>): readonly [Lazy<T>, Lazy<T>] => [
+let partitionl = <T>(it: Lazy<T>, fn: FnFilter<T>): readonly [Lazy<T>, Lazy<T>] => [
   filterl(it, fn),
   filterl(it, (value: T): boolean => !fn(value)),
 ]
 
-const hasValue = <T>(it: Lazy<T>): boolean => {
-  for (const item of it) return item !== null
+let hasValue = <T>(it: Lazy<T>): boolean => {
+  for (let item of it) return item !== null
   return false
 }
 
@@ -38,7 +38,7 @@ const hasValue = <T>(it: Lazy<T>): boolean => {
                                                                         checks
 */
 
-const growPaths = <T>(
+let growPaths = <T>(
   paths: Iterable<readonly T[]>,
   neighbors: ReadonlyMap<T, readonly T[]>
 ): Lazy<readonly T[]> =>
@@ -71,10 +71,10 @@ export function* findCycles<T>(
 
   while (true) {
     // partition into cycles and paths
-    const [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
+    let [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
 
     // report back the cycles
-    if (hasValue(cycles)) for (const cycle of cycles) yield cycle
+    if (hasValue(cycles)) for (let cycle of cycles) yield cycle
 
     // if nothing at all was found then break
     if (!hasValue(paths)) break
@@ -84,7 +84,7 @@ export function* findCycles<T>(
   }
 }
 
-export const buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>
+export let buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>
   indexedPairs
 
     // create edge list

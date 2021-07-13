@@ -1,8 +1,7 @@
 console.time('startup')
 import * as sourceMap from 'source-map-support'
 sourceMap.install()
-import { Worker, isMainThread } from 'worker_threads'
-import yargs from 'yargs'
+import { Worker } from 'worker_threads'
 import { dirname } from 'path'
 import { Mutex } from 'async-mutex'
 import {
@@ -17,17 +16,19 @@ import {
   startSubscription,
   stopSubscription,
 } from './services/configure.js'
-import { createGraphProfitCallback, graphWorker } from './graphworker.js'
+import { createGraphProfitCallback } from './graphworker.js'
 import { setupData } from './lib/datahelpers.js'
 import { buildGraph } from './lib/graphlib.js'
 
-const createShutdownCallback = (
+export { app }
+
+function createShutdownCallback(
   conn: unknown,
   worker: Worker,
   pairs: IndexedPair[],
   wsExchange: unknown
-) =>
-  async function (): Promise<void> {
+) {
+  return async (): Promise<void> => {
     // kill detached worker thread
     await worker.terminate()
 
@@ -40,18 +41,21 @@ const createShutdownCallback = (
 
     console.log('shutdown complete')
   }
+}
 
 async function app(config: Config): Promise<readonly [unknown, Worker]> {
+  // configure services
   console.log('Starting.')
   configureService(config.exchangeName)
 
-  const [assets, pairs, pairMap, initialAssetIndex] = await setupData(
-      await getAvailablePairs(await getExchangeApi(config.exchangeName), config.key),
-      config.initialAsset
-    ),
-    exchangeWs = await getExchangeWs(config.exchangeName),
-    exchangeConn = getConnection(config.key),
-    sendMutex = new Mutex()
+  // configure data and connections
+  let [assets, pairs, pairMap, initialAssetIndex] = await setupData(
+    await getAvailablePairs(await getExchangeApi(config.exchangeName), config.key),
+    config.initialAsset
+  )
+  let exchangeWs = await getExchangeWs(config.exchangeName)
+  let exchangeConn = getConnection(config.key)
+  let sendMutex = new Mutex()
 
   // start subscriptions and wait for initial flood of tick updates to stabilize
   await startSubscription(pairs, pairMap, exchangeWs, config.key)
@@ -59,7 +63,7 @@ async function app(config: Config): Promise<readonly [unknown, Worker]> {
   await new Promise(res => setTimeout(res, 10000))
 
   // setup sockets and graph worker
-  const graphWorkerTask = new Worker(dirname(process.argv[1]) + '/litetrader.js', {
+  let graphWorkerTask = new Worker(dirname(process.argv[1]) + '/litetrader.js', {
     workerData: {
       exchangeName: config.exchangeName,
       graph: buildGraph(pairs),
@@ -95,40 +99,7 @@ async function app(config: Config): Promise<readonly [unknown, Worker]> {
     )
   )
 
-  // return configured threads
+  // log time completed and return configured threads
   console.timeEnd('startup')
   return [exchangeConn, graphWorkerTask]
 }
-
-// process the command line args
-const argv = yargs(process.argv.slice(2))
-  .options({
-    exchangeName: { type: 'string', default: 'kraken' },
-    initialAmount: { type: 'number', default: 200 },
-    initialAsset: { type: 'string', default: 'ADA' },
-    eta: { type: 'number', default: 0.001 },
-    apiKey: { type: 'string', default: '' },
-    apiPrivateKey: { type: 'string', default: '' },
-    passphrase: { type: 'string', default: '' },
-    accountId: { type: 'string', default: '' },
-  })
-  .parseSync()
-
-argv.initialAsset === null
-  ? console.log('Invalid asset provided')
-  : isMainThread
-  ? app({
-      exchangeName: argv.exchangeName as ExchangeName,
-      initialAmount: argv.initialAmount,
-      initialAsset: argv.initialAsset,
-      eta: argv.eta,
-      key: {
-        apiKey: argv.apiKey,
-        apiPrivateKey: argv.apiPrivateKey,
-        passphrase: argv.passphrase,
-        accountId: argv.accountId,
-      },
-    })
-  : graphWorker()
-
-// wait for shutdown
