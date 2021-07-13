@@ -19,11 +19,14 @@ export let startSubscription: (
 ) => Promise<unknown>
 
 export async function getExchangeApi(exchangeName: ExchangeName): Promise<unknown> {
-  return exchangeName === 'kraken'
-    ? new ccxt.kraken()
-    : exchangeName === 'oanda'
-    ? undefined
-    : Promise.reject(Error('unknown exchange ' + exchangeName))
+  switch (exchangeName) {
+    case 'kraken':
+      return new ccxt.kraken()
+    case 'oanda':
+      return undefined
+    default:
+      return Promise.reject(Error('unknown exchange ' + exchangeName))
+  }
 }
 
 export async function getExchangeWs(exchangeName: ExchangeName): Promise<unknown> {
