@@ -30,11 +30,14 @@ export async function getExchangeApi(exchangeName: ExchangeName): Promise<unknow
 }
 
 export async function getExchangeWs(exchangeName: ExchangeName): Promise<unknown> {
-  return exchangeName === 'kraken'
-    ? new ccxws.Kraken()
-    : exchangeName === 'oanda'
-    ? undefined
-    : Promise.reject(Error('unknown exchange ' + exchangeName))
+  switch (exchangeName) {
+    case 'kraken':
+      return new ccxws.Kraken()
+    case 'oanda':
+      return undefined
+    default:
+      return Promise.reject(Error('unknown exchange ' + exchangeName))
+  }
 }
 
 export function closeExchangeWs(ex: unknown): void {
