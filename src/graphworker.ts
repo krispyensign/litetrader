@@ -130,7 +130,7 @@ function createGraphProfitCallback(
 
 function graphWorker(): true {
   // create a cycles generator
-  let cycles = findCycles(
+  let cycles = findCycles<number>(
     // bug: only supports one vertex for now
     [workerData.initialAssetIndex],
 
