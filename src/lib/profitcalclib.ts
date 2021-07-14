@@ -28,7 +28,7 @@ let buildStep = (sm: StepMaterial): Step =>
         },
         price: safeBid(sm),
         index: sm.pair.quoteIndex,
-        newAmount: sm.amount * (1 - sm.pair.takerFee) * safeBid(sm),
+        newAmount: sm.amount * (1 - (sm.pair.takerFee ?? 0)) * safeBid(sm),
       }
     : {
         orderCreateRequest: {
@@ -46,7 +46,10 @@ let buildStep = (sm: StepMaterial): Step =>
 let calcStepAmount = (sm: StepMaterial): number =>
   sm.index === sm.pair.baseIndex
     ? safeRound(sm.amount, sm.pair.precision)
-    : safeRound(safeDivide(sm.amount, (1 + sm.pair.takerFee) * safeAsk(sm)), sm.pair.precision)
+    : safeRound(
+        safeDivide(sm.amount, (1 + (sm.pair.takerFee ?? 0)) * safeAsk(sm)),
+        sm.pair.precision
+      )
 
 let buildNextStepInPlace = (ss: StepSnapshot, eta: number): Steps =>
   isError(ss) || ss === 0

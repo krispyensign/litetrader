@@ -25,15 +25,23 @@ function getStreamEndpoint(url: string, key: Key): Duplex {
   })
 }
 
+// helper function to safely divide by 0
+function safeDivide(numA: number, numB: number): number {
+  return numB !== 0 ? numA / numB : 0
+}
+
 function createSubscriptionCallback(pairs: IndexedPair[], pairMap: Map<string, number>) {
   return async (tick: OandaTicker): Promise<void> => {
     if (tick.type === 'HEARTBEAT') return
     let pairIndex = pairMap.get(tick.instrument)
     if (pairIndex === undefined)
       return Promise.reject(Error(`Invalid pair encountered. ${tick.instrument}`))
-    pairs[pairIndex].ask = Number(tick.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
-    pairs[pairIndex].bid = Number(tick.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
-    console.log({ id: pairs[pairIndex].name, a: pairs[pairIndex].ask, b: pairs[pairIndex].bid })
+    let bid = Number(tick.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
+    let ask = Number(tick.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
+    pairs[pairIndex].bid = bid
+    pairs[pairIndex].ask = ask
+    pairs[pairIndex].takerFee = safeDivide((bid ?? 0) - (ask ?? 0), bid ?? 0)
+    // console.log({ id: pairs[pairIndex].name, a: pairs[pairIndex].ask, b: pairs[pairIndex].bid })
   }
 }
 

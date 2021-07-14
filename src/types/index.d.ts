@@ -68,8 +68,8 @@ type IndexedPair = {
   readonly precisionMode?: number
   readonly baseName: string
   readonly quoteName: string
-  readonly makerFee: number
-  readonly takerFee: number
+  makerFee?: number
+  takerFee?: number
   volume?: number
   readonly ordermin: number
   ask?: number
