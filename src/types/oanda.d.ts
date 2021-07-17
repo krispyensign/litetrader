@@ -14,8 +14,20 @@ type OandaInstrument = {
   minimumTradeSize: string
 }
 
+type OandaPrice = {
+  asks: PriceBucket[]
+  bids: PriceBucket[]
+  closeOutAsk: string
+  closeOutBid: string
+  instrument: string
+}
+
 type OandaAccountInstruments = {
   instruments: OandaInstrument[]
+}
+
+type OandaAccountPrices = {
+  prices: OandaPrice[]
 }
 
 type OandaMarketOrderRequest = {

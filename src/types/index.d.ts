@@ -53,11 +53,11 @@ type ExchangePair = {
   readonly baseName: string
   readonly quoteName: string
   readonly makerFee: number
-  readonly takerFee: number
+  takerFee?: number
   readonly volume?: number
   readonly ordermin: number
-  readonly ask?: number
-  readonly bid?: number
+  ask?: number
+  bid?: number
 }
 
 type IndexedPair = {

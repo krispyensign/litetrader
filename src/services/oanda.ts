@@ -38,10 +38,16 @@ function createSubscriptionCallback(pairs: IndexedPair[], pairMap: Map<string, n
       return Promise.reject(Error(`Invalid pair encountered. ${tick.instrument}`))
     let bid = Number(tick.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
     let ask = Number(tick.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
+    let takerFee = safeDivide((bid ?? 0) - (ask ?? 0), bid ?? 0)
     pairs[pairIndex].bid = bid
     pairs[pairIndex].ask = ask
-    pairs[pairIndex].takerFee = safeDivide((bid ?? 0) - (ask ?? 0), bid ?? 0)
-    // console.log({ id: pairs[pairIndex].name, a: pairs[pairIndex].ask, b: pairs[pairIndex].bid })
+    pairs[pairIndex].takerFee = takerFee
+    console.log({
+      id: pairs[pairIndex].name,
+      a: pairs[pairIndex].ask,
+      b: pairs[pairIndex].bid,
+      fee: takerFee,
+    })
   }
 }
 
@@ -57,12 +63,12 @@ function createOrderRequest(_token: string, order: OrderCreateRequest): string {
   } as OandaAddOrder)
 }
 
-async function startSubscription(
+let startSubscription = async (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   _wsExchange: unknown,
   key: Key
-): Promise<unknown> {
+): Promise<unknown> => {
   // setup subscription callback and stream
   let callback = createSubscriptionCallback(pairs, pairMap)
 
@@ -80,8 +86,8 @@ async function startSubscription(
   )
 }
 
-async function getAvailablePairs(_apiExchange: unknown, key: Key): Promise<ExchangePair[]> {
-  return (
+let getAvailablePairs = async (_apiExchange: unknown, key: Key): Promise<ExchangePair[]> => {
+  let pairs: ExchangePair[] = (
     await validateResponse<OandaAccountInstruments>(
       await got
         .get({
@@ -107,6 +113,35 @@ async function getAvailablePairs(_apiExchange: unknown, key: Key): Promise<Excha
     takerFee: 0,
     tradename: i.name,
   }))
+
+  let prices = await validateResponse<OandaAccountPrices>(
+    await got
+      .get({
+        url: `${apiUrl}${basePath}${key.accountId}/pricing?instruments=${pairs
+          .map(p => p.name)
+          .join(',')}`,
+        headers: {
+          Authorization: `Bearer ${key.apiKey}`,
+        },
+        timeout: 50000,
+        method: 'GET',
+        responseType: 'json',
+        isStream: false,
+      })
+      .json()
+  )
+
+  for (let price of prices.prices) {
+    let pair = pairs.find(p => p.name === price.instrument)!
+    let ask = Number(price.bids[0].price)
+    let bid = Number(price.asks[0].price)
+    let takerFee = safeDivide((bid ?? 0) - (ask ?? 0), bid ?? 0)
+    pair.ask = ask
+    pair.bid = bid
+    pair.takerFee = takerFee
+  }
+
+  return pairs
 }
 
 function setCallback(_sock: unknown, callback: (data: string) => void): unknown {
