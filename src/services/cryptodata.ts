@@ -3,8 +3,9 @@ import ccxws from 'ccxws'
 import * as bannedConfig from './../lib/bannedPairs.json'
 export { startSubscription, stopSubscription, getAvailablePairs }
 
-function createSubscriptionCallback(pairs: IndexedPair[], pairMap: Map<string, number>) {
-  return async (snap: ccxws.Level2Data, market: ccxws.Market): Promise<void> => {
+let createSubscriptionCallback =
+  (pairs: IndexedPair[], pairMap: Map<string, number>) =>
+  async (snap: ccxws.Level2Data, market: ccxws.Market): Promise<void> => {
     let pairIndex = pairMap.get(market.id)
     if (pairIndex === undefined)
       return Promise.reject(Error(`Invalid pair encountered. ${market.id}`))
@@ -13,13 +14,12 @@ function createSubscriptionCallback(pairs: IndexedPair[], pairMap: Map<string, n
     pairs[pairIndex].bid = Number(snap.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
     // console.log({ id: pairs[pairIndex].name, a: pairs[pairIndex].ask, b: pairs[pairIndex].bid })
   }
-}
 
-async function startSubscription(
+let startSubscription = async (
   pairs: IndexedPair[],
   pairMap: Map<string, number>,
   wsExchange: unknown
-): Promise<unknown> {
+): Promise<unknown> => {
   let ex: ccxws.Exchange = wsExchange as ccxws.Exchange
   ex.on('l2snapshot', createSubscriptionCallback(pairs, pairMap))
   ex.on('l2update', createSubscriptionCallback(pairs, pairMap))
@@ -42,8 +42,8 @@ async function startSubscription(
   return wsExchange
 }
 
-function stopSubscription(pairs: IndexedPair[], wsExchange: unknown): void {
-  return pairs.forEach(
+let stopSubscription = (pairs: IndexedPair[], wsExchange: unknown): void =>
+  pairs.forEach(
     pair => (
       (wsExchange as ccxws.Exchange).unsubscribeLevel2Snapshots({
         base: pair.baseName,
@@ -59,11 +59,10 @@ function stopSubscription(pairs: IndexedPair[], wsExchange: unknown): void {
       })
     )
   )
-}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function getAvailablePairs(apiExchange: unknown, _key: Key): Promise<ExchangePair[]> {
-  return (apiExchange as ccxt.Exchange).loadMarkets().then(markets =>
+let getAvailablePairs = async (apiExchange: unknown, _key: Key): Promise<ExchangePair[]> =>
+  (apiExchange as ccxt.Exchange).loadMarkets().then(markets =>
     Object.entries(markets)
       .filter(
         ([, market]) =>
@@ -86,4 +85,3 @@ async function getAvailablePairs(apiExchange: unknown, _key: Key): Promise<Excha
         })
       )
   )
-}

@@ -1,34 +1,29 @@
-function filterMapl<T, U>(it: Iterable<T>, fnFilter: FnFilter<T>, fn: Fn<T, U>): Lazy<U> {
-  return {
-    *[Symbol.iterator](): IterableIterator<U> {
-      for (let item of it)
-        if (!fnFilter(item)) continue
-        else yield fn(item)
-    },
-  }
-}
+let filterMapl = <T, U>(it: Iterable<T>, fnFilter: FnFilter<T>, fn: Fn<T, U>): Lazy<U> => ({
+  *[Symbol.iterator](): IterableIterator<U> {
+    for (let item of it)
+      if (!fnFilter(item)) continue
+      else yield fn(item)
+  },
+})
 
-function filterl<T>(it: Iterable<T>, fn: FnFilter<T>): Lazy<T> {
-  return {
-    *[Symbol.iterator](): IterableIterator<T> {
-      for (let item of it) if (fn(item)) yield item
-    },
-  }
-}
+let filterl = <T>(it: Iterable<T>, fn: FnFilter<T>): Lazy<T> => ({
+  *[Symbol.iterator](): IterableIterator<T> {
+    for (let item of it) if (fn(item)) yield item
+  },
+})
 
-function flatMapl<T, U>(it: Iterable<T>, fn: FnMulti<T, U>): Lazy<U> {
-  return {
-    *[Symbol.iterator](): IterableIterator<U> {
-      for (let item of it) for (let subItem of fn(item)) yield subItem
-    },
-  }
-}
+let flatMapl = <T, U>(it: Iterable<T>, fn: FnMulti<T, U>): Lazy<U> => ({
+  *[Symbol.iterator](): IterableIterator<U> {
+    for (let item of it) for (let subItem of fn(item)) yield subItem
+  },
+})
 
-function partitionl<T>(it: Lazy<T>, fn: FnFilter<T>): readonly [Lazy<T>, Lazy<T>] {
-  return [filterl(it, fn), filterl(it, (value: T): boolean => !fn(value))]
-}
+let partitionl = <T>(it: Lazy<T>, fn: FnFilter<T>): readonly [Lazy<T>, Lazy<T>] => [
+  filterl(it, fn),
+  filterl(it, (value: T): boolean => !fn(value)),
+]
 
-function hasValue<T>(it: Lazy<T>): boolean {
+let hasValue = <T>(it: Lazy<T>): boolean => {
   for (let item of it) return item !== null
   return false
 }
@@ -43,11 +38,11 @@ function hasValue<T>(it: Lazy<T>): boolean {
                                                                         checks
 */
 
-function growPaths<T>(
+let growPaths = <T>(
   paths: Iterable<readonly T[]>,
   neighbors: ReadonlyMap<T, readonly T[]>
-): Lazy<readonly T[]> {
-  return flatMapl(
+): Lazy<readonly T[]> =>
+  flatMapl(
     // only perform grow operation if there are neighbors
     filterl(paths, path => neighbors.has(path[path.length - 1])),
 
@@ -63,7 +58,6 @@ function growPaths<T>(
         neighbor => currentPath.concat(neighbor)
       )
   )
-}
 
 export function* findCycles<T>(
   startAssets: readonly T[],
@@ -90,23 +84,20 @@ export function* findCycles<T>(
   }
 }
 
-export function buildGraph(indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> {
-  return (
-    indexedPairs
+export let buildGraph = (indexedPairs: readonly IndexedPair[]): Dictionary<readonly number[]> =>
+  indexedPairs
 
-      // create edge list
-      .reduce(
-        (edgeList, ip) =>
-          edgeList.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
-        new Array<readonly [number, number]>()
-      )
-      // create adjacency map from edge list
-      .reduce(
-        (adjMap, edge) =>
-          adjMap[edge[0].toString()] !== undefined
-            ? ((adjMap[edge[0].toString()] = adjMap[edge[0].toString()]!.concat(edge[1])), adjMap)
-            : ((adjMap[edge[0].toString()] = [edge[1]]), adjMap),
-        {} as Dictionary<readonly number[]>
-      )
-  )
-}
+    // create edge list
+    .reduce(
+      (edgeList, ip) =>
+        edgeList.concat([[ip.baseIndex, ip.quoteIndex]]).concat([[ip.quoteIndex, ip.baseIndex]]),
+      new Array<readonly [number, number]>()
+    )
+    // create adjacency map from edge list
+    .reduce(
+      (adjMap, edge) =>
+        adjMap[edge[0].toString()] !== undefined
+          ? ((adjMap[edge[0].toString()] = adjMap[edge[0].toString()]!.concat(edge[1])), adjMap)
+          : ((adjMap[edge[0].toString()] = [edge[1]]), adjMap),
+      {} as Dictionary<readonly number[]>
+    )
