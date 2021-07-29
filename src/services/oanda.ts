@@ -36,18 +36,18 @@ function createSubscriptionCallback(pairs: IndexedPair[], pairMap: Map<string, n
     let pairIndex = pairMap.get(tick.instrument)
     if (pairIndex === undefined)
       return Promise.reject(Error(`Invalid pair encountered. ${tick.instrument}`))
-    let bid = Number(tick.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
-    let ask = Number(tick.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
-    let takerFee = safeDivide((bid ?? 0) - (ask ?? 0), bid ?? 0)
+    let ask = Number(tick.asks[0]?.price ?? pairs[pairIndex].ask ?? 0)
+    let bid = Number(tick.bids[0]?.price ?? pairs[pairIndex].bid ?? 0)
+    // let takerFee = safeDivide((bid ?? 0) - (ask ?? 0), bid ?? 0)
     pairs[pairIndex].bid = bid
     pairs[pairIndex].ask = ask
-    pairs[pairIndex].takerFee = takerFee
-    console.log({
-      id: pairs[pairIndex].name,
-      a: pairs[pairIndex].ask,
-      b: pairs[pairIndex].bid,
-      fee: takerFee,
-    })
+    // pairs[pairIndex].takerFee = takerFee
+    // console.log({
+    //   id: pairs[pairIndex].name,
+    //   a: pairs[pairIndex].ask,
+    //   b: pairs[pairIndex].bid,
+    //   // fee: takerFee,
+    // })
   }
 }
 

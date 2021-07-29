@@ -69,6 +69,7 @@ export function* findCycles<T>(
     neighbors
   )
 
+  let length = 1
   while (true) {
     // partition into cycles and paths
     let [cycles, paths] = partitionl(candidatePaths, path => path[0] === path[path.length - 1])
@@ -80,7 +81,16 @@ export function* findCycles<T>(
     if (!hasValue(paths)) break
 
     // start to find the next size up paths
-    candidatePaths = growPaths(paths, neighbors)
+    if (length >= 4) {
+      candidatePaths = growPaths(
+        startAssets.map(val => [val]),
+        neighbors
+      )
+      length = 1
+    } else {
+      candidatePaths = growPaths(paths, neighbors)
+      length++
+    }
   }
 }
 
